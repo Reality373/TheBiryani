@@ -1,0 +1,26 @@
+/* Design tokens. Every colour used anywhere comes from here (docs/design.md, section 4). */
+:root {
+  --night: #141A2E;   /* the room at night */
+  --indigo: #27356B;  /* window, rain, cool shapes */
+  --iron: #0E0D12;    /* deepest shadow, text on saffron */
+  --madder: #A33B2C;  /* borders, accents */
+  --saffron: #F2A516; /* light, flame, primary button */
+  --copper: #B8693A;  /* the pot */
+  --rice: #F6EBD3;    /* rice, and all text on dark */
+  --mint: #5E8C4A;    /* herbs */
+
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-text: 'Literata Variable', Georgia, 'Times New Roman', serif;
+
+  --text-line: clamp(1.15rem, 0.95rem + 1.1vw, 1.5rem);
+  --text-cap: 0.875rem;
+  --text-title: clamp(4.5rem, 3rem + 14vw, 9rem);
+
+  --space: 1rem;
+  --tap: 3.5rem; /* primary button height */
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-line: 500ms;  /* a line fading in */
+  --t-state: 900ms; /* an art state changing */
+  --t-view: 1600ms; /* a camera move */
+}
