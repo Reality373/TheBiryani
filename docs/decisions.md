@@ -46,7 +46,7 @@ Sources: the brainstorm chat of 7 Nov 2026 ([research/00-brainstorm-chat.md](res
 | # | Question | Who or what answers it |
 |---|---|---|
 | O1 | The exact deadline, who runs the challenge, how it is judged, and whether it has rules on AI-made work. | The user, from the announcement. Not findable by web search. |
-| O2 | **A face or not.** Both reports lean on a reacting face to win over sceptics; D2 says no person is needed. Default: hands only, no face. | The user. |
+| O2 | **A face or not.** Both reports lean on a reacting face to win over sceptics; D2 says no person is needed. Default: nobody on screen, neither face nor hands. | The user. |
 | O3 | **The closing line.** The visual report ends on "whoever taught the dish", which conflicts with D2. Default: "You knew you'd be happy. You were right." | The user, at script review. |
 | O4 | Where it is hosted, and approval to publish. | The user. Needed before any deploy. |
 | O5 | Whether it makes anyone hungry, and whether it moves someone who dislikes biryani. | Only showing it to real people. No research answers this. |

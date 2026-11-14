@@ -37,6 +37,10 @@ Each task gets one reviewer pass (Sonnet, medium) on its diff. What a reviewer c
 - ES modules only, loaded with `<script type="module">`. Relative imports include the `.js` extension.
 - Tests: `node --test` from the repo root. Test files live in `tests/` and end in `.test.js`. Only pure modules are unit-tested; nothing imports a DOM library.
 - Serve locally with `python3 -m http.server 8000` from the repo root. Never open `index.html` from `file://`.
+- **To look at the page:** `tools/shot.sh OUT.png '?query' [W] [H]`. It serves the repo, loads the page in a frame of exactly W × H CSS px (default 390 × 844) in headless Chrome and writes a PNG; open the PNG to check it. Headless Chrome will not make a window narrower than 500 px, which is why the frame exists. Write PNGs outside the repo.
+- **To run the whole piece:** `tools/smoke.sh ['?query']`. It loads the page with `auto=1`, which makes every button press itself, and passes when the page reaches the end with no uncaught error. Expected last line: `smoke: ok`. From Task 6 on, every task ends with this passing.
+- `auto=1` contract: `ui.action` and `ui.card` resolve by themselves after 50 ms (`card` with its last choice); `main.js` sets `data-done="1"` on `<html>` when the last scene's `play` resolves and does not loop; any `error` or `unhandledrejection` event sets `data-error` on `<html>` to its message.
+- Work on the `build` branch. `git add` only the files your task names; never `git add -A` or `git add .`.
 - Animate only `transform` and `opacity`. No animated `filter`, `mask-position`, `background-position`, `width`, `height`, `top` or `left`. No live SVG filters on moving elements.
 - Every colour comes from a custom property in `css/tokens.css`. No hex values anywhere else, except inside SVG art, which may use only the eight token hex values plus darker or lighter shades of them for baked shadows and light.
 - Every line of story, caption, card text and button label comes from `js/data/script.js`. No user-facing strings in scene or UI code. The only exception is the settings dialog's fixed labels, which live in `index.html`.
@@ -44,7 +48,7 @@ Each task gets one reviewer pass (Sonnet, medium) on its diff. What a reviewer c
 - Everything the viewer can activate is a real `<button>`, reachable by keyboard, at least 44 × 44 CSS px, with a visible focus ring.
 - Nothing advances on a timer the viewer can miss. Lines stay until the viewer acts.
 - Calm mode (`prefs.get('calm')`) must keep every line, picture and sound, and remove camera moves, ambient motion and required holds.
-- Scenes never check whether sound is on. `audio` methods are safe no-ops until unlocked.
+- Scenes never check whether sound is on. `audio` remembers the beds and muffle asked for while it is locked or muted and applies them when sound comes on, so switching sound on mid-scene gives the right mix.
 - Stage height uses `100svh`, never `dvh` or `vh`.
 - Copy is British English, sentence case, no exclamation marks, no emoji.
 - Do not edit anything under `docs/`. Do not push, publish or deploy.
@@ -110,7 +114,7 @@ export default {
 ### Task 1: Visual foundation
 
 **Files:**
-- Create: `index.html`, `package.json`, `css/tokens.css`, `css/app.css`, `js/art/kitchen.js`, `js/main.js`
+- Create: `index.html`, `package.json`, `css/tokens.css`, `css/app.css`, `js/art/kitchen.js`, `js/main.js`, `tools/frame.html`, `tools/shot.sh`, `tools/smoke.sh`
 
 **Interfaces:**
 - Produces: the DOM ids `#stage`, `#kitchen`, `#top`, `#steam`, `#line`, `#cap`, `#act`, `#act-label`, `#act-ring`, `#card` (hidden until used, with children `#card-title`, `#card-text`, `#card-icons`, `#card-note`, `#card-choices`), `#settings`, `#open-settings`, `#set-sound`, `#set-calm`, `#set-caps`; the art-state attributes above; the eight colour tokens named in design.md §4; `kitchenSVG` exported from `js/art/kitchen.js`.
@@ -464,7 +468,7 @@ test('control pairs meet 3:1', () => {
 ```
 
 - [ ] **Step 2: Run the tests and see them fail.** Run: `node --test`. Expected: the contrast test passes (tokens exist); the other six files fail with module-not-found errors.
-- [ ] **Step 3: Write `js/data/script.js`.** Transcribe every line from design.md §3 "Script" and the easter-egg table, word for word, into the step format. Structure the steps so that: the Arrival scene has one step with `act: false` (its two start buttons use `labels.withSound` and `labels.quietly`); the Seal scene's second step has `act: 'Press the seal', hold: 1800, holdCue: 'pressing'` and its third has `cue: 'sealed'`; every Wait step has `act: 'Wait'` and `rest: 2000`, with cues `low` on the first and `off` on the last; the Lid-lift's first step is `{ act: 'Break the seal', hold: 1200, holdCue: 'cracking' }` with no line, and its second has `cue: 'lift'`; each bite's first step has `cue: 'bite'` and each bite ends on a step whose `act` is `'Take a bite'` except the sixth, which ends with the default label; the Glow's last step has `act: false`. Captions: use the examples in design.md §3 and add one per scene where the sound changes. `spices` ids are `elaichi`, `clove`, `cinnamon`, `pepper`, `bayleaf`, `chilli`, `staranise`; weight `1` except `staranise` at `0.15`. `labels`: `title` 'Dum', `intro` (the line under the title), `withSound` 'Start with sound', `quietly` 'Start quietly', `silentHint` 'No sound? Check the silent switch.', `resumeSound` 'Tap to bring the sound back', `again` 'Go again', `method` (the "Made the home way" line), `found` '{n} of 7 found'.
+- [ ] **Step 3: Write `js/data/script.js`.** Transcribe every line from design.md §3 "Script" and the easter-egg table, word for word, into the step format. Structure the steps so that: the Arrival scene has one step with `act: false` (its two start buttons use `labels.withSound` and `labels.quietly`); the Seal scene's second step has `act: 'Press the seal', hold: 1800, holdCue: 'pressing'` and its third has `cue: 'sealed'`; every Wait step has `act: 'Wait'` and `rest: 2000`, with cues `low` on the first and `off` on the last; the Lid-lift's first step is `{ act: 'Break the seal', hold: 1200, holdCue: 'cracking' }` with no line, its second ("The lid lifts…") has `cue: 'lift'`, and its third ("Then saffron…") has `cue: 'look'`; each bite's first step has `cue: 'bite'` and each bite ends on a step whose `act` is `'Take a bite'` except the sixth, which ends with the default label; the Glow's last step has `act: false`. Captions: use the examples in design.md §3 and add one per scene where the sound changes. `spices` ids are `elaichi`, `clove`, `cinnamon`, `pepper`, `bayleaf`, `chilli`, `staranise`; weight `1` except `staranise` at `0.15`. `labels`: `title` 'Dum', `intro` (the line under the title), `withSound` 'Start with sound', `quietly` 'Start quietly', `silentHint` 'No sound? Check the silent switch.', `resumeSound` 'Tap to bring the sound back', `again` 'Go again', `method` (the "Made the home way" line), `found` '{n} of 7 found'.
 - [ ] **Step 4: Write the five modules**, each the smallest thing that passes its tests. `runSteps` order within a step is cue, caption, line, button, as the test fixes.
 - [ ] **Step 5: Run the tests.** Run: `node --test`. Expected: all pass, 0 failures.
 - [ ] **Step 6: Commit:** `feat: runner, hold, prefs, steps, script and egg planner with tests`.
@@ -482,7 +486,8 @@ test('control pairs meet 3:1', () => {
 Behaviour:
 - `say` replaces the text in `#line` (an `aria-live="polite"` region) and resolves when its fade-in ends: about 500 ms, or at once in calm mode.
 - `caption` sets `#cap`; it is visible only while `prefs.get('captions')` is true. `null` empties it.
-- `action` shows `#act` with the label and resolves when it is activated. With `rest`, the button is `disabled` for that long first. With `hold`, pressing fills `#act-ring` using `createHold`; `onProgress` is called every frame with 0 to 1; a tap under 250 ms, Enter or Space completes it on its own; in calm mode any activation completes at once. Without `hold`, a click on `#stage` also activates it. Each activation calls `audio.hit('tap')`.
+- `run(steps, hooks)` empties `#line` before its first step, so a line from the previous scene never sits above a new button.
+- `action` shows `#act` with the label and resolves when it is activated. With `rest`, the button carries `aria-disabled="true"` for that long and ignores presses, and so does the stage-tap shortcut; never use the `disabled` attribute, which would drop keyboard focus. With `hold`, pressing fills `#act-ring` using `createHold`; `onProgress` is called every frame with 0 to 1; a tap under 250 ms, Enter or Space completes it on its own; in calm mode any activation completes at once. Without `hold`, a click on `#stage` also activates it. Each activation calls `audio.hit('tap')`.
 - `card` fills and shows `#card` and hides the narration line and `#act` while it is up: `title` and `text` as headings, `note` as small text, `icons` (an array of spice ids, optional) as a row of `<svg><use href="#t-egg-<id>">` icons, and one button per entry in `choices`. It resolves with the index of the button chosen and hides the card. Used by Arrival and by the end card.
 - `view` sets `data-view` on `#stage` and resolves when the transition ends, with a timeout fallback of the CSS duration plus 100 ms; at once in calm mode.
 - The settings dialog: `#open-settings` opens `#settings` with `showModal()`. The three toggles are bound both ways to `prefs` keys `sound`, `calm` and `captions`. `document.documentElement.dataset.calm` mirrors the calm pref.
@@ -501,9 +506,10 @@ Behaviour:
 - Modify: `js/main.js` (a temporary `?demo=audio` page with one button per voice)
 
 **Interfaces:**
-- Produces: `createAudio()` → `{ unlock() → Promise<boolean>, bed(name, level = 1, fade = 1.5), stop(name, fade = 1.5), hit(name), muffle(amount, seconds = 1.5), pause(), resume() → Promise<boolean> }`.
+- Produces: `createAudio()` → `{ unlock() → Promise<boolean>, mute(on), bed(name, level = 1, fade = 1.5), stop(name, fade = 1.5), hit(name), muffle(amount, seconds = 1.5), pause(), resume() → Promise<boolean> }`.
   - Beds: `rain`, `flame`, `sizzle`, `simmer`, `drone`. Hits: `tap`, `thud`, `crack`, `steam`, `chime`, `spoon`.
-  - Every method is a safe no-op until `unlock()` has resolved `true`. `unlock()` must be called inside a user gesture; it sets `navigator.audioSession.type = 'playback'` when that API exists (in a try/catch), creates one `AudioContext`, and resolves `false` if there is no Web Audio.
+  - No method ever throws, locked or not. `bed`, `stop` and `muffle` are recorded as the wanted state even while locked or muted, and that state is applied when `unlock()` succeeds or `mute(false)` is called. `hit` is dropped while locked or muted. `mute(true)` fades the master to silence in 300 ms and keeps the context.
+  - `unlock()` must be called inside a user gesture; it sets `navigator.audioSession.type = 'playback'` when that API exists (in a try/catch), creates one `AudioContext` (or resumes the existing one), and resolves `false` if there is no Web Audio. Calling it twice is safe.
   - `muffle(1)` closes a lowpass on everything except `rain` to about 600 Hz; `muffle(0)` opens it to 18 kHz with an exponential ramp. `rain` gets a gentler version (down to about 2 kHz).
   - `pause()` fades the master to silence in 200 ms and suspends; `resume()` resumes and fades in, resolving `false` if the context is still not running (the caller then shows `labels.resumeSound`).
 
@@ -549,10 +555,14 @@ Read first: `docs/research/06-visual-effect-techniques.md` §1.2 and the "Day-si
 
 Choreography (each line of script comes from `ctx.script[id]` through `ctx.ui.run`):
 - **arrival:** view `wide`, pot `lidded`, flame `high`, light `normal`. `ui.card({ title: labels.title, text: labels.intro, note: labels.silentHint, choices: [labels.withSound, labels.quietly] })`. On "with sound": `await audio.unlock()`, `prefs.set('sound', true)`, `audio.bed('rain', 0.5)`, `audio.bed('flame', 0.3)`. On "quietly": `prefs.set('captions', true)`.
-- **seal:** view `medium`. The `pressing` hook sets `--seal` on `#kitchen` from progress. The `sealed` hook sets pot `sealed` and calls `audio.hit('thud')`.
-- **wait:** view `wide`, light `dim`, `audio.muffle(1, 3)`, `steam.wisp(true)` from the seal. Hook `low` sets flame `low`; hook `off` sets flame `off` and `audio.stop('flame', 3)`. The pot is never hidden.
-- **reveal:** view `close`. Hook `cracking` drives a small shake-free visual on the seal from progress (opacity of crack marks only). Hook `lift`: pot `cracked`, `audio.hit('crack')`, then after 300 ms pot `lifted`, `audio.muffle(0, 1.5)`, `audio.hit('steam')`, `await steam.plume()`, `audio.hit('chime')`, then view `top` with `#top` showing `pot`.
-- `main.js` handles `visibilitychange`: hidden calls `audio.pause()`; visible calls `audio.resume()` and, if it resolves `false`, shows `labels.resumeSound` as a button that resumes on tap.
+- **seal:** view `medium`, pot `lidded`, flame `high`, light `normal`, `--seal` 0, `audio.muffle(0)`, `audio.bed('rain', 0.5)`, `audio.bed('flame', 0.3)`, `audio.stop('drone')` (this scene is also where a replay starts). The `pressing` hook sets `--seal` on `#kitchen` from progress. The `sealed` hook sets pot `sealed` and calls `audio.hit('thud')`.
+- **wait:** view `wide`, pot `sealed`, light `dim`, `audio.muffle(1, 3)`, `steam.wisp(true)` from the seal. Hook `low` sets flame `low`; hook `off` sets flame `off` and `audio.stop('flame', 3)`. The pot is never hidden.
+- **reveal:** view `close`, pot `sealed`, flame `off`. Hook `cracking` drives the opacity of crack marks on the seal from progress. Hook `lift` must return quickly so its line shows while the steam is up: `steam.wisp(false)`, pot `cracked`, `audio.hit('crack')`, then after 300 ms pot `lifted`, `audio.muffle(0, 1.5)`, `audio.hit('steam')`, and it starts `steam.plume()` without awaiting it, keeping the promise. Hook `look` awaits that promise, then `audio.hit('chime')`, then view `top` with `#top` showing `pot`.
+- `main.js` wiring:
+  - Sound pref: `prefs.subscribe` on `sound` calls `audio.unlock()` then `audio.mute(false)` when it turns on (the toggle click is the gesture) and `audio.mute(true)` when it turns off.
+  - `visibilitychange`: hidden calls `audio.pause()`; visible calls `audio.resume()` and, if it resolves `false` while the sound pref is on, shows `labels.resumeSound` as a button that resumes on tap.
+  - Replay: the last scene's `play` resolves when the viewer chooses to go again. `main.js` then loops `runner.start(<the scene after arrival>)` for ever, except under `auto=1`.
+  - Errors: `error` and `unhandledrejection` listeners set `data-error` on `<html>`.
 
 - [ ] **Step 1:** Write the four scenes and the real `main.js`.
 - [ ] **Step 2:** Serve. Play from the start to the lid-lift in both "with sound" and "quietly", and again with calm mode on. Check: no console errors, nothing advances by itself, the Wait button rests between lines, the settings toggles work mid-scene.
@@ -582,7 +592,7 @@ Art direction: read design.md §4 and look at `js/art/kitchen.js` first; match i
 
 **Files:**
 - Create: `js/scenes/eat.js`, `js/scenes/glow.js`
-- Modify: `js/main.js` (add both to the scene list; "Go again" restarts from `seal`), `css/app.css` (end card)
+- Modify: `js/main.js` (add both to the scene list), `css/app.css` (end card)
 
 **Interfaces:**
 - Consumes: `planEggs`, `spices`, `script.eat`, `labels`, the `#top` states from Task 7.
@@ -590,7 +600,7 @@ Art direction: read design.md §4 and look at `js/art/kitchen.js` first; match i
 
 Choreography:
 - **eat:** view `top`, `#top` showing `plate`. At the start, `plan = planEggs(spices, 6)`. For bite `i`: run `script.eat[i]`; its `bite` hook sets `data-eaten` to `i + 1` and calls `audio.hit('spoon')`. After bite `i`, if `plan[i]` names a spice: set `data-egg`, run that spice's `say` lines as steps, add the id to `prefs` `spices` if new, then clear `data-egg`.
-- **glow:** view `wide`, pot `lifted`, light `warm`, `audio.bed('drone', 0.4, 4)`, `audio.bed('rain', 0.2, 6)`. Run `script.glow`, then `ui.card({ title: labels.title, text: labels.method, icons: prefs.get('spices'), note: labels.found with {n} filled in, choices: [labels.again] })`; when it resolves, stop the drone and restart the runner from `seal`.
+- **glow:** view `wide`, pot `lifted`, light `warm`, `audio.bed('drone', 0.4, 4)`, `audio.bed('rain', 0.2, 6)`. Run `script.glow`, then `ui.card({ title: labels.title, text: labels.method, icons: prefs.get('spices'), note: labels.found with {n} filled in, choices: [labels.again] })`; when it resolves, `play` resolves, and `main.js` starts the next round (Task 6 wiring).
 
 - [ ] **Step 1:** Write both scenes and the end card.
 - [ ] **Step 2:** Serve and play the whole core from Arrival to the end card and round again. Check: six bites, one or two eggs, found spices persist across a reload, "Go again" works twice running, no console errors, calm mode works throughout.
