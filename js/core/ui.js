@@ -85,6 +85,8 @@ export function createUI({ prefs, audio }) {
 
       label.textContent = text;
       act.hidden = false;
+      const a = document.activeElement;
+      if (!a || a === document.body || a === act) act.focus({ preventScroll: true });
       act.removeAttribute('data-hold');
       act.style.removeProperty('--p');
       let restTimer = 0;
@@ -117,7 +119,6 @@ export function createUI({ prefs, audio }) {
         if (resting || down) return;
         if (calm()) return finish(true);
         down = true;
-        h = h ?? createHold({ ms: hold });
         h.press(performance.now());
         if (!raf) raf = requestAnimationFrame(frame);
       };
@@ -171,6 +172,8 @@ export function createUI({ prefs, audio }) {
         b.addEventListener('click', () => pick(i));
         choiceBox.append(b);
       });
+      const a = document.activeElement;
+      if (!a || a === document.body) choiceBox.firstElementChild?.focus({ preventScroll: true });
       if (auto) setTimeout(() => pick(choices.length - 1), 50);
     });
   }
