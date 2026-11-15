@@ -35,16 +35,16 @@ const filt = (ctx, type, frequency, Q = 0.7) => new BiquadFilterNode(ctx, { type
 const pan = (ctx, p) => new StereoPannerNode(ctx, { pan: p });
 
 // Short enveloped noise burst through one filter.
-function tick(ctx, noise, out, { t = ctx.currentTime, type = 'bandpass', freq, q = 1, len = 0.01, peak = 0.5, p }) {
+function tick(ctx, noise, out, { t = ctx.currentTime, type = 'bandpass', freq, q = 1, len = 0.01, peak = 0.5, p, done }) {
   const s = new AudioBufferSourceNode(ctx, { buffer: noise });
   const e = new GainNode(ctx, { gain: 0 });
   e.gain.setValueAtTime(0, t);
   e.gain.linearRampToValueAtTime(peak, t + 0.002);
   e.gain.exponentialRampToValueAtTime(0.001, t + 0.002 + len);
-  const f = s.connect(filt(ctx, type, freq, q)).connect(e);
+  s.connect(filt(ctx, type, freq, q)).connect(e);
   (p === undefined ? e : e.connect(pan(ctx, p))).connect(out);
   s.start(t, rnd(0, noise.duration - 0.2), len + 0.02);
-  return f;
+  if (done) s.onended = done;
 }
 
 // Short decaying oscillator with an exponential pitch glide f -> to.
@@ -78,7 +78,7 @@ function voiceKit(ctx, noise) {
     poisson(rate, fn) {
       (function next() {
         if (!alive) return;
-        fn();
+        if (ctx.state === 'running') fn(); // a suspended clock would pile every voice onto one instant
         setTimeout(next, (-Math.log(1 - Math.random()) / rate()) * 1000);
       })();
     },
@@ -119,9 +119,7 @@ function sizzle(ctx, noise, out) {
   k.poisson(() => 45, () => {
     if (live >= 8) return;
     live++;
-    const f = tick(ctx, noise, out, { freq: rnd(2000, 9000), q: rnd(1, 4), len: rnd(0.002, 0.008), peak: 0.1 + Math.random() * Math.random() * 0.9, p: rnd(-0.5, 0.5) });
-    setTimeout(() => { live--; }, 30);
-    return f;
+    tick(ctx, noise, out, { freq: rnd(2000, 9000), q: rnd(1, 4), len: rnd(0.002, 0.008), peak: 0.1 + Math.random() * Math.random() * 0.9, p: rnd(-0.5, 0.5), done: () => { live--; } });
   });
   k.poisson(() => 1, () => { // rarer, louder pops
     const t = ctx.currentTime + 0.02;
@@ -204,19 +202,23 @@ export function createAudio() {
   const want = { beds: {}, muffle: 0, seconds: 1.5, muted: false };
   const live = {}; // name -> { gain, voice }
 
+  // Build into locals and assign only on success, so a failure leaves the engine locked.
   function build(AC) {
-    ctx = new AC({ latencyHint: 'interactive' });
-    master = new GainNode(ctx, { gain: want.muted ? 0 : 1 });
-    const limiter = new DynamicsCompressorNode(ctx, { threshold: -10, ratio: 8, attack: 0.003, release: 0.15, knee: 6 });
-    master.connect(limiter).connect(ctx.destination);
-    room = [filt(ctx, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5), filt(ctx, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5)];
-    dry = new GainNode(ctx);
-    dry.connect(room[0]).connect(room[1]).connect(master);
-    rainLp = filt(ctx, 'lowpass', cutoff(OPEN, RAIN_CLOSED, want.muffle), 0.5);
-    rainLp.connect(master);
-    verb = new GainNode(ctx, { gain: 0.25 }); // send level; the return goes through the dry bus
-    verb.connect(new ConvolverNode(ctx, { buffer: makeIR(ctx) })).connect(dry);
-    noise = makeNoise(ctx);
+    const c = new AC({ latencyHint: 'interactive' });
+    try {
+      const m = new GainNode(c, { gain: want.muted ? 0 : 1 });
+      const limiter = new DynamicsCompressorNode(c, { threshold: -3, ratio: 20, attack: 0.003, release: 0.15, knee: 0 });
+      m.connect(limiter).connect(c.destination);
+      const r = [filt(c, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5), filt(c, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5)];
+      const d = new GainNode(c);
+      d.connect(r[0]).connect(r[1]).connect(m);
+      const rl = filt(c, 'lowpass', cutoff(OPEN, RAIN_CLOSED, want.muffle), 0.5);
+      rl.connect(m);
+      const v = new GainNode(c, { gain: 0.25 }); // send level; the return goes through the dry bus
+      v.connect(new ConvolverNode(c, { buffer: makeIR(c) })).connect(d);
+      const n = makeNoise(c);
+      ctx = c; master = m; room = r; dry = d; rainLp = rl; verb = v; noise = n;
+    } catch (e) { c.close?.().catch(() => {}); throw e; }
   }
 
   function applyMuffle(seconds) {
@@ -246,6 +248,14 @@ export function createAudio() {
     }
   }
 
+  // Shared by unlock() on an existing context and resume(). Never leaves a promise pending.
+  async function wake() {
+    paused = false;
+    await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 600))]);
+    ramp(master.gain, want.muted ? 0 : 1, 0.3, ctx.currentTime);
+    return ctx.state === 'running';
+  }
+
   const applyAll = () => { for (const n of BEDS) applyBed(n); };
   const safe = (fn, fallback) => (...a) => { try { return fn(...a); } catch { return fallback; } };
 
@@ -258,10 +268,9 @@ export function createAudio() {
           if (!AC) return false;
           build(AC);
         }
-        paused = false;
-        await ctx.resume();
+        const ok = await wake();
         applyAll();
-        return ctx.state === 'running';
+        return ok;
       } catch { return false; }
     },
     mute: safe((on) => {
@@ -300,10 +309,7 @@ export function createAudio() {
     async resume() {
       try {
         if (!ctx) return false;
-        paused = false;
-        await ctx.resume();
-        ramp(master.gain, want.muted ? 0 : 1, 0.3, ctx.currentTime);
-        return ctx.state === 'running';
+        return await wake();
       } catch { return false; }
     },
   };
