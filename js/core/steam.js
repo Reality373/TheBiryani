@@ -53,6 +53,7 @@ export function createSteam(canvas, prefs) {
   const EMIT_MS = 1100; // the plume keeps billowing out for this long
   let pending = null; // { resolve, deadline }
   let resizeRaf = 0;
+  let calmGen = 0, calmCancel = null, calmUp = false; // calm plume sequence: token, wake-up for its wait, still on screen
 
   const auto = new URLSearchParams(location.search).has('auto');
 
@@ -79,7 +80,7 @@ export function createSteam(canvas, prefs) {
     parts.push({ kind: 'w', x, y, born: t, life: rnd(2500, 3500), rise: rnd(0.09, 0.13) * H / 1000,
       sway: rnd(0.012, 0.022) * W, phase: rnd(0, TAU), freq: rnd(1.2, 2), s0: rnd(0.05, 0.08) * W, grow: rnd(1.8, 2.6), peak: 0.22 });
   }
-  // Camera zoom of the stage right now. Sizes and rises are authored in screen terms and divided by
+  // Camera zoom of the stage right now (a snapshot: start a plume when the camera is settled). Sizes and rises are authored in screen terms and divided by
   // it, so the steam looks the same size whether the camera is wide or close. Where it starts is not.
   function zoomOf() {
     try { return new DOMMatrixReadOnly(getComputedStyle(canvas.parentElement).transform).a || 1; } catch { return 1; }
@@ -188,8 +189,19 @@ export function createSteam(canvas, prefs) {
   }
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const calmWait = (ms) => new Promise((r) => {
+    const t = setTimeout(r, ms);
+    calmCancel = () => { clearTimeout(t); r(); };
+  });
+  // Interrupt any calm plume: its waits end now, its promise resolves, the canvas is left visible.
+  function endCalm() {
+    calmGen++; calmUp = false;
+    if (calmCancel) { const c = calmCancel; calmCancel = null; c(); }
+    canvas.style.transition = ''; canvas.style.opacity = '';
+  }
 
   function clear() {
+    endCalm();
     wisping = false; plumeStart = -1; parts = [];
     cancelAnimationFrame(raf); raf = 0;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -200,28 +212,41 @@ export function createSteam(canvas, prefs) {
   return {
     wisp(on) {
       if (auto) return;
-      if (calm()) { if (on) stillPuff(); else ctx.clearRect(0, 0, W, H); return; }
+      if (on) resize();
       wisping = !!on;
+      if (calm()) {
+        wisping = false; // no loop in calm mode, even if one was running when calm turned on
+        if (on) stillPuff(); else if (!calmUp) ctx.clearRect(0, 0, W, H);
+        return;
+      }
       if (on) { nextWisp = now; kick(); }
+      else if (!parts.length && plumeStart < 0 && !calmUp) ctx.clearRect(0, 0, W, H);
     },
     async plume() {
       if (auto) return wait(50);
       if (calm()) {
-        stillPlume();
-        await wait(1200);
+        endCalm();
+        const g = calmGen;
+        resize();
+        stillPlume(); calmUp = true;
+        await calmWait(1200);
+        if (g !== calmGen) return;
         canvas.style.transition = 'opacity 600ms ease';
         canvas.style.opacity = '0';
-        await wait(600);
+        await calmWait(600);
+        if (g !== calmGen) return;
         ctx.clearRect(0, 0, W, H);
-        canvas.style.transition = 'none';
-        canvas.style.opacity = '';
+        calmUp = false;
+        canvas.style.transition = ''; canvas.style.opacity = '';
         return;
       }
+      endCalm();
+      resize();
       if (pending) pending.resolve();
       return new Promise((resolve) => {
         plumeN = Math.round(rnd(52, 60)); plumeEmitted = 0; plumeZ = zoomOf();
         plumeStart = now; plumeEnd = now + EMIT_MS;
-        pending = { resolve, deadline: now + 3600 };
+        pending = { resolve, deadline: now + 2800 };
         kick();
       });
     },
