@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Phone-size frame</title>
+<!-- Headless Chrome will not open a window narrower than 500 px, so tools/shot.sh loads the page
+     in an iframe of the exact size instead. Query: w, h, u (the path and query to load). -->
+<style>html, body { margin: 0; background: #000; } iframe { display: block; border: 0; }</style>
+<body>
+<script>
+  const q = new URLSearchParams(location.search);
+  const frame = document.createElement('iframe');
+  frame.width = q.get('w') || 390;
+  frame.height = q.get('h') || 844;
+  frame.src = q.get('u') || '/';
+  document.body.append(frame);
+</script>

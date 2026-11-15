@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dum</title>
+  <meta name="description" content="A small, slow story about Hyderabadi dum biryani.">
+  <meta name="theme-color" content="#141A2E">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <main class="frame">
+    <!-- The art. js/main.js puts the two <svg> views in front of the canvas. -->
+    <div id="stage" data-view="wide">
+      <canvas id="steam" aria-hidden="true" data-x="0.5" data-y="0.47"></canvas>
+    </div>
+
+    <!-- Words and the one button. Kept outside the stage so they stay sharp when it zooms. -->
+    <div class="text">
+      <p id="cap"></p>
+      <p id="line" aria-live="polite"></p>
+      <button id="act" type="button" hidden>
+        <span id="act-label"></span>
+        <span id="act-ring" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- Title card at the start, end card at the end. -->
+    <section id="card" hidden>
+      <h1 id="card-title"></h1>
+      <p id="card-text"></p>
+      <div id="card-icons"></div>
+      <p id="card-note"></p>
+      <div id="card-choices"></div>
+    </section>
+
+    <button id="open-settings" type="button" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>
+      </svg>
+    </button>
+
+    <dialog id="settings" aria-labelledby="settings-title">
+      <h2 id="settings-title">Settings</h2>
+      <label class="switch"><span>Sound</span><input id="set-sound" type="checkbox" role="switch"></label>
+      <label class="switch"><span>Sound captions</span><input id="set-caps" type="checkbox" role="switch"></label>
+      <label class="switch"><span>Calm mode<small>Less movement, and taps instead of holds.</small></span><input id="set-calm" type="checkbox" role="switch"></label>
+      <form method="dialog"><button type="submit">Done</button></form>
+    </dialog>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

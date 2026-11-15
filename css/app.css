@@ -1,0 +1,397 @@
+/* Fonts: SIL Open Font Licence, loaded from a CDN with system fallbacks. */
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/files/fraunces-latin-soft-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Literata Variable';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/literata@5/files/literata-latin-wght-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Literata Variable';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/literata@5/files/literata-latin-wght-italic.woff2') format('woff2');
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--rice);
+}
+
+body {
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 3px solid var(--rice);
+  outline-offset: 3px;
+}
+
+/* ---------- frame and stage ---------- */
+
+/* A phone-shaped column: full width on a phone, centred on anything wider. svh, never dvh. */
+.frame {
+  position: relative;
+  height: 100svh;
+  width: min(100vw, 60svh);
+  margin-inline: auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* The camera. Origin sits on the pot. No will-change: the art must re-sharpen after a zoom. */
+#stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 53.75%;
+  transition: transform var(--t-view) var(--ease), opacity 300ms ease;
+}
+#stage[data-view='medium'] { transform: scale(1.5); }
+#stage[data-view='close'] { transform: translateY(12%) scale(2.2); }
+
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: opacity 700ms ease;
+}
+#top { opacity: 0; }
+#stage[data-view='top'] #top { opacity: 1; }
+#stage[data-view='top'] #kitchen { opacity: 0; }
+
+#steam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- kitchen states ---------- */
+
+.rain-a { animation: rain 0.85s linear infinite; }
+.rain-b { animation: rain 1.5s linear infinite; }
+@keyframes rain { to { transform: translateY(188px); } }
+
+#k-glow, #k-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: opacity var(--t-state) ease, transform var(--t-state) var(--ease);
+}
+#k-glow .flick, #k-flame .flick {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+#k-glow .flick { animation: glow 3.1s ease-in-out infinite; }
+#k-flame .flick { animation: flame 1.9s ease-in-out infinite; }
+@keyframes glow {
+  0%, 100% { opacity: 1; }
+  38% { opacity: 0.86; }
+  61% { opacity: 0.95; }
+  79% { opacity: 0.82; }
+}
+@keyframes flame {
+  0%, 100% { transform: scale(1, 1); }
+  30% { transform: scale(0.97, 1.08); }
+  58% { transform: scale(1.02, 0.93); }
+  82% { transform: scale(0.98, 1.04); }
+}
+#kitchen[data-flame='low'] #k-flame { transform: scale(0.82, 0.42); }
+#kitchen[data-flame='low'] #k-glow { opacity: 0.45; }
+#kitchen[data-flame='off'] #k-flame { transform: scale(0.6, 0.05); opacity: 0; }
+#kitchen[data-flame='off'] #k-glow { opacity: 0.1; }
+
+/* The dough is drawn in by --seal (0 to 1) while the viewer presses it. */
+#kitchen .dough {
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--seal, 0));
+  transition: opacity 500ms ease;
+}
+#kitchen:is([data-pot='sealed'], [data-pot='cracked']) .dough { stroke-dashoffset: 0; }
+#k-dents, #k-cracks { transition: opacity 500ms ease; }
+#k-dents { opacity: 0; }
+#kitchen:is([data-pot='sealed'], [data-pot='cracked']) #k-dents { opacity: 1; }
+#k-cracks { opacity: var(--crack, 0); }
+#kitchen[data-pot='cracked'] #k-cracks { opacity: 1; }
+#kitchen[data-pot='lifted'] :is(.dough, #k-dents, #k-cracks) { opacity: 0; }
+
+#k-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 1400ms var(--ease), opacity 800ms ease 600ms;
+}
+#kitchen[data-pot='lifted'] #k-lid {
+  transform: translate(-30px, -150px) rotate(-16deg);
+  opacity: 0;
+}
+#k-rice { opacity: 0; transition: opacity 500ms ease 300ms; }
+#kitchen[data-pot='lifted'] #k-rice { opacity: 1; }
+
+#k-dim, #k-warm { opacity: 0; transition: opacity 2400ms ease; }
+#kitchen[data-light='dim'] #k-dim { opacity: 0.52; }
+#kitchen[data-light='warm'] #k-warm { opacity: 0.1; }
+#kitchen[data-light='warm'] #k-glow { opacity: 0.9; }
+
+/* ---------- words and the button ---------- */
+
+.text {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem max(1.5rem, env(safe-area-inset-bottom));
+  text-align: center;
+  isolation: isolate; /* keeps the scrim's z-index: -1 above the stage */
+}
+/* A scrim, so text never sits on moving art. */
+.text::before {
+  content: '';
+  position: absolute;
+  inset: -7rem 0 0 0;
+  z-index: -1;
+  background: linear-gradient(to top, var(--night) 0, var(--night) 58%, transparent 100%);
+  opacity: 0.94;
+  pointer-events: none;
+}
+
+#cap {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: var(--text-cap);
+  font-style: italic;
+  letter-spacing: 0.01em;
+  opacity: 0.8;
+}
+
+#line {
+  display: grid;
+  align-items: end;
+  margin: 0;
+  min-height: 4.2em;
+  max-width: 21em;
+  font-size: var(--text-line);
+  line-height: 1.38;
+  text-wrap: balance;
+}
+#line.is-in { animation: line-in var(--t-line) var(--ease) both; }
+@keyframes line-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The one button. --p (0 to 1) fills its bar during a hold. */
+#act, #card-choices button {
+  position: relative;
+  min-width: 12.5rem;
+  height: var(--tap);
+  padding: 0 1.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--saffron);
+  color: var(--iron);
+  font-weight: 650;
+  font-size: 1.0625rem;
+  letter-spacing: 0.01em;
+  transition: opacity 300ms ease, transform 120ms ease;
+}
+#act { touch-action: none; }
+#act:active, #card-choices button:active { transform: scale(0.97); }
+#act[aria-disabled='true'] { opacity: 0.38; cursor: default; }
+#act[aria-disabled='true']:active { transform: none; }
+
+#act-ring, #act[data-hold]::after {
+  position: absolute;
+  inset: auto 1.5rem 0.55rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--iron);
+}
+#act-ring {
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+  opacity: 0;
+}
+#act[data-hold] #act-ring { opacity: 0.9; }
+#act[data-hold]::after { content: ''; opacity: 0.22; }
+
+/* ---------- title card and end card ---------- */
+
+#card {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  isolation: isolate;
+}
+#card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--night);
+  opacity: 0.84;
+}
+#card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 800;
+  font-variation-settings: 'SOFT' 100;
+  line-height: 0.85;
+  letter-spacing: -0.035em;
+  color: var(--saffron);
+}
+#card-text {
+  margin: 0;
+  max-width: 19em;
+  font-size: 1.125rem;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+#card-note {
+  margin: 0;
+  font-size: var(--text-cap);
+  font-style: italic;
+  opacity: 0.8;
+}
+#card-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+#card-icons svg { width: 44px; height: 44px; }
+#card-icons:empty, #card-note:empty, #card-text:empty { display: none; }
+#card-choices { display: grid; gap: 0.75rem; margin-top: 0.5rem; }
+#card-choices button + button {
+  background: transparent;
+  color: var(--rice);
+  box-shadow: inset 0 0 0 2px var(--rice);
+}
+
+/* ---------- settings ---------- */
+
+#open-settings {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--night);
+  color: var(--rice);
+}
+
+#settings {
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 0;
+  border-radius: 1.25rem;
+  background: var(--iron);
+  color: var(--rice);
+}
+#settings::backdrop { background: var(--night); opacity: 0.7; }
+#settings h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 1.5rem;
+}
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.25rem;
+}
+.switch small { display: block; font-size: 0.8125rem; opacity: 0.75; }
+.switch input {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 3.25rem;
+  height: 2rem;
+  margin: 0;
+  border-radius: 2rem;
+  background: var(--indigo);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+.switch input::after {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--rice);
+  transition: transform 200ms var(--ease);
+}
+.switch input:checked { background: var(--saffron); }
+.switch input:checked::after { transform: translateX(1.25rem); background: var(--iron); }
+#settings form { margin-top: 1rem; text-align: right; }
+#settings form button {
+  height: 2.75rem;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rice);
+  color: var(--iron);
+  font-weight: 650;
+}
+
+/* ---------- short landscape windows: art on the left, words on the right (WCAG 1.3.4) ---------- */
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .frame { width: 100vw; }
+  #stage { right: 50%; transform-origin: 50% 61%; }
+  .text {
+    inset: 0 0 0 50%;
+    align-content: center;
+    padding: 1rem 1.5rem;
+  }
+  .text::before { display: none; }
+  #line { min-height: 0; font-size: 1.25rem; }
+  #card { inset: 0 0 0 50%; }
+  #card::before { display: none; }
+  #card-title { font-size: 5rem; }
+}
+
+/* ---------- calm mode: same story, no camera moves, no ambient motion ---------- */
+
+:root[data-calm='true'] #stage { transition: opacity 300ms ease; }
+:root[data-calm='true'] :is(.rain-a, .rain-b, .flick) { animation: none; }
+:root[data-calm='true'] #k-lid { transition: opacity 600ms ease; }
+:root[data-calm='true'] #line.is-in { animation: none; }
+:root[data-calm='true'] :is(#act, #card-choices button):active { transform: none; }
