@@ -2,6 +2,7 @@ import { kitchenSVG } from './art/kitchen.js';
 import { topdownSVG } from './art/topdown.js';
 import { createAudio } from './core/audio.js';
 import { createPrefs } from './core/prefs.js';
+import { createSteam } from './core/steam.js';
 import { createUI } from './core/ui.js';
 import { labels } from './data/script.js';
 
@@ -72,4 +73,20 @@ if (q.get('demo') === 'audio') { // temporary, deleted in Task 6
   r.oninput = () => audio.muffle(Number(r.value));
   box.append('muffle ', r);
   document.body.append(box);
+}
+if (q.get('demo') === 'steam') { // temporary, deleted in Task 6
+  if (q.has('calmpref')) prefs.set('calm', true);
+  stage.dataset.view = 'close';
+  kitchen.dataset.pot = 'lifted';
+  kitchen.dataset.flame = 'off';
+  const steam = createSteam(document.getElementById('steam'), prefs);
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 99; background: #fff; padding: 6px; font: 14px sans-serif';
+  const btn = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = fn; bar.append(b, ' '); };
+  btn('wisp on', () => steam.wisp(true));
+  btn('wisp off', () => steam.wisp(false));
+  btn('plume', () => steam.plume());
+  document.body.append(bar);
+  if (q.get('run') === 'plume') steam.plume();
+  if (q.get('run') === 'wisp') steam.wisp(true);
 }
