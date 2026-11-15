@@ -10,6 +10,8 @@ import arrival from './scenes/arrival.js';
 import seal from './scenes/seal.js';
 import wait from './scenes/wait.js';
 import reveal from './scenes/reveal.js';
+import eat from './scenes/eat.js';
+import glow from './scenes/glow.js';
 
 const fail = (msg) => { document.documentElement.dataset.error = String(msg); };
 window.addEventListener('error', (e) => fail(e.message));
@@ -80,13 +82,13 @@ if (dev) {
 
 // ---- the run ----
 const ctx = { ui, audio, steam, prefs, script, spices, kitchen, top };
-const modules = { arrival, seal, wait, reveal };
+const modules = { arrival, seal, wait, reveal, eat, glow };
 const scenes = SCENES.filter((id) => modules[id]).map((id) => modules[id]);
 const runner = createRunner(scenes, ctx);
 const last = scenes[scenes.length - 1].id;
 if (!dev) (async () => {
   await runner.start(q.get('from') ?? undefined);
   document.documentElement.dataset.done = '1';
-  // Round loop: Task 8 adds glow, after which the piece goes round again.
+  // Round loop: after glow the piece goes round again.
   while (last === 'glow' && !q.has('auto')) await runner.start(scenes[1].id);
 })();
