@@ -2,9 +2,14 @@ import { kitchenSVG } from './art/kitchen.js';
 import { topdownSVG } from './art/topdown.js';
 import { createAudio } from './core/audio.js';
 import { createPrefs } from './core/prefs.js';
+import { createRunner } from './core/runner.js';
 import { createSteam } from './core/steam.js';
 import { createUI } from './core/ui.js';
-import { labels } from './data/script.js';
+import { labels, script, spices, SCENES } from './data/script.js';
+import arrival from './scenes/arrival.js';
+import seal from './scenes/seal.js';
+import wait from './scenes/wait.js';
+import reveal from './scenes/reveal.js';
 
 const fail = (msg) => { document.documentElement.dataset.error = String(msg); };
 window.addEventListener('error', (e) => fail(e.message));
@@ -16,77 +21,70 @@ try { storage = window.localStorage; storage.getItem('dum:probe'); } catch {
   storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
 }
 const prefs = createPrefs(storage, { reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
-const ui = createUI({ prefs, audio: { hit() {} } }); // real audio arrives in a later task
+const audio = createAudio();
+const steam = createSteam(document.getElementById('steam'), prefs);
+const ui = createUI({ prefs, audio });
 
 const stage = document.getElementById('stage');
 stage.insertAdjacentHTML('afterbegin', kitchenSVG + topdownSVG);
 const kitchen = document.getElementById('kitchen');
-
-// Query-string state switcher, so any state can be screenshotted, e.g.
-// /?view=medium&pot=sealed&flame=low&light=dim&line=Hello&act=Go+on
+const top = document.getElementById('top');
 const q = new URLSearchParams(location.search);
-if (q.has('view')) stage.dataset.view = q.get('view');
-for (const key of ['pot', 'flame', 'light']) if (q.has(key)) kitchen.dataset[key] = q.get(key);
-for (const key of ['seal', 'crack']) if (q.has(key)) kitchen.style.setProperty(`--${key}`, q.get(key));
-if (q.has('calm')) document.documentElement.dataset.calm = 'true';
-if (q.has('cap')) { ui.caption(q.get('cap')); document.getElementById('cap').hidden = false; }
-if (q.has('line')) document.getElementById('line').textContent = q.get('line');
-if (q.has('settings')) document.getElementById('settings').showModal();
-if (q.has('act')) {
-  const act = document.getElementById('act');
-  act.hidden = false;
-  document.getElementById('act-label').textContent = q.get('act');
-  if (q.has('p')) { act.dataset.hold = ''; act.style.setProperty('--p', q.get('p')); }
+
+prefs.subscribe((key, value) => {
+  if (key !== 'sound') return;
+  if (value) audio.unlock().then(() => audio.mute(false)).catch(() => {});
+  else audio.mute(true);
+});
+
+let resumeBtn;
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden) return void audio.pause();
+  if (await audio.resume() || !prefs.get('sound') || q.has('auto') || resumeBtn) return;
+  resumeBtn = document.createElement('button');
+  resumeBtn.type = 'button';
+  resumeBtn.textContent = labels.resumeSound;
+  resumeBtn.style.cssText = 'position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50; min-height: 44px; padding: 0 16px';
+  resumeBtn.addEventListener('click', async () => {
+    if (await audio.resume()) { resumeBtn.remove(); resumeBtn = null; }
+  });
+  document.body.append(resumeBtn);
+});
+
+// ---- developer switches for screenshots ----
+// Only without auto/from, so they cannot interfere with a real run. e.g.
+// /?view=medium&pot=sealed&flame=low&light=dim&line=Hello&act=Go+on
+// Using one also stops the scenes from starting, so the forced state stays on screen.
+const DEV = ['view', 'pot', 'flame', 'light', 'seal', 'crack', 'calm', 'cap', 'line', 'settings', 'act', 'card'];
+const dev = !q.has('auto') && !q.has('from') && DEV.some((k) => q.has(k));
+if (dev) {
+  if (q.has('view')) stage.dataset.view = q.get('view');
+  for (const key of ['pot', 'flame', 'light']) if (q.has(key)) kitchen.dataset[key] = q.get(key);
+  for (const key of ['seal', 'crack']) if (q.has(key)) kitchen.style.setProperty(`--${key}`, q.get(key));
+  if (q.has('calm')) document.documentElement.dataset.calm = 'true';
+  if (q.has('cap')) { ui.caption(q.get('cap')); document.getElementById('cap').hidden = false; }
+  if (q.has('line')) document.getElementById('line').textContent = q.get('line');
+  if (q.has('settings')) document.getElementById('settings').showModal();
+  if (q.has('act')) {
+    const act = document.getElementById('act');
+    act.hidden = false;
+    document.getElementById('act-label').textContent = q.get('act');
+    if (q.has('p')) { act.dataset.hold = ''; act.style.setProperty('--p', q.get('p')); }
+  }
+  if (q.has('card')) {
+    ui.card({ title: labels.title, text: labels.intro, note: labels.silentHint, choices: [labels.withSound, labels.quietly] });
+  }
 }
-if (q.has('card')) {
-  ui.card({ title: labels.title, text: labels.intro, note: labels.silentHint, choices: [labels.withSound, labels.quietly] });
-}
-if (q.get('demo') === 'ui') { // temporary, deleted in Task 6
-  (async () => {
-    await ui.run([
-      { say: 'A line, then a plain button.' },
-      { say: 'Now a hold button.', act: 'Hold me', hold: 900, holdCue: 'ring' },
-      { say: 'Now a rested button.', act: 'Wait for it', rest: 1200 },
-    ], { ring() {} });
-    await ui.view('medium');
-    await ui.card({ title: 'Done', text: 'Demo card.', choices: ['One', 'Two'] });
-    document.documentElement.dataset.done = '1';
-  })();
-}
-if (q.get('demo') === 'audio') { // temporary, deleted in Task 6
-  const AC = window.AudioContext; // capture the context so the check script can read its state
-  if (AC) window.AudioContext = class extends AC { constructor(...a) { super(...a); window.__ctx = this; } };
-  const audio = createAudio();
-  window.__audioDemo = { audio, state: () => window.__ctx?.state ?? 'none' };
-  const box = document.createElement('div');
-  box.style.cssText = 'position: fixed; inset: auto 0 0 0; z-index: 99; background: #fff; color: #000; padding: 6px; font: 14px sans-serif; max-height: 50vh; overflow: auto';
-  const btn = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = fn; box.append(b, ' '); };
-  btn('unlock', () => audio.unlock());
-  btn('mute on', () => audio.mute(true));
-  btn('mute off', () => audio.mute(false));
-  btn('pause', () => audio.pause());
-  btn('resume', () => audio.resume());
-  for (const n of ['rain', 'flame', 'sizzle', 'simmer', 'drone']) { btn(`${n} start`, () => audio.bed(n, 1)); btn(`${n} stop`, () => audio.stop(n)); }
-  for (const n of ['tap', 'thud', 'crack', 'steam', 'chime', 'spoon']) btn(n, () => audio.hit(n));
-  const r = document.createElement('input');
-  r.type = 'range'; r.min = 0; r.max = 1; r.step = 0.01; r.value = 0;
-  r.oninput = () => audio.muffle(Number(r.value));
-  box.append('muffle ', r);
-  document.body.append(box);
-}
-if (q.get('demo') === 'steam') { // temporary, deleted in Task 6
-  if (q.has('calmpref')) prefs.set('calm', true);
-  stage.dataset.view = 'close';
-  kitchen.dataset.pot = 'lifted';
-  kitchen.dataset.flame = 'off';
-  const steam = createSteam(document.getElementById('steam'), prefs);
-  const bar = document.createElement('div');
-  bar.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 99; background: #fff; padding: 6px; font: 14px sans-serif';
-  const btn = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = fn; bar.append(b, ' '); };
-  btn('wisp on', () => steam.wisp(true));
-  btn('wisp off', () => steam.wisp(false));
-  btn('plume', () => steam.plume());
-  document.body.append(bar);
-  if (q.get('run') === 'plume') steam.plume();
-  if (q.get('run') === 'wisp') steam.wisp(true);
-}
+
+// ---- the run ----
+const ctx = { ui, audio, steam, prefs, script, spices, kitchen, top };
+const modules = { arrival, seal, wait, reveal };
+const scenes = SCENES.filter((id) => modules[id]).map((id) => modules[id]);
+const runner = createRunner(scenes, ctx);
+const last = scenes[scenes.length - 1].id;
+if (!dev) (async () => {
+  await runner.start(q.get('from') ?? undefined);
+  document.documentElement.dataset.done = '1';
+  // Round loop: Task 8 adds glow, after which the piece goes round again.
+  while (last === 'glow' && !q.has('auto')) await runner.start(scenes[1].id);
+})();
