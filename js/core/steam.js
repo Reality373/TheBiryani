@@ -49,7 +49,8 @@ export function createSteam(canvas, prefs) {
   let W = 1, H = 1;
   let raf = 0, last = 0, now = 0;
   let wisping = false, nextWisp = 0;
-  let plumeStart = -1, plumeEnd = 0, plumeEmitted = 0, plumeN = 0;
+  let plumeStart = -1, plumeEnd = 0, plumeEmitted = 0, plumeN = 0, plumeZ = 1;
+  const EMIT_MS = 1100; // the plume keeps billowing out for this long
   let pending = null; // { resolve, deadline }
   let resizeRaf = 0;
 
@@ -78,10 +79,18 @@ export function createSteam(canvas, prefs) {
     parts.push({ kind: 'w', x, y, born: t, life: rnd(2500, 3500), rise: rnd(0.09, 0.13) * H / 1000,
       sway: rnd(0.012, 0.022) * W, phase: rnd(0, TAU), freq: rnd(1.2, 2), s0: rnd(0.05, 0.08) * W, grow: rnd(1.8, 2.6), peak: 0.22 });
   }
-  function spawnPlume(t, i) {
+  // Camera zoom of the stage right now. Sizes and rises are authored in screen terms and divided by
+  // it, so the steam looks the same size whether the camera is wide or close. Where it starts is not.
+  function zoomOf() {
+    try { return new DOMMatrixReadOnly(getComputedStyle(canvas.parentElement).transform).a || 1; } catch { return 1; }
+  }
+  // Rises from across the pot's mouth (about 0.38 of the stage width), not from one point.
+  function spawnPlume(t) {
     const [x, y] = origin();
-    parts.push({ kind: 'p', x: x + rnd(-0.05, 0.05) * W, y: y + rnd(-0.01, 0.01) * H, born: t, life: rnd(1600, 2400), rise: rnd(0.24, 0.38) * H, drift: rnd(-0.1, 0.1) * W,
-      curl: rnd(-1, 1) * 0.03 * W, phase: rnd(0, TAU), s0: rnd(0.06, 0.1) * W, grow: rnd(3, 5), peak: rnd(0.045, 0.08) });
+    const z = plumeZ;
+    parts.push({ kind: 'p', x: x + rnd(-0.17, 0.17) * W, y: y + rnd(-0.012, 0.012) * H, born: t, life: rnd(2400, 3600),
+      rise: rnd(0.2, 0.42) * H / z, drift: rnd(-0.14, 0.14) * W / z, curl: rnd(-1, 1) * 0.04 * W / z, phase: rnd(0, TAU),
+      s0: rnd(0.08, 0.12) * W / z, grow: rnd(2.8, 4.4), peak: rnd(0.1, 0.16) });
   }
 
   // position and alpha of a particle at age a (ms)
@@ -92,8 +101,8 @@ export function createSteam(canvas, prefs) {
       return [p.x + Math.sin(p.phase + s * p.freq) * p.sway * Math.min(1, s), p.y - p.rise * a,
         p.s0 * (1 + (p.grow - 1) * u), p.peak * Math.sin(Math.PI * u) ** 1.2];
     }
-    const e = 1 - (1 - u) ** 2.2; // rises fast, then slows
-    const al = Math.min(1, u / 0.12) * (1 - u) ** 1.5;
+    const e = 1 - (1 - u) ** 1.9; // rises fast, then slows
+    const al = Math.min(1, u / 0.15) * (1 - u) ** 1.1;
     return [p.x + p.drift * e + Math.sin(p.phase + u * 3) * p.curl * u, p.y - p.rise * e,
       p.s0 * (1 + (p.grow - 1) * Math.sqrt(u)), p.peak * al];
   }
@@ -107,8 +116,8 @@ export function createSteam(canvas, prefs) {
   function drawShaft(intensity) {
     if (intensity <= 0.01) return;
     const [x, y] = origin();
-    const w = 0.6 * W, h = 0.5 * H;
-    ctx.globalAlpha = 0.05 * intensity;
+    const w = 0.46 * W, h = 0.45 * H / plumeZ;
+    ctx.globalAlpha = 0.08 * intensity;
     ctx.drawImage(shaft, x - w / 2, y - h, w, h);
   }
 
@@ -121,8 +130,8 @@ export function createSteam(canvas, prefs) {
 
     if (wisping && now >= nextWisp) { spawnWisp(now); nextWisp = now + rnd(140, 220); }
     if (plumeStart >= 0) {
-      const target = Math.min(plumeN, Math.ceil(((now - plumeStart) / 700) * plumeN));
-      while (plumeEmitted < target) spawnPlume(now, plumeEmitted++);
+      const target = Math.min(plumeN, Math.ceil(((now - plumeStart) / EMIT_MS) * plumeN));
+      while (plumeEmitted < target) { spawnPlume(now); plumeEmitted++; }
       if (plumeEmitted >= plumeN && now >= plumeEnd) plumeStart = -1;
     }
 
@@ -133,7 +142,7 @@ export function createSteam(canvas, prefs) {
     let plumeLevel = 0, plumeAlive = 0;
     for (const p of parts) if (p.kind === 'p') { plumeAlive++; plumeLevel += pose(p, now - p.born)[3]; }
     ctx.globalCompositeOperation = 'lighter';
-    drawShaft(Math.min(1, plumeLevel / 1.2));
+    drawShaft(Math.min(1, plumeLevel / 1.2) ** 1.8); // fades faster than the particles, so no hard-edged beam is left behind
     for (const p of parts) {
       const [x, y, s, a] = pose(p, now - p.born);
       stamp(x, y, s, a);
@@ -155,12 +164,13 @@ export function createSteam(canvas, prefs) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
-    drawShaft(1.4);
+    plumeZ = zoomOf();
+    drawShaft(1.2);
     const [x, y] = origin();
     for (let i = 0; i < 40; i++) {
       const f = i / 39, ang = i * 2.4;
-      stamp(x + Math.sin(ang) * (0.02 + 0.09 * f) * W, y - (0.02 + 0.38 * f) * H + Math.cos(ang * 1.7) * 0.02 * H,
-        (0.07 + 0.12 * f) * W, 0.13 * (1 - f * 0.5));
+      stamp(x + Math.sin(ang) * (0.06 + 0.1 * f) * W, y - (0.02 + 0.3 * f) * H / plumeZ + Math.cos(ang * 1.7) * 0.015 * H,
+        (0.09 + 0.14 * f) * W / plumeZ, 0.15 * (1 - f * 0.5));
     }
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -209,9 +219,9 @@ export function createSteam(canvas, prefs) {
       }
       if (pending) pending.resolve();
       return new Promise((resolve) => {
-        plumeN = Math.round(rnd(45, 60)); plumeEmitted = 0;
-        plumeStart = now; plumeEnd = now + 700;
-        pending = { resolve, deadline: now + 2800 };
+        plumeN = Math.round(rnd(52, 60)); plumeEmitted = 0; plumeZ = zoomOf();
+        plumeStart = now; plumeEnd = now + EMIT_MS;
+        pending = { resolve, deadline: now + 3600 };
         kick();
       });
     },
