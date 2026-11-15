@@ -51,6 +51,16 @@ export function createUI({ prefs, audio }) {
   }
 
   // ---- the one button ----
+  // A finished hold's release still fires a click; swallow it so it cannot skip the next action.
+  let swallowClick = false;
+  act.addEventListener('click', (e) => {
+    if (!swallowClick) return;
+    swallowClick = false;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }, true);
+  for (const type of ['pointerdown', 'keydown']) act.addEventListener(type, () => { swallowClick = false; }, true);
+
   function action(text, { hold, rest, onProgress } = {}) {
     return new Promise((resolve) => {
       const ac = new AbortController();
@@ -60,7 +70,7 @@ export function createUI({ prefs, audio }) {
       let raf = 0;
       let h = null;
 
-      const finish = () => {
+      const finish = (pressed = false) => {
         ac.abort();
         cancelAnimationFrame(raf);
         clearTimeout(restTimer);
@@ -68,6 +78,7 @@ export function createUI({ prefs, audio }) {
         act.removeAttribute('data-hold');
         act.style.removeProperty('--p');
         act.hidden = true;
+        if (hold && pressed) swallowClick = true;
         audio.hit('tap');
         resolve();
       };
@@ -86,6 +97,7 @@ export function createUI({ prefs, audio }) {
 
       if (!hold) {
         const click = () => { if (!resting) finish(); };
+        on(act, 'keydown', (e) => { if (e.repeat) e.preventDefault(); });
         on(act, 'click', click);
         on(stage, 'click', click);
         return;
@@ -97,13 +109,13 @@ export function createUI({ prefs, audio }) {
         const p = h.progress(now);
         act.style.setProperty('--p', p);
         onProgress?.(p);
-        if (h.done(now)) return finish();
+        if (h.done(now)) return finish(down);
         raf = p > 0 || down ? requestAnimationFrame(frame) : 0;
       };
       let down = false;
       const press = () => {
         if (resting || down) return;
-        if (calm()) return finish();
+        if (calm()) return finish(true);
         down = true;
         h = h ?? createHold({ ms: hold });
         h.press(performance.now());
