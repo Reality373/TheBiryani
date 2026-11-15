@@ -55,12 +55,14 @@ document.addEventListener('visibilitychange', async () => {
 // Only without auto/from, so they cannot interfere with a real run. e.g.
 // /?view=medium&pot=sealed&flame=low&light=dim&line=Hello&act=Go+on
 // Using one also stops the scenes from starting, so the forced state stays on screen.
-const DEV = ['view', 'pot', 'flame', 'light', 'seal', 'crack', 'calm', 'cap', 'line', 'settings', 'act', 'card'];
+const DEV = ['view', 'pot', 'flame', 'light', 'seal', 'crack', 'calm', 'cap', 'line', 'settings', 'act', 'card', 'show', 'eaten', 'egg'];
 const dev = !q.has('auto') && !q.has('from') && DEV.some((k) => q.has(k));
 if (dev) {
   if (q.has('view')) stage.dataset.view = q.get('view');
   for (const key of ['pot', 'flame', 'light']) if (q.has(key)) kitchen.dataset[key] = q.get(key);
   for (const key of ['seal', 'crack']) if (q.has(key)) kitchen.style.setProperty(`--${key}`, q.get(key));
+  for (const key of ['show', 'eaten', 'egg']) if (q.has(key)) top.dataset[key] = q.get(key);
+  if (q.has('show')) stage.dataset.view = 'top';
   if (q.has('calm')) document.documentElement.dataset.calm = 'true';
   if (q.has('cap')) { ui.caption(q.get('cap')); document.getElementById('cap').hidden = false; }
   if (q.has('line')) document.getElementById('line').textContent = q.get('line');

@@ -395,3 +395,26 @@ button {
 :root[data-calm='true'] #k-lid { transition: opacity 600ms ease; }
 :root[data-calm='true'] #line.is-in { animation: none; }
 :root[data-calm='true'] :is(#act, #card-choices button):active { transform: none; }
+
+/* ---------- top-down art states (#top) ---------- */
+/* data-show: pot | plate | bowl. data-eaten 0..6 hides portions 1..n, outside in. data-egg shows one spice on the spoon. */
+#top :is(#t-pot, #t-table, #t-plate, #t-bowl, #t-spoon, #t-salan, #t-dahi, [id^='t-portion-'], #t-spoon use) {
+  transition: opacity 500ms ease;
+}
+#top:not([data-show='pot']) #t-pot,
+#top:not([data-show='bowl']) #t-bowl,
+#top:not([data-show='plate']) :is(#t-table, #t-plate, #t-spoon, #t-salan, #t-dahi, [id^='t-portion-']) { opacity: 0; }
+#top #t-spoon use { opacity: 0; }
+#top[data-egg='elaichi'] #t-spoon use[href='#t-egg-elaichi'],
+#top[data-egg='clove'] #t-spoon use[href='#t-egg-clove'],
+#top[data-egg='cinnamon'] #t-spoon use[href='#t-egg-cinnamon'],
+#top[data-egg='pepper'] #t-spoon use[href='#t-egg-pepper'],
+#top[data-egg='bayleaf'] #t-spoon use[href='#t-egg-bayleaf'],
+#top[data-egg='chilli'] #t-spoon use[href='#t-egg-chilli'],
+#top[data-egg='staranise'] #t-spoon use[href='#t-egg-staranise'] { opacity: 1; }
+#top[data-show='plate']:is([data-eaten='1'], [data-eaten='2'], [data-eaten='3'], [data-eaten='4'], [data-eaten='5'], [data-eaten='6']) #t-portion-1,
+#top[data-show='plate']:is([data-eaten='2'], [data-eaten='3'], [data-eaten='4'], [data-eaten='5'], [data-eaten='6']) #t-portion-2,
+#top[data-show='plate']:is([data-eaten='3'], [data-eaten='4'], [data-eaten='5'], [data-eaten='6']) #t-portion-3,
+#top[data-show='plate']:is([data-eaten='4'], [data-eaten='5'], [data-eaten='6']) #t-portion-4,
+#top[data-show='plate']:is([data-eaten='5'], [data-eaten='6']) #t-portion-5,
+#top[data-show='plate'][data-eaten='6'] #t-portion-6 { opacity: 0; }
