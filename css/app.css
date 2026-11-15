@@ -122,7 +122,7 @@ body {
 
 /* The dough is drawn in by --seal (0 to 1) while the viewer presses it. */
 #kitchen .dough {
-  stroke-dasharray: 1;
+  stroke-dasharray: 1 2; /* the gap is wider than the path, so no zero-length dash is left at the end */
   stroke-dashoffset: calc(1 - var(--seal, 0));
   transition: opacity 500ms ease;
 }
