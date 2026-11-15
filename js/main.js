@@ -1,5 +1,6 @@
 import { kitchenSVG } from './art/kitchen.js';
 import { topdownSVG } from './art/topdown.js';
+import { createAudio } from './core/audio.js';
 import { createPrefs } from './core/prefs.js';
 import { createUI } from './core/ui.js';
 import { labels } from './data/script.js';
@@ -50,4 +51,25 @@ if (q.get('demo') === 'ui') { // temporary, deleted in Task 6
     await ui.card({ title: 'Done', text: 'Demo card.', choices: ['One', 'Two'] });
     document.documentElement.dataset.done = '1';
   })();
+}
+if (q.get('demo') === 'audio') { // temporary, deleted in Task 6
+  const AC = window.AudioContext; // capture the context so the check script can read its state
+  if (AC) window.AudioContext = class extends AC { constructor(...a) { super(...a); window.__ctx = this; } };
+  const audio = createAudio();
+  window.__audioDemo = { audio, state: () => window.__ctx?.state ?? 'none' };
+  const box = document.createElement('div');
+  box.style.cssText = 'position: fixed; inset: auto 0 0 0; z-index: 99; background: #fff; color: #000; padding: 6px; font: 14px sans-serif; max-height: 50vh; overflow: auto';
+  const btn = (text, fn) => { const b = document.createElement('button'); b.textContent = text; b.onclick = fn; box.append(b, ' '); };
+  btn('unlock', () => audio.unlock());
+  btn('mute on', () => audio.mute(true));
+  btn('mute off', () => audio.mute(false));
+  btn('pause', () => audio.pause());
+  btn('resume', () => audio.resume());
+  for (const n of ['rain', 'flame', 'sizzle', 'simmer', 'drone']) { btn(`${n} start`, () => audio.bed(n, 1)); btn(`${n} stop`, () => audio.stop(n)); }
+  for (const n of ['tap', 'thud', 'crack', 'steam', 'chime', 'spoon']) btn(n, () => audio.hit(n));
+  const r = document.createElement('input');
+  r.type = 'range'; r.min = 0; r.max = 1; r.step = 0.01; r.value = 0;
+  r.oninput = () => audio.muffle(Number(r.value));
+  box.append('muffle ', r);
+  document.body.append(box);
 }
