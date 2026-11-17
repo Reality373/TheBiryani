@@ -1,0 +1,106 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Close-shot preview</title>
+<!-- Dev page. ?scene=plate|pot  ?mood=lamp|dusk|stove|steam|burst|night|moon  ?cx=&cy= (pin parallax, -1..1)
+     ?zoom=&zx=&zy= (scale about a world point)  ?count=1 (print element counts). -->
+<style>
+  html, body { margin: 0; height: 100%; background: #0B1030; overflow: hidden; }
+  #stage { position: fixed; inset: 0; overflow: hidden; --shift: 64px; }
+  @media (max-width: 600px) { #stage { --shift: 26px; } }
+  #world { position: absolute; inset: 0; }
+  .plane { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(calc(var(--cx, 0) * var(--d) * var(--shift)), calc(var(--cy, 0) * var(--d) * var(--shift) * 0.4), 0); }
+  #grain { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; opacity: .34; }
+  #vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(4,3,10,.7) 100%); }
+  #info { position: fixed; left: 6px; top: 4px; color: #fff; font: 11px monospace; z-index: 5; opacity: .7; }
+</style>
+<div id="stage"><div id="world"></div><div id="grain"></div><div id="vig"></div></div>
+<div id="info"></div>
+<script type="module">
+import { plane } from '../js/art/lib.js';
+import { close } from '../js/art/close.js';
+import * as F from '../js/art/food.js';
+
+const q = new URLSearchParams(location.search);
+const scene = q.get('scene') || 'plate';
+const mood = q.get('mood') || (scene === 'pot' ? 'burst' : 'lamp');
+const stage = document.getElementById('stage');
+const world = document.getElementById('world');
+
+function platePlanes() {
+  const back = close({ surface: 'table', mood, pool: { x: 800, y: 640, rx: 430, ry: 190 } });
+  const defs = (p) => F.foodDefs(p);
+  // opened handi, upper centre-left, lid leaning, dough, serving spoon, plume
+  const handi = plane('p-handi', 0.42, `${defs('h')}
+${F.lid({ p: 'h', cx: 330, cy: 300, r: 118, lean: -14 })}
+${F.handi({ p: 'h', cx: 560, cy: 330, w: 330, tilt: 0.5, seed: 4, count: 600,
+  items: [
+    { y: 345, svg: F.biristaCluster({ p: 'h', x: 540, y: 335, w: 150, h: 36, n: 14, seed: 2 }) },
+    { y: 350, svg: [0, 1, 2, 3, 4].map((i) => F.mintLeaf({ p: 'h', x: 470 + i * 38, y: 340 + (i % 2) * 14, len: 30, rot: -60 + i * 40, seed: i + 3 })).join('') },
+  ] })}
+${F.servingSpoon({ p: 'h', x: 628, y: 352, len: 190, rot: 16 })}
+${F.doughBits({ p: 'h', cx: 520, cy: 520, n: 6, spread: 190, seed: 3 })}
+${F.steam({ p: 'h', x: 540, y: 285, h: 230, w: 60, n: 4, seed: 6 })}`);
+  const left = plane('p-left', 0.5, `${defs('l')}
+${F.bowl({ p: 'l', cx: 390, cy: 640, w: 210, fill: 'salan', seed: 2 })}
+${F.tumbler({ p: 'l', cx: 250, cy: 470, w: 84, h: 130 })}`);
+  const right = plane('p-right', 0.5, `${defs('r')}
+${F.bowl({ p: 'r', cx: 1230, cy: 600, w: 200, fill: 'dahi', seed: 3 })}
+${F.smallPlate({ p: 'r', cx: 1270, cy: 770, w: 230 })}
+${F.onionRings({ p: 'r', cx: 1235, cy: 765, n: 5, seed: 2 })}
+${F.lemonWedge({ p: 'r', x: 1325, y: 790, s: 0.85, rot: 14 })}`);
+  // the plate of biryani: brightest, warmest thing in the frame
+  const cx = 800; const cy = 615;
+  const chk = [[736, 585, 98, 68, -22], [866, 580, 96, 66, 16], [800, 540, 80, 56, 4], [905, 632, 74, 52, 30]];
+  const items = chk.map(([x, y, w, h, r], i) => ({ y: y + h * 0.3, svg: F.chicken({ p: 'm', x, y, w, h, rot: r, seed: i + 1, doneness: 0.4 + i * 0.1 }) }));
+  items.push({ y: 640, svg: F.biristaCluster({ p: 'm', x: 800, y: 505, w: 130, h: 36, n: 16, seed: 5 }) });
+  items.push({ y: 645, svg: F.biristaCluster({ p: 'm', x: 735, y: 655, w: 90, h: 24, n: 9, seed: 8 }) });
+  items.push({ y: 650, svg: [[770, 495, -80], [830, 500, -30], [700, 640, 160], [880, 520, 20]].map(([x, y, r], i) => F.mintLeaf({ p: 'm', x, y, len: 38, rot: r, seed: i + 7 })).join('') });
+  items.push({ y: 660, svg: F.spice('cardamom', { p: 'm', x: 765, y: 655, rot: 30 }) + F.spice('cinnamon', { p: 'm', x: 700, y: 590, rot: -35 }) + F.spice('bay', { p: 'm', x: 870, y: 665, rot: 20, s: 0.9 }) + F.spice('clove', { p: 'm', x: 825, y: 600, rot: -50 }) });
+  const plateP = plane('p-plate', 0.62, `${defs('m')}
+${F.plate({ p: 'm', cx, cy, w: 460 })}
+<ellipse cx="800" cy="560" rx="300" ry="200" fill="url(#m-glow)" opacity=".7" style="mix-blend-mode:screen"/>
+${F.riceMound({ p: 'm', cx, cy: cy + 14, rx: 150, ry: 66, h: 150, count: 1500, seed: 11, saffron: 0.4, grain: 1.05, masala: chk.map(([x, y]) => ({ x, y: y + 20, r: 62 })), items })}
+${F.glisten({ x: 780, y: 560, w: 260, h: 110, n: 22, seed: 4 })}
+${F.spoon({ p: 'm', x: 925, y: 690, len: 150, rot: 14, s: 1.35, bite: { n: 34, seed: 5 } })}
+${F.steam({ p: 'm', x: 800, y: 470, h: 210, w: 70, n: 4, seed: 9 })}`);
+  return [...back.planes, handi, left, right, plateP, back.front];
+}
+
+function potPlanes() {
+  const back = close({ surface: 'table', mood, pool: { x: 800, y: 560, rx: 520, ry: 280 } });
+  const items = [
+    { y: 900, svg: F.biristaCluster({ p: 'p', x: 690, y: 260, w: 260, h: 70, n: 34, seed: 2 }) },
+    { y: 900, svg: F.biristaCluster({ p: 'p', x: 950, y: 330, w: 220, h: 70, n: 26, seed: 3 }) },
+    { y: 901, svg: F.biristaCluster({ p: 'p', x: 780, y: 410, w: 180, h: 40, n: 16, seed: 4 }) },
+    { y: 902, svg: Array.from({ length: 14 }, (_, i) => F.mintLeaf({ p: 'p', x: 520 + ((i * 131) % 560), y: 250 + ((i * 71) % 230), len: 38, rot: i * 67, seed: i + 1 })).join('') },
+  ];
+  const potP = plane('p-pot', 0.55, `${F.foodDefs('p')}
+${F.handi({ p: 'p', cx: 800, cy: 330, w: 800, tilt: 0.6, seed: 6, saffron: 0.35, items })}
+${F.glisten({ x: 760, y: 440, w: 380, h: 150, n: 18, seed: 2 })}
+${F.steam({ p: 'p', x: 800, y: 300, h: 300, w: 160, n: 6, seed: 3 })}`);
+  return [...back.planes, potP, back.front];
+}
+
+const planes = scene === 'pot' ? potPlanes() : platePlanes();
+world.innerHTML = planes.join('');
+if (q.has('cx')) stage.style.setProperty('--cx', q.get('cx'));
+if (q.has('cy')) stage.style.setProperty('--cy', q.get('cy'));
+
+const W = innerWidth; const H = innerHeight; const s = Math.max(W / 1600, H / 1000);
+const z = parseFloat(q.get('zoom') || '1');
+if (z !== 1) {
+  const ox = (W - 1600 * s) / 2 + parseFloat(q.get('zx') || '800') * s;
+  const oy = (H - 1000 * s) / 2 + parseFloat(q.get('zy') || '500') * s;
+  world.style.transformOrigin = `${ox}px ${oy}px`; world.style.transform = `scale(${z})`;
+}
+
+const c = document.createElement('canvas'); c.width = c.height = 256;
+const g = c.getContext('2d'); const im = g.createImageData(256, 256);
+for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+g.putImageData(im, 0, 0);
+document.getElementById('grain').style.backgroundImage = `url(${c.toDataURL()})`;
+
+if (q.has('count')) document.getElementById('info').textContent = planes.map((p) => { const d = document.createElement('div'); d.innerHTML = p; return d.firstChild.id + ':' + d.querySelectorAll('*').length; }).join(' ');
+document.documentElement.dataset.ready = '1';
+</script>
