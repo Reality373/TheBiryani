@@ -169,13 +169,17 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
 
   // ---- cards ----
   // choices: strings, or { label, sound: true | false | 'keep' }. Choosing sets the sound pref inside the click, so audio unlocks.
-  function card({ kind = 'title', title, text, meta, foot, note, icons = [], choices = [] }) {
+  // list: [{ step, why }] under the text, as an ordered recipe. Its absence leaves the card as it was.
+  function card({ kind = 'title', title, text, meta, foot, note, list = [], icons = [], choices = [] }) {
     const c = $('card');
     c.dataset.kind = kind;
     $('card-medal').innerHTML = medal();
     $('card-dots').innerHTML = dotRow();
     $('card-title').textContent = title ?? '';
     for (const [id, v] of [['card-text', text], ['card-meta', meta], ['card-foot', foot], ['card-note', note]]) { $(id).textContent = v ?? ''; $(id).hidden = !v; }
+    $('card-recipe').hidden = !list.length;
+    $('card-list').replaceChildren(...list.map(({ step, why }) => { const li = el('li'); li.append(el('span', 'step', step), el('span', 'why', why)); return li; }));
+    c.toggleAttribute('data-list', list.length > 0);
     const iconBox = $('card-icons'), box = $('card-choices');
     iconBox.replaceChildren(); box.replaceChildren();
     iconBox.hidden = !icons.length;

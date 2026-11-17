@@ -193,6 +193,13 @@ html[data-card] #corner-buttons { top: calc(var(--cb) + 14px); right: calc(var(-
 .card-dots svg { display: block; width: 8rem; height: auto; }
 #card-title { margin: 0; font-family: var(--font-display); font-weight: 600; font-variation-settings: 'SOFT' 100; font-size: clamp(3.4rem, 2.4rem + 6vw, 6.5rem); line-height: 0.95; color: var(--rice); }
 #card-text { text-wrap: pretty; text-wrap: balance; margin: 0; font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem); line-height: 1.4; color: var(--rice); }
+#card-recipe { width: 100%; text-align: left; }
+#card-recipe h2 { margin: 0.8rem 0 0.4rem; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.3rem; color: var(--rice); }
+#card-list { columns: 1; margin: 0; padding-left: 1.6rem; color: var(--rice); }
+#card-list li { break-inside: avoid; margin: 0 0 0.75rem; }
+#card-list .step { display: block; font-weight: 400; font-size: 1rem; line-height: 1.35; }
+#card-list .why { display: block; font-style: italic; font-size: 0.9rem; line-height: 1.35; opacity: 0.8; }
+@media (min-width: 900px) { #card[data-list] .card-col { max-width: 54rem; } #card-list { columns: 2; column-gap: 2.4rem; } }
 #card-meta, #card-foot, #card-note { margin: 0; font-size: 0.875rem; letter-spacing: 0.02em; color: var(--rice); }
 #card-meta { letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.78rem; }
 #card-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
