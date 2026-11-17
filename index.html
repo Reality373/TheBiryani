@@ -4,51 +4,114 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Dum</title>
-  <meta name="description" content="A small, slow story about Hyderabadi dum biryani.">
+  <meta name="description" content="A small, slow story about Hyderabadi dum biryani. You cook it, wait for it, and eat it.">
   <meta name="theme-color" content="#141A2E">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Dum">
+  <meta property="og:description" content="A small, slow story about Hyderabadi dum biryani. You cook it, wait for it, and eat it.">
+  <meta property="og:image" content="og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dum">
+  <meta name="twitter:description" content="A small, slow story about Hyderabadi dum biryani. You cook it, wait for it, and eat it.">
+  <meta name="twitter:image" content="og-image.png">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <main class="frame">
-    <!-- The art. js/main.js puts the two <svg> views in front of the canvas. -->
-    <div id="stage" data-view="wide">
-      <canvas id="steam" aria-hidden="true" data-x="0.5" data-y="0.47"></canvas>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <!-- A small Kalamkari flower for the frame corners. -->
+    <symbol id="corner-flower" viewBox="-14 -14 28 28">
+      <g fill="#A33B2C" stroke="#F6EBD3" stroke-width="1.1">
+        <circle cx="0" cy="-7" r="5.2"/><circle cx="6.7" cy="-2.2" r="5.2"/><circle cx="4.1" cy="5.7" r="5.2"/>
+        <circle cx="-4.1" cy="5.7" r="5.2"/><circle cx="-6.7" cy="-2.2" r="5.2"/>
+      </g>
+      <circle r="3.6" fill="#F6EBD3"/><circle r="1.8" fill="#F2A516"/>
+      <path d="M9 9Q16 11 13 4Q10 6 9 9zM-9 9Q-16 11 -13 4Q-10 6 -9 9z" fill="#5E8C4A"/>
+    </symbol>
+  </svg>
+
+  <main id="app">
+    <!-- The picture. Scenes are built into .camera by js/core/stage.js. -->
+    <div id="stage"><div class="camera" id="camera"></div></div>
+
+    <!-- Overlays that never move. -->
+    <div class="grain grain-a" aria-hidden="true"></div>
+    <div class="grain grain-b" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="frame" aria-hidden="true">
+      <i class="fb t"></i><i class="fb b"></i><i class="fb l"></i><i class="fb r"></i>
+      <svg class="fc tl"><use href="#corner-flower"/></svg><svg class="fc tr"><use href="#corner-flower"/></svg>
+      <svg class="fc bl"><use href="#corner-flower"/></svg><svg class="fc br"><use href="#corner-flower"/></svg>
     </div>
 
-    <!-- Words and the one button. Kept outside the stage so they stay sharp when it zooms. -->
-    <div class="text">
-      <p id="cap"></p>
-      <p id="line" aria-live="polite"></p>
-      <button id="act" type="button" hidden>
-        <span id="act-label"></span>
-        <span id="act-ring" aria-hidden="true"></span>
-      </button>
-    </div>
-
-    <!-- Title card at the start, end card at the end. -->
-    <section id="card" hidden>
-      <h1 id="card-title"></h1>
-      <p id="card-text"></p>
-      <div id="card-icons"></div>
-      <p id="card-note"></p>
-      <div id="card-choices"></div>
+    <!-- Title and end cards. -->
+    <section id="card" hidden aria-labelledby="card-title">
+      <i class="card-trim top"></i><i class="card-trim bottom"></i>
+      <div class="card-in">
+        <div class="card-medal" id="card-medal"></div>
+        <div class="card-col">
+          <div class="card-dots" id="card-dots"></div>
+          <h1 id="card-title"></h1>
+          <p id="card-text"></p>
+          <p id="card-meta"></p>
+          <div id="card-icons"></div>
+          <div id="card-choices"></div>
+          <p id="card-foot"></p>
+          <p id="card-note"></p>
+        </div>
+      </div>
     </section>
 
-    <button id="open-settings" type="button" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>
-      </svg>
-    </button>
+    <!-- The UI layer: words and buttons, never inside a moving plane. -->
+    <div id="ui">
+      <div id="scrim-top" aria-hidden="true"></div>
+      <nav id="diamonds" aria-label="Chapters"></nav>
+      <header id="cartouche" hidden>
+        <p id="cart-num"></p>
+        <h2 id="cart-title" tabindex="-1"></h2>
+      </header>
+      <div id="chapter-big" aria-hidden="true"><p id="big-num"></p><p id="big-title"></p></div>
+      <div id="hints" aria-hidden="true"></div>
+      <div id="bottom">
+        <p id="cap"></p>
+        <div id="subs" aria-live="polite"><p id="sub-prev"></p><p id="sub-cur"></p></div>
+      </div>
+      <div id="corner-buttons">
+        <button id="cc" type="button" aria-label="Sound captions" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.5" y="5" width="19" height="14" rx="3.5"/><path d="M10.5 10.2a2.4 2.4 0 1 0 0 3.6M17.5 10.2a2.4 2.4 0 1 0 0 3.6"/>
+          </svg>
+        </button>
+        <button id="open-settings" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <dialog id="settings" aria-labelledby="settings-title">
       <h2 id="settings-title">Settings</h2>
       <label class="switch"><span>Sound</span><input id="set-sound" type="checkbox" role="switch"></label>
-      <label class="switch"><span>Sound captions</span><input id="set-caps" type="checkbox" role="switch"></label>
-      <label class="switch"><span>Calm mode<small>Less movement, and taps instead of holds.</small></span><input id="set-calm" type="checkbox" role="switch"></label>
-      <form method="dialog"><button type="submit">Done</button></form>
+      <label class="switch"><span>Voice<small>A placeholder voice, if your device has one.</small></span><input id="set-voice" type="checkbox" role="switch"></label>
+      <label class="switch"><span>Subtitles</span><input id="set-subtitles" type="checkbox" role="switch"></label>
+      <label class="switch"><span>Sound captions<small>Words in brackets for the sounds.</small></span><input id="set-caps" type="checkbox" role="switch"></label>
+      <label class="switch"><span>Calm mode<small>Less movement, and taps instead of drags.</small></span><input id="set-calm" type="checkbox" role="switch"></label>
+      <div id="set-chapters" hidden>
+        <h3>Chapters</h3>
+        <ol id="chapter-list"></ol>
+        <button id="start-over" type="button">Start over</button>
+      </div>
+      <form method="dialog"><button type="submit" class="done">Done</button></form>
     </dialog>
+
+    <div id="failure" role="alert">
+      <p>Something went wrong.</p>
+      <button type="button" onclick="location.reload()">Reload</button>
+    </div>
   </main>
 
   <script type="module" src="js/main.js"></script>

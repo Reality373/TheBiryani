@@ -12,6 +12,8 @@ test('defaults', () => {
   assert.equal(p.get('sound'), false);
   assert.equal(p.get('calm'), false);
   assert.equal(p.get('captions'), false);
+  assert.equal(p.get('voice'), true);
+  assert.equal(p.get('subtitles'), true);
   assert.deepEqual(p.get('spices'), []);
 });
 

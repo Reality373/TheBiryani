@@ -19,7 +19,7 @@ const ratio = (a, b) => {
 };
 
 test('text pairs meet 4.5:1', () => {
-  for (const [fg, bg] of [['rice', 'night'], ['rice', 'iron'], ['rice', 'indigo'], ['rice', 'madder'], ['iron', 'saffron']]) {
+  for (const [fg, bg] of [['rice', 'night'], ['rice', 'iron'], ['rice', 'indigo'], ['rice', 'madder'], ['iron', 'saffron'], ['saffron', 'iron']]) {
     assert.ok(ratio(fg, bg) >= 4.5, `${fg} on ${bg} is ${ratio(fg, bg).toFixed(2)}`);
   }
 });

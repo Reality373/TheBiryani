@@ -1,187 +1,212 @@
-import { createHold } from './hold.js';
-import { runSteps } from './steps.js';
+// The words and buttons that never move: chapter title and cartouche, diamonds, subtitles, captions, hints, cards, settings.
+import { medal, dotRow, trimTile } from '../art/card.js';
+import { spiceIcon } from '../art/spices.js';
+import { canJump, indexOf } from './progress.js';
+import { labels } from '../data/labels.js';
 
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-const SVG = 'http://www.w3.org/2000/svg';
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
-export function createUI({ prefs, audio }) {
+export function createUI({ prefs, calm, auto, chapters, onJump }) {
   const root = document.documentElement;
-  const auto = new URLSearchParams(location.search).has('auto');
-  const [stage, cap, line, act, label, card] = ['stage', 'cap', 'line', 'act', 'act-label', 'card'].map($);
-  const calm = () => prefs.get('calm');
+  root.style.setProperty('--trim', trimTile());
+  const subs = $('subs'), cur = $('sub-cur'), prev = $('sub-prev'), cap = $('cap');
+  const toggles = { sound: $('set-sound'), voice: $('set-voice'), subtitles: $('set-subtitles'), captions: $('set-caps'), calm: $('set-calm') };
+  let cardOpen = false;
+  let chapterId = null;
 
-  // ---- settings ----
-  const toggles = { sound: $('set-sound'), calm: $('set-calm'), captions: $('set-caps') };
+  // ---- settings and the CC button ----
   const syncPrefs = () => {
-    for (const [key, box] of Object.entries(toggles)) box.checked = !!prefs.get(key);
+    for (const [key, box] of Object.entries(toggles)) box.checked = key === 'calm' ? !!calm() : !!prefs.get(key);
     root.dataset.calm = String(!!calm());
+    root.dataset.subtitles = String(!!prefs.get('subtitles'));
+    $('cc').setAttribute('aria-pressed', String(!!prefs.get('captions')));
     cap.hidden = !prefs.get('captions') || !cap.textContent;
+    drawDiamonds();
+    drawChapterList();
   };
   for (const [key, box] of Object.entries(toggles)) box.addEventListener('change', () => prefs.set(key, box.checked));
-  prefs.subscribe(syncPrefs);
+  $('cc').addEventListener('click', () => prefs.set('captions', !prefs.get('captions')));
   $('open-settings').addEventListener('click', () => $('settings').showModal());
+  $('start-over').addEventListener('click', () => { prefs.set('reached', null); location.reload(); });
 
-  // ---- words ----
-  function caption(text) {
-    cap.textContent = text ?? '';
-    cap.hidden = !prefs.get('captions') || !text;
-    return Promise.resolve();
-  }
-  syncPrefs();
-
-  function say(text) {
-    line.classList.remove('is-in');
-    line.textContent = text;
-    void line.offsetWidth; // reflow so the fade-in replays
-    line.classList.add('is-in');
-    return auto || calm() ? Promise.resolve() : wait(500);
-  }
-
-  function view(name) {
-    if (stage.dataset.view === name) return Promise.resolve();
-    stage.dataset.view = name;
-    if (auto || calm()) return Promise.resolve();
-    return new Promise((resolve) => {
-      const done = () => { stage.removeEventListener('transitionend', onEnd); clearTimeout(timer); resolve(); };
-      const onEnd = (e) => { if (e.target === stage && e.propertyName === 'transform') done(); };
-      const timer = setTimeout(done, 1700); // --t-view (1600ms) + 100ms
-      stage.addEventListener('transitionend', onEnd);
+  // ---- chapters: diamonds (reached ones are buttons), the settings list ----
+  const jump = (id) => { $('settings').close(); onJump(id); };
+  function drawDiamonds() {
+    const nav = $('diamonds');
+    nav.replaceChildren();
+    const reached = prefs.get('reached');
+    chapters.filter((c) => c.numeral).forEach((c, i) => {
+      const can = canJump(chapters, reached, c.id) && !cardOpen;
+      const b = el(can ? 'button' : 'span', 'dia');
+      b.dataset.state = c.id === chapterId ? 'current' : can || indexOf(chapters, c.id) <= indexOf(chapters, reached) ? 'reached' : 'todo';
+      b.innerHTML = '<i></i>';
+      if (can) {
+        b.type = 'button';
+        b.setAttribute('aria-label', `Go to chapter ${c.numeral}, ${c.title}`);
+        if (c.id === chapterId) b.setAttribute('aria-current', 'step');
+        b.addEventListener('click', () => onJump(c.id));
+      }
+      nav.append(b);
     });
   }
-
-  // ---- the one button ----
-  // A finished hold's release still fires a click; swallow it so it cannot skip the next action.
-  let swallowClick = false;
-  act.addEventListener('click', (e) => {
-    if (!swallowClick) return;
-    swallowClick = false;
-    e.stopImmediatePropagation();
-    e.preventDefault();
-  }, true);
-  for (const type of ['pointerdown', 'keydown']) act.addEventListener(type, () => { swallowClick = false; }, true);
-
-  function action(text, { hold, rest, onProgress } = {}) {
-    return new Promise((resolve) => {
-      const ac = new AbortController();
-      const { signal } = ac;
-      const on = (target, type, fn) => target.addEventListener(type, fn, { signal });
-      let resting = false;
-      let raf = 0;
-      let h = null;
-
-      const finish = (pressed = false) => {
-        ac.abort();
-        cancelAnimationFrame(raf);
-        clearTimeout(restTimer);
-        act.removeAttribute('aria-disabled');
-        act.removeAttribute('data-hold');
-        act.style.removeProperty('--p');
-        act.hidden = true;
-        if (hold && pressed) swallowClick = true;
-        audio.hit('tap');
-        resolve();
-      };
-
-      label.textContent = text;
-      act.hidden = false;
-      const a = document.activeElement;
-      if (!a || a === document.body || a === act) act.focus({ preventScroll: true });
-      act.removeAttribute('data-hold');
-      act.style.removeProperty('--p');
-      let restTimer = 0;
-      if (rest && !auto) {
-        resting = true;
-        act.setAttribute('aria-disabled', 'true');
-        restTimer = setTimeout(() => { resting = false; act.removeAttribute('aria-disabled'); }, rest);
-      }
-      if (auto) { restTimer = setTimeout(finish, 50); return; }
-
-      if (!hold) {
-        const click = () => { if (!resting) finish(); };
-        on(act, 'keydown', (e) => { if (e.repeat) e.preventDefault(); });
-        on(act, 'click', click);
-        on(stage, 'click', click);
-        return;
-      }
-
-      if (!calm()) act.dataset.hold = '';
-      const frame = () => {
-        const now = performance.now();
-        const p = h.progress(now);
-        act.style.setProperty('--p', p);
-        onProgress?.(p);
-        if (h.done(now)) return finish(down);
-        raf = p > 0 || down ? requestAnimationFrame(frame) : 0;
-      };
-      let down = false;
-      const press = () => {
-        if (resting || down) return;
-        if (calm()) return finish(true);
-        down = true;
-        h.press(performance.now());
-        if (!raf) raf = requestAnimationFrame(frame);
-      };
-      const release = () => {
-        if (!down) return;
-        down = false;
-        h.release(performance.now());
-      };
-      const isKey = (e) => e.key === 'Enter' || e.key === ' ';
-      h = createHold({ ms: hold });
-      on(act, 'pointerdown', (e) => { act.setPointerCapture?.(e.pointerId); press(); });
-      on(act, 'pointerup', release);
-      on(act, 'pointercancel', release);
-      on(act, 'keydown', (e) => { if (!isKey(e)) return; e.preventDefault(); if (!e.repeat) press(); });
-      on(act, 'keyup', (e) => { if (!isKey(e)) return; e.preventDefault(); release(); });
-      on(act, 'click', (e) => e.preventDefault()); // a hold button ignores click
-    });
-  }
-
-  // ---- card ----
-  function cardUI({ title, text, note, icons = [], choices = [] }) {
-    const set = (id, v) => { $(id).textContent = v ?? ''; };
-    set('card-title', title); set('card-text', text); set('card-note', note);
-    const iconBox = $('card-icons');
-    const choiceBox = $('card-choices');
-    iconBox.replaceChildren();
-    choiceBox.replaceChildren();
-    for (const id of icons) {
-      const svg = document.createElementNS(SVG, 'svg');
-      svg.setAttribute('viewBox', '0 0 48 48');
-      svg.setAttribute('aria-label', id);
-      const use = document.createElementNS(SVG, 'use');
-      use.setAttribute('href', `#t-egg-${id}`);
-      svg.append(use);
-      iconBox.append(svg);
+  function drawChapterList() {
+    const reached = prefs.get('reached');
+    $('set-chapters').hidden = reached == null || cardOpen;
+    const ol = $('chapter-list');
+    ol.replaceChildren();
+    for (const c of chapters.filter((x) => x.numeral)) {
+      const b = el('button', null, `${c.numeral}. ${c.title}`);
+      b.type = 'button';
+      b.disabled = !canJump(chapters, reached, c.id);
+      b.addEventListener('click', () => jump(c.id));
+      const li = el('li'); li.append(b); ol.append(li);
     }
-    line.hidden = true;
-    act.hidden = true;
-    card.hidden = false;
+  }
+  prefs.subscribe(syncPrefs);
+
+  // ---- chapter title: big and centred, then it settles into the cartouche ----
+  async function chapter(index, numeral, title) {
+    chapterId = chapters[index]?.id ?? null;
+    $('cartouche').hidden = !title;
+    $('cart-num').textContent = numeral;
+    $('cart-title').textContent = title;
+    $('cart-num').hidden = !numeral;
+    drawDiamonds();
+    ui.subtitle(null);
+    if (title && !auto) {
+      $('big-num').textContent = numeral;
+      $('big-title').textContent = title;
+      const big = $('chapter-big');
+      big.classList.add('is-on');
+      await wait(calm() ? 900 : 2000);
+      big.classList.remove('is-on');
+    }
+    if (title) $('cart-title').focus({ preventScroll: true });
+  }
+
+  // ---- subtitles and captions ----
+  let fade = 0;
+  function subtitle(text) {
+    clearTimeout(fade);
+    if (!text) { cur.textContent = prev.textContent = ''; subs.classList.remove('is-on'); return; }
+    prev.textContent = cur.textContent;
+    cur.textContent = text;
+    subs.classList.add('is-on');
+    fade = setTimeout(() => subs.classList.remove('is-on'), 9000);
+  }
+  function caption(text) {
+    cap.textContent = text ? `[${text.replace(/^\[|\]$/g, '')}]` : '';
+    cap.hidden = !prefs.get('captions') || !text;
+  }
+
+  // ---- hints: text beside the hotspot, and a glyph for the gesture along its path ----
+  const hints = new Map();
+  let hraf = 0;
+  const glyph = (g, k) => {
+    const dot = (cls, r = 6) => `<circle class="${cls}" r="${r}"/>`;
+    if (g === 'hold') return `<circle class="g-track" r="24"/><circle class="g-fill" r="24" pathLength="100"/>${dot('g-dot', 5)}`;
+    if (g === 'circle') return `<circle class="g-dots" r="34"/><g class="g-orbit"><circle class="g-dot" cx="34" r="5.5"/></g>`;
+    if (g && g.drag) {
+      let [vx, vy] = [g.drag[0] * k, g.drag[1] * k];
+      const m = Math.hypot(vx, vy), cap = 150;
+      if (m > cap) { vx *= cap / m; vy *= cap / m; }
+      const a = Math.atan2(vy, vx) * 180 / Math.PI;
+      return `<path class="g-line" d="M0 0L${vx.toFixed(1)} ${vy.toFixed(1)}"/><path class="g-head" d="M-8 -7L2 0L-8 7" transform="translate(${vx.toFixed(1)} ${vy.toFixed(1)}) rotate(${a.toFixed(1)})"/><g class="g-slide" style="--vx:${vx.toFixed(1)}px;--vy:${vy.toFixed(1)}px">${dot('g-dot', 6)}</g>`;
+    }
+    return `${dot('g-ping', 8)}${dot('g-dot', 6)}`;
+  };
+  const zoneTop = () => innerHeight * (innerWidth < 600 ? 0.72 : 0.78); // above the subtitle zone
+  function place() {
+    const placed = [];
+    for (const h of hints.values()) {
+      const r = h.target.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      h.glyph.style.transform = `translate(${cx}px, ${cy}px)`;
+      const tw = h.text.offsetWidth, th = h.text.offsetHeight;
+      const dx = h.gesture?.drag?.[0] ?? 0, dy = h.gesture?.drag?.[1] ?? 0;
+      let left = r.right + 14;
+      if (dx > 0 && Math.abs(dx) > Math.abs(dy)) left = r.left - 14 - tw; // drag goes right: text goes left
+      if (left + tw > innerWidth - 10) left = r.left - 14 - tw;
+      if (left < 10) left = Math.min(Math.max(10, cx - tw / 2), innerWidth - tw - 10);
+      let top = cy - th / 2;
+      if (left > r.left - 14 - tw && left < r.right + 14) top = r.bottom + 10; // squeezed: go under the target
+      top = Math.max(60, Math.min(top, zoneTop() - th - 8));
+      for (const o of placed) if (left < o.r && left + tw > o.l && top < o.b && top + th > o.t) top = o.b + 6; // do not overlap another hint
+      placed.push({ l: left, r: left + tw, t: top, b: top + th });
+      h.text.style.transform = `translate(${left}px, ${top}px)`;
+    }
+    hraf = hints.size ? requestAnimationFrame(place) : 0;
+  }
+  function hint(target, text, gesture = 'tap') {
+    if (hints.has(target)) return;
+    const k = target.ownerSVGElement?.getScreenCTM()?.a ?? 1;
+    const text_ = el('p', 'hint', text);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'glyph');
+    svg.setAttribute('viewBox', '-90 -90 180 180');
+    svg.innerHTML = glyph(gesture, k);
+    $('hints').append(svg, text_);
+    hints.set(target, { target, text: text_, glyph: svg, gesture });
+    place();
+    requestAnimationFrame(() => { text_.classList.add('is-on'); svg.classList.add('is-on'); });
+    if (!hraf) hraf = requestAnimationFrame(place);
+  }
+  function unhint(target) {
+    const h = hints.get(target);
+    if (!h) return;
+    hints.delete(target);
+    h.text.classList.remove('is-on'); h.glyph.classList.remove('is-on');
+    setTimeout(() => { h.text.remove(); h.glyph.remove(); }, 350);
+  }
+
+  // ---- cards ----
+  // choices: strings, or { label, sound: true | false | 'keep' }. Choosing sets the sound pref inside the click, so audio unlocks.
+  function card({ kind = 'title', title, text, meta, foot, note, icons = [], choices = [] }) {
+    const c = $('card');
+    c.dataset.kind = kind;
+    $('card-medal').innerHTML = medal();
+    $('card-dots').innerHTML = dotRow();
+    $('card-title').textContent = title ?? '';
+    for (const [id, v] of [['card-text', text], ['card-meta', meta], ['card-foot', foot], ['card-note', note]]) { $(id).textContent = v ?? ''; $(id).hidden = !v; }
+    const iconBox = $('card-icons'), box = $('card-choices');
+    iconBox.replaceChildren(); box.replaceChildren();
+    iconBox.hidden = !icons.length;
+    for (const id of icons) { const s = el('span', 'chip'); s.innerHTML = spiceIcon(id.id ?? id, id.name ?? id); iconBox.append(s); }
+    cardOpen = true;
+    root.dataset.card = kind;
+    drawDiamonds(); drawChapterList();
+    c.hidden = false;
     return new Promise((resolve) => {
       const pick = (i) => {
-        card.hidden = true;
-        line.hidden = false;
-        audio.hit('tap');
+        const ch = choices[i];
+        if (ch && typeof ch === 'object' && ch.sound !== undefined) {
+          if (ch.sound === 'keep') prefs.set('sound', prefs.get('sound'));
+          else prefs.set('sound', ch.sound);
+          if (ch.sound === false) { prefs.set('subtitles', true); prefs.set('captions', true); }
+        }
+        c.hidden = true;
+        cardOpen = false;
+        delete root.dataset.card;
+        drawDiamonds(); drawChapterList();
         resolve(i);
       };
-      choices.forEach((c, i) => {
-        const b = document.createElement('button');
+      choices.forEach((ch, i) => {
+        const b = el('button', i === 0 ? 'primary' : '', typeof ch === 'string' ? ch : ch.label);
         b.type = 'button';
-        b.textContent = c;
         b.addEventListener('click', () => pick(i));
-        choiceBox.append(b);
+        box.append(b);
       });
-      const a = document.activeElement;
-      if (!a || a === document.body) choiceBox.firstElementChild?.focus({ preventScroll: true });
+      box.firstElementChild?.focus({ preventScroll: true });
       if (auto) setTimeout(() => pick(choices.length - 1), 50);
     });
   }
 
-  const ui = { say, caption, action, view, card: cardUI };
-  ui.run = (steps, hooks) => {
-    line.textContent = '';
-    return runSteps(steps, hooks, ui);
+  const ui = {
+    chapter, subtitle, caption, card, hint, unhint,
+    headingFocused: () => document.activeElement === $('cart-title') || document.activeElement === document.body,
   };
+  syncPrefs();
   return ui;
 }

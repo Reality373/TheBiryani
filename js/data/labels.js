@@ -1,0 +1,15 @@
+export const labels = {
+  title: 'Dum',
+  tagline: 'A small, slow story about Hyderabadi dum biryani.',
+  length: 'About 8 minutes · Better with sound',
+  silentHint: 'No sound? Check the silent switch.',
+  continue: 'Continue: {title}',
+  startOver: 'Start over',
+  withSound: 'Begin with sound',
+  quietly: 'Begin quietly',
+  placeholder: 'Voice is a placeholder.',
+  resumeSound: 'Tap to bring the sound back',
+  again: 'Go again',
+  method: 'Made the home way: chicken first, then rice, then dum.',
+  found: '{n} of 7 found',
+};

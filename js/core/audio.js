@@ -4,7 +4,15 @@
 // whose return goes through the dry bus (so it is muffled like everything else).
 
 const BEDS = ['rain', 'flame', 'sizzle', 'simmer', 'drone'];
+const DUCK = 0.5; // about -6 dB, while a voice line plays
 const OPEN = 18000, DRY_CLOSED = 600, RAIN_CLOSED = 2000;
+// Chapters register their own voices here when their sound module is imported (shared by every engine instance).
+const registry = { beds: {}, hits: {} };
+export function register(name, def) {
+  if (def.bed) registry.beds[name] = def.bed;
+  if (def.hit) registry.hits[name] = def.hit;
+}
+const isBed = (name) => BEDS.includes(name) || name in registry.beds;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp01 = (x) => Math.min(1, Math.max(0, Number(x) || 0));
 const cutoff = (open, closed, amount) => open * (closed / open) ** amount; // exponential, never 0
@@ -85,6 +93,8 @@ function voiceKit(ctx, noise) {
     stop(fade) { alive = false; for (const s of srcs) s.stop(ctx.currentTime + fade + 0.1); },
   };
 }
+
+export { tick, tone, voiceKit, makeNoise, filt, rnd };
 
 // ---- beds: (ctx, noise, out) -> { stop(fade) } ----
 
@@ -198,8 +208,8 @@ const hits = {
 };
 
 export function createAudio() {
-  let ctx = null, master, dry, room, rainLp, verb, noise, paused = false;
-  const want = { beds: {}, muffle: 0, seconds: 1.5, muted: false };
+  let ctx = null, master, duckG, dry, room, rainLp, verb, noise, paused = false;
+  const want = { beds: {}, muffle: 0, seconds: 1.5, muted: false, duck: false };
   const live = {}; // name -> { gain, voice }
 
   // Build into locals and assign only on success, so a failure leaves the engine locked.
@@ -208,7 +218,8 @@ export function createAudio() {
     try {
       const m = new GainNode(c, { gain: want.muted ? 0 : 1 });
       const limiter = new DynamicsCompressorNode(c, { threshold: -3, ratio: 20, attack: 0.003, release: 0.15, knee: 0 });
-      m.connect(limiter).connect(c.destination);
+      const dk = new GainNode(c, { gain: want.duck ? DUCK : 1 });
+      m.connect(dk).connect(limiter).connect(c.destination);
       const r = [filt(c, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5), filt(c, 'lowpass', cutoff(OPEN, DRY_CLOSED, want.muffle), 0.5)];
       const d = new GainNode(c);
       d.connect(r[0]).connect(r[1]).connect(m);
@@ -217,7 +228,7 @@ export function createAudio() {
       const v = new GainNode(c, { gain: 0.25 }); // send level; the return goes through the dry bus
       v.connect(new ConvolverNode(c, { buffer: makeIR(c) })).connect(d);
       const n = makeNoise(c);
-      ctx = c; master = m; room = r; dry = d; rainLp = rl; verb = v; noise = n;
+      ctx = c; master = m; duckG = dk; room = r; dry = d; rainLp = rl; verb = v; noise = n;
     } catch (e) { c.close?.().catch(() => {}); throw e; }
   }
 
@@ -237,7 +248,7 @@ export function createAudio() {
     if (w) {
       const gain = new GainNode(ctx, { gain: 0 });
       gain.connect(name === 'rain' ? rainLp : dry);
-      live[name] = { gain, voice: { rain, flame, sizzle, simmer, drone }[name](ctx, noise, gain) };
+      live[name] = { gain, voice: ({ rain, flame, sizzle, simmer, drone }[name] ?? registry.beds[name])(ctx, noise, gain) };
       return ramp(gain.gain, w.level, w.fade, now);
     }
     if (cur) {
@@ -256,7 +267,7 @@ export function createAudio() {
     return ctx.state === 'running';
   }
 
-  const applyAll = () => { for (const n of BEDS) applyBed(n); };
+  const applyAll = () => { for (const n of new Set([...BEDS, ...Object.keys(want.beds)])) applyBed(n); };
   const safe = (fn, fallback) => (...a) => { try { return fn(...a); } catch { return fallback; } };
 
   return {
@@ -280,18 +291,32 @@ export function createAudio() {
       if (!want.muted) applyAll();
     }),
     bed: safe((name, level = 1, fade = 1.5) => {
-      if (!BEDS.includes(name)) return;
+      if (!isBed(name)) return;
       want.beds[name] = { level: clamp01(level), fade: Number(fade) || 0 };
       applyBed(name);
     }),
     stop: safe((name, fade = 1.5) => {
-      if (!BEDS.includes(name)) return;
+      if (!isBed(name)) return;
       delete want.beds[name];
       applyBed(name, Number(fade) || 0);
     }),
     hit: safe((name) => {
-      if (!ctx || want.muted || paused || ctx.state !== 'running' || !hits[name]) return;
-      hits[name](ctx, noise, dry, verb);
+      const fn = hits[name] ?? registry.hits[name];
+      if (!ctx || want.muted || paused || ctx.state !== 'running' || !fn) return;
+      fn(ctx, noise, dry, verb);
+    }),
+    register,
+    // Gesture-driven level: ramps a bed (starting it if needed); 0 stops it.
+    level: safe((name, value, sec = 0.08) => {
+      if (!isBed(name)) return;
+      const v = clamp01(value);
+      if (v < 0.001) { delete want.beds[name]; applyBed(name, sec); return; }
+      want.beds[name] = { level: v, fade: Number(sec) || 0 };
+      applyBed(name);
+    }),
+    duck: safe((on) => {
+      want.duck = !!on;
+      if (ctx) ramp(duckG.gain, on ? DUCK : 1, 0.25, ctx.currentTime);
     }),
     muffle: safe((amount, seconds = 1.5) => {
       want.muffle = clamp01(amount);

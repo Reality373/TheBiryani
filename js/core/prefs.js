@@ -1,7 +1,7 @@
 const KEY = 'dum:prefs';
 
 export function createPrefs(storage, { reducedMotion = false } = {}) {
-  const defaults = { sound: false, calm: reducedMotion, captions: false, spices: [] };
+  const defaults = { sound: false, voice: true, subtitles: true, calm: reducedMotion, captions: false, reached: null, spices: [] };
   let stored = {};
   try {
     const parsed = JSON.parse(storage.getItem(KEY));

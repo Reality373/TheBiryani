@@ -1,17 +1,13 @@
-import { kitchenSVG } from './art/kitchen.js';
-import { topdownSVG } from './art/topdown.js';
+// Boot and the chapter loop. Dev switches are listed in docs/plan.md ("Dev switches").
 import { createAudio } from './core/audio.js';
 import { createPrefs } from './core/prefs.js';
-import { createRunner } from './core/runner.js';
-import { createSteam } from './core/steam.js';
+import { createStage } from './core/stage.js';
+import { createHotspots } from './core/hotspot.js';
+import { createVoice } from './core/voice.js';
 import { createUI } from './core/ui.js';
-import { labels, script, spices, SCENES } from './data/script.js';
-import arrival from './scenes/arrival.js';
-import seal from './scenes/seal.js';
-import wait from './scenes/wait.js';
-import reveal from './scenes/reveal.js';
-import eat from './scenes/eat.js';
-import glow from './scenes/glow.js';
+import { advance, continueTarget, indexOf } from './core/progress.js';
+import { chapters } from './data/chapters.js';
+import { labels } from './data/labels.js';
 
 const fail = (msg) => { document.documentElement.dataset.error = String(msg); };
 window.addEventListener('error', (e) => fail(e.message));
@@ -22,16 +18,12 @@ try { storage = window.localStorage; storage.getItem('dum:probe'); } catch {
   const mem = {};
   storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
 }
-const prefs = createPrefs(storage, { reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
-const audio = createAudio();
-const steam = createSteam(document.getElementById('steam'), prefs);
-const ui = createUI({ prefs, audio });
-
-const stage = document.getElementById('stage');
-stage.insertAdjacentHTML('afterbegin', kitchenSVG + topdownSVG);
-const kitchen = document.getElementById('kitchen');
-const top = document.getElementById('top');
 const q = new URLSearchParams(location.search);
+const auto = q.has('auto');
+const prefs = createPrefs(storage, { reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches });
+const calm = () => q.get('calm') === '1' || prefs.get('calm');
+const audio = createAudio();
+if (q.has('reached')) prefs.set('reached', q.get('reached')); // dev: pretend a chapter was reached (screenshots of the Continue choice)
 
 prefs.subscribe((key, value) => {
   if (key !== 'sound') return;
@@ -42,7 +34,7 @@ prefs.subscribe((key, value) => {
 let resumeBtn;
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden) return void audio.pause();
-  if (await audio.resume() || !prefs.get('sound') || q.has('auto') || resumeBtn) return;
+  if (await audio.resume() || !prefs.get('sound') || auto || resumeBtn) return;
   resumeBtn = document.createElement('button');
   resumeBtn.type = 'button';
   resumeBtn.textContent = labels.resumeSound;
@@ -53,42 +45,75 @@ document.addEventListener('visibilitychange', async () => {
   document.body.append(resumeBtn);
 });
 
-// ---- developer switches for screenshots ----
-// Only without auto/from, so they cannot interfere with a real run. e.g.
-// /?view=medium&pot=sealed&flame=low&light=dim&line=Hello&act=Go+on
-// Using one also stops the scenes from starting, so the forced state stays on screen.
-const DEV = ['view', 'pot', 'flame', 'light', 'seal', 'crack', 'calm', 'cap', 'line', 'settings', 'act', 'card', 'show', 'eaten', 'egg'];
-const dev = !q.has('auto') && !q.has('from') && DEV.some((k) => q.has(k));
-if (dev) {
-  if (q.has('view')) stage.dataset.view = q.get('view');
-  for (const key of ['pot', 'flame', 'light']) if (q.has(key)) kitchen.dataset[key] = q.get(key);
-  for (const key of ['seal', 'crack']) if (q.has(key)) kitchen.style.setProperty(`--${key}`, q.get(key));
-  for (const key of ['show', 'eaten', 'egg']) if (q.has(key)) top.dataset[key] = q.get(key);
-  if (q.has('show')) stage.dataset.view = 'top';
-  if (q.has('calm')) document.documentElement.dataset.calm = 'true';
-  if (q.has('cap')) { ui.caption(q.get('cap')); document.getElementById('cap').hidden = false; }
-  if (q.has('line')) document.getElementById('line').textContent = q.get('line');
-  if (q.has('settings')) document.getElementById('settings').showModal();
-  if (q.has('act')) {
-    const act = document.getElementById('act');
-    act.hidden = false;
-    document.getElementById('act-label').textContent = q.get('act');
-    if (q.has('p')) { act.dataset.hold = ''; act.style.setProperty('--p', q.get('p')); }
-  }
-  if (q.has('card')) {
-    ui.card({ title: labels.title, text: labels.intro, note: labels.silentHint, choices: [labels.withSound, labels.quietly] });
-  }
+// ---- the parts ----
+let ctl = null; // AbortController of the running chapter
+let jumpTo = null;
+const jump = (id) => { jumpTo = id; voice.clear(); ctl?.abort(); };
+const ui = createUI({ prefs, calm, auto, chapters, onJump: jump });
+const stage = createStage({ el: document.getElementById('stage'), camera: document.getElementById('camera'), calm, auto, params: q });
+const hotspot = createHotspots({ stage, ui, calm, auto });
+const voice = createVoice({ prefs, ui, audio, auto });
+if (q.has('settings')) document.getElementById('settings').showModal();
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const load = {};
+const loadChapter = (c) => (load[c.id] ??= import(`./chapters/${c.id}.js`).then(async (m) => ({ mod: m.default, art: (await m.default.art()).default })));
+const prefetch = (c) => c && loadChapter(c).catch(() => {}); // a failure still surfaces when that chapter is awaited
+
+async function runChapter(c, index, signal) {
+  const { mod, art } = await loadChapter(c);
+  await stage.show(art(q));
+  if (signal.aborted) return;
+  hotspot.signal = signal;
+  const aborted = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
+  const ctx = {
+    stage, hotspot, voice, audio, ui, prefs, params: q, auto, calm, signal, mood: c.mood,
+    wait: (ms) => (auto ? Promise.resolve() : Promise.race([sleep(ms), aborted])),
+  };
+  await ui.chapter(index, c.numeral, c.title);
+  if (signal.aborted) return;
+  await Promise.race([mod.play(ctx), aborted]);
 }
 
-// ---- the run ----
-const ctx = { ui, audio, steam, prefs, script, spices, kitchen, top };
-const modules = { arrival, seal, wait, reveal, eat, glow };
-const scenes = SCENES.filter((id) => modules[id]).map((id) => modules[id]);
-const runner = createRunner(scenes, ctx);
-const last = scenes[scenes.length - 1].id;
-if (!dev) (async () => {
-  await runner.start(q.get('from') ?? undefined);
+async function run() {
+  const want = q.get('ch');
+  let list, start = 0;
+  if (want) {
+    const i = indexOf(chapters, want);
+    list = i < 0 ? [{ id: want, numeral: '', title: want[0].toUpperCase() + want.slice(1), mood: 'night' }]
+      : chapters.filter((c, k) => k >= i && (k === i || c.built));
+  } else {
+    list = chapters.filter((c) => c.built);
+    const resume = continueTarget(chapters, prefs.get('reached'), (c) => c.built || q.has('reached'));
+    const choice = await ui.card({
+      kind: 'title', title: labels.title, text: labels.tagline, meta: labels.length, foot: labels.silentHint, note: labels.placeholder,
+      choices: [
+        ...(resume ? [{ label: labels.continue.replace('{title}', resume.title), sound: 'keep' }] : []),
+        { label: labels.withSound, sound: true },
+        { label: labels.quietly, sound: false },
+      ],
+    });
+    if (resume && choice === 0) start = list.findIndex((c) => c.id === resume.id);
+  }
+
+  for (let again = true; again; start = 0) {
+  for (let i = Math.max(0, start); i < list.length; i++) {
+    if (!auto) prefetch(list[i + 1]);
+    ctl = new AbortController();
+    const c = list[i];
+    const index = indexOf(chapters, c.id);
+    if (index >= 0) prefs.set('reached', advance(chapters, prefs.get('reached'), c.id));
+    await runChapter(c, index, ctl.signal);
+    if (jumpTo) {
+      const j = list.findIndex((x) => x.id === jumpTo);
+      jumpTo = null;
+      if (j >= 0) { i = j - 1; continue; }
+    }
+    if (c.id === 'end') prefs.set('reached', null);
+  }
+  again = !auto && !want && list.at(-1)?.id === 'end'; // after the end, the piece can go round again
+  }
   document.documentElement.dataset.done = '1';
-  // Round loop: after glow the piece goes round again.
-  while (last === 'glow' && !q.has('auto')) await runner.start(scenes[1].id);
-})();
+}
+
+run().catch(fail);
