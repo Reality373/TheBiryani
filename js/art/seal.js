@@ -15,6 +15,8 @@ export default function art() {
 
   const fx = plane('seal-fx', 0.78, `<style>
       [data-pot='lidded'] #r-dough{opacity:1 !important}
+      #r-dough .lm{opacity:var(--on,0) !important} /* the chapter lights each lump by its eighth; no fade, so a press shows at once */
+      @media (max-width:600px){[data-pot='open'] #r-lid .lidT{transform:translate(-70px,207px) rotate(2deg)}} /* inside the phone column; LID_PHONE in chapters/seal.js */
       #seal-fx #s-rope{opacity:0;transition:opacity .6s}
       [data-pot='lidded'] #seal-fx #s-rope{opacity:.7}
       #seal-fx #s-rope.gone{opacity:0 !important}
