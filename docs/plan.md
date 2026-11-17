@@ -55,7 +55,9 @@ export default {
 
 `js/data/chapters.js` lists every chapter in order: `{ id, numeral, title }` for `marinade` I, `fry` II, `layers` III, `seal` IV, `wait` V, `opening` VI, `plate` VII, then `end` (no numeral). `main.js` shows the title card, then for each chapter: imports its module (a chapter whose file does not exist yet is skipped), imports its art, `stage.show()`s it, calls `ui.chapter()`, then `await play(ctx)`. While a chapter plays, the next chapter's modules are imported in the background. After `end` the piece can start again from the first chapter.
 
-`ctx` holds: `stage`, `hotspot`, `voice`, `audio`, `ui`, `prefs`, `params` (the page's URLSearchParams), `auto` (boolean), `calm()` (current calm setting), `wait(ms)` (resolves at once in auto mode).
+`ctx` holds: `stage`, `hotspot`, `voice`, `audio`, `ui`, `prefs`, `params` (the page's URLSearchParams), `auto` (boolean), `calm()` (current calm setting), `wait(ms)` (resolves at once in auto mode), `signal` (an `AbortSignal` that aborts when the viewer jumps to another chapter), `mood` (the chapter's colour-script mood, from `chapters.js`, to pass to `room()` or `close()`).
+
+`chapters.js` entries are `{ id, numeral, title, mood, built }`, moods per design.md §4: marinade `dusk`, fry `stove`, layers `steam`, seal `night`, wait `night`, opening `burst`, plate `lamp`, end `moon`.
 
 ### Art
 
@@ -76,6 +78,10 @@ stage.camera.lean(x, y)                 // add a bias in [-1, 1] to the parallax
 stage.toWorld(event, planeEl) -> {x, y} // pointer position in that plane's viewBox units
 ```
 
+Framing: `push` keeps the pushed-to point inside the top 70% of the viewport, because the bottom 22% (28% under 600 px wide) is the subtitle zone. Chapters push in on whatever is currently touchable.
+
+Frame-time fallback: the stage measures frame time for the first 2 s after each `show`. If the median is over 24 ms it sets `data-lite` on `<html>`: the grain becomes a plain-opacity overlay, the automatic drift stops, and chapters may read `document.documentElement.dataset.lite` to thin their own ambient effects (motes, rain density).
+
 Parallax: `--cx`, `--cy` in [-1, 1] on the stage, from the pointer (eased, lerp about 0.06) or a slow automatic drift (`0.6 * sin(t / 9 s)`) when there is no pointer. Each plane moves only by `translate3d(calc(var(--cx) * var(--d) * var(--shift)), calc(var(--cy) * var(--d) * var(--shift) * 0.4), 0)`, `--shift` 64 px on wide screens and 26 px under 600 px. `?cx=&cy=` pin the camera and stop the loop. Calm mode pins it at 0, 0 and makes `push` jump. Do not leave `will-change: transform` on anything that gets scaled up (it blurs).
 
 ### hotspot (`js/core/hotspot.js`)
@@ -83,6 +89,7 @@ Parallax: `--cx`, `--cy` in [-1, 1] on the stage, from the pointer (eased, lerp 
 ```js
 const h = ctx.hotspot(el, {
   label,     // lowercase imperative, shown as the hint and used as aria-label: 'stir it in'
+  gesture,   // REQUIRED. How the hint glyph shows it: 'tap' | 'hold' | 'circle' | { drag: [dx, dy] } (world units)
   step,      // REQUIRED. One tap, Enter or Space. Return true when this hotspot is finished.
   drag,      // optional ({ x, y, dx, dy, speed, first }) => true|void. Pointer moves while pressed, world units. true = finished.
   hold,      // optional (dt) => true|void. Called every frame while pressed and held.
@@ -93,9 +100,9 @@ h.done      // Promise, resolves once finished (a callback returned true, or h.f
 h.finish(); h.dispose();
 ```
 
-- Makes `el` a focusable control: `role="button"`, `tabindex="0"`, `aria-label`, `.hotspot` class, visible focus ring. The art gives `el` a transparent `.hit` shape at least 48 CSS px across at the camera scale it is used at.
+- Makes `el` a focusable control: `role="button"`, `tabindex="0"` while active (`-1` plus `aria-hidden` once disposed or finished), `aria-label`, `.hotspot` class, visible focus ring. The art gives `el` a transparent `.hit` shape at least 48 CSS px across at the camera scale it is used at.
 - Several hotspots can be active at once.
-- After 2.5 s with no input anywhere, each active hotspot that has never been touched gets a slow saffron pulse ring and its hint text beside it (through `ui.hint`). Both fade on its first touch and never return for it.
+- After 2.5 s with no input anywhere, each active hotspot that has never been touched gets a slow saffron pulse ring, its hint text beside it (through `ui.hint`, never inside the subtitle zone) and the gesture glyph animated along its path (still in calm mode). All fade on its first touch and never return for it.
 - Calm mode: `drag` and `hold` are ignored; only `step`.
 - Auto mode (`?auto=1`): calls `step` every 60 ms until it returns true. So `step` must always make progress.
 
@@ -124,12 +131,24 @@ and exports the existing building blocks (`tick`, `tone`, `voiceKit`, `makeNoise
 ### ui (`js/core/ui.js`)
 
 ```js
-ui.chapter(index, numeral, title) -> Promise  // big centred title for about 2 s, then it settles into the header; immediate in auto
+ui.chapter(index, numeral, title) -> Promise  // big centred title for about 2 s, then it settles into the top-left cartouche; immediate in auto; then focus goes to the heading
 ui.subtitle(text)                             // used by voice: current line full, previous at 0.45
 ui.caption(text | null)                       // [sound caption], shown only when captions are on
 ui.card({ kind: 'title' | 'end', title, text, note, icons, choices }) -> Promise<choice index>
 ui.hint(el, text); ui.unhint(el)               // used by hotspot
 ```
+
+### Progress and ways out (`main.js`, `ui.js`)
+
+- `prefs` keeps `reached`: the id of the furthest chapter started. Finishing `end` clears it.
+- The title card shows "Continue: <title>" as its first choice when `reached` is set, above "Begin with sound" and "Begin quietly" (both start from the first chapter).
+- Header diamonds of chapters up to `reached` are buttons that jump to that chapter (its start). The Settings dialog lists the same chapters and has "Start over".
+- A jump ends the current chapter cleanly: `main.js` passes `ctx.signal` (an `AbortSignal`) to `play`; chapters stop their loops and timers when it aborts, and `hotspot`s created with it dispose themselves. `stage.show` of the new chapter follows.
+
+### Page shell (`index.html`)
+
+- Open Graph and Twitter card meta: title "Dum", description "A small, slow story about Hyderabadi dum biryani. You cook it, wait for it, and eat it.", image `og-image.png` (1200x630, rendered from the title card in W3).
+- A failure message (cream text, "Something went wrong.", a "Reload" button) shown when `data-error` is set.
 
 ## Dev switches
 

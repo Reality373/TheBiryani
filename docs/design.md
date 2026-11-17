@@ -22,9 +22,12 @@ Everything in decisions.md D1–D10 still holds: the dish and method, no person 
 4. **Every drag also works as a tap, Enter or Space** (one press = one step). Calm mode turns every drag into taps and stops camera drift and ambient motion.
 5. **Each cooking action gets its why,** spoken at the moment it happens, in one short sentence.
 6. **The voice carries the words.** Subtitles mirror the voice (on by default). Sound captions in [brackets] are a separate toggle.
-7. **Never lost.** After 2.5 s idle, the next touchable thing pulses with a saffron ring and a short italic hint appears beside it ("stir it in"). It shows once per hotspot and fades on first touch.
+7. **Never lost.** After 2.5 s idle, the next touchable thing pulses with a saffron ring, a short italic hint appears beside it ("stir it in"), and a small glyph shows the gesture along its path: a dotted arc for a stir, an arrow for a drag, a filling ring for a hold, a dot for a tap. It shows once per hotspot and fades on first touch. Calm mode shows the glyph still.
 8. **Variety.** No two beats in a row use the same gesture.
-9. **The camera frames what you touch.** It pushes in on the active object so every target is big; hit areas are at least 48 CSS px.
+9. **The camera frames what you touch.** It pushes in on the active object so every target is big; hit areas are at least 48 CSS px. The active hotspot always sits in the top 70% of the screen: the bottom of the screen belongs to the subtitles (22% on desktop, 28% on phones).
+10. **Short enough to love.** Each chapter takes 45–75 s and 2–4 gestures; the Plate keeps its six bites, each short. The whole piece runs 7–8 minutes, and the title card says so. Trim lines before trimming gestures.
+11. **Every sound has a visual twin** (bubbles with the sizzle, a pointer jump with each knob click, a ripple with each plop), so the piece still answers every touch for someone watching without sound.
+12. **Ways out, but no skipping.** The piece remembers the furthest chapter reached. The title card offers "Continue" when there is one; the diamonds of reached chapters jump there; Settings has the chapter list and "Start over". Nothing skips the interaction inside a chapter, and chapters not yet reached cannot be jumped to.
 
 ## 3. Chapters
 
@@ -40,7 +43,7 @@ A title card opens the piece; seven chapters; an end card closes it. Each chapte
 | V | **The Wait** | Room, wide | Slide the tawa under the pot; turn the knob from high to low; then, in any order: wipe the fogged window, try the lid (it refuses), push the thread of steam; finally turn the flame off | Flame hiss following the knob, everything muffled as if from the next room, rain louder at the window, a squeaky rub, a dull knock, cooling ticks |
 | VI | **The Opening** | Room close, then into the pot | Drag along the dough to crack the seal (cracks follow your finger); drag the lid up (steam leaks as it rises, then bursts); serve with the big spoon, down the side and up | Cracking dough, a steam rush, the muffle opening, one chime, the spoon scraping the bottom |
 | VII | **The Plate** | Close: the plate on the table | Six bites, each a different gesture (below); whole spices turn up in some bites | Spoon on steel, then quiet; a short sting for each spice found |
-| — | End card | Room, warm | Look at the spices you found; "Go again" | Rain easing, a warm drone |
+| — | End card | Room, warm | Read "The recipe, and why" (every step with its reason, as you heard them); see the spices you found; "Go again" | Rain easing, a warm drone |
 
 **The six bites.** 1: gather rice from the edge of the mound into the spoon. 2: tap a piece of chicken to break it onto the spoon. 3: sweep rice, chicken and an onion curl together. 4: dip the spoon in the dahi chutney. 5: drag the serving spoon from the pot for a second helping (the plate refills). 6: sweep what is left into one last spoonful. Between bites the spoon lifts toward the viewer and the mound shrinks. Easter eggs: one or two of the seven spices turn up per plate, shown on the spoon; found spices are kept for the end card ("3 of 7 found").
 
@@ -68,6 +71,18 @@ Spice lines are unchanged from v1 and live in `js/data/spices.js`.
 - *Forest and lake at dusk*: dense stippled texture, one small warm light in large cool masses. The lighting idea.
 - *Rug Studio landing page*: thick border, vine ring, arched panel with a sunburst, triangle trim, four or five inks. The frame and the cards.
 
+**Colour script.** One room, but the light changes with the story, set through a `mood` option on `room()` and `close()`:
+
+| Chapter | Mood |
+|---|---|
+| Marinade | Dusk: violet sky, the rain just starting, a warm lamp on the counter |
+| Fry | The stove's light dominant, a haze of frying in the air |
+| Layers | Misted with steam, softer edges |
+| Seal, Wait | Deep night: rain heaviest, the room dimmest, the pot the only warmth |
+| Opening | A burst of warm light as the lid lifts |
+| Plate | Golden lamp light on the table |
+| End | Rain easing, the moon out |
+
 **Two kinds of shot.**
 - **Room**: the kitchen from the side. Used by Seal, Wait, the start of the Opening and the end card. One shared world.
 - **Close**: a three-quarter view looking down about 35 degrees at the counter or table (circles become ellipses about 0.45 as tall as wide), with the room far behind, soft and blurred. Used by Marinade, Fry, Layers, the inside of the pot in the Opening, and the Plate.
@@ -93,9 +108,9 @@ Spice lines are unchanged from v1 and live in `js/data/spices.js`.
 8. Palette: night #141A2E, indigo #27356B, iron #0E0D12, madder #A33B2C, saffron #F2A516, copper #B8693A, cream #F6EBD3, mint #5E8C4A, plus their tints and shades. Food may add its own true colours (chicken browns, chilli green, saffron orange #E0861A).
 9. Food must pass the appetite test: warm saturated colour, individual rice grains, glossy highlights, pale rice against dark onion, a little bright green, steam. Grey or uniform food fails.
 
-**Frame and cards.** A thin saffron line inset 14 px (8 px on phones) with small Kalamkari corner flowers over every scene. The title and end cards follow Rug Studio in this project's inks (night, madder, saffron, mint, cream): thick madder border, vine-and-flower ring, triangle trim, a cusped arch panel with a saffron sunburst behind a sealed-pot emblem, cream display type.
+**Frame and cards.** The title and end cards follow Rug Studio in this project's inks (night, madder, saffron, mint, cream): thick madder border, vine-and-flower ring, triangle trim, a cusped arch panel with a saffron sunburst behind a sealed-pot emblem, cream display type, and the same grain as the scenes. Every scene keeps a slim version of that border on screen (a thin madder band with a low-contrast vine and small Kalamkari corner flowers, about 10 px, 6 px on phones), so the card opens into the scene through a frame that stays. The title card also says "About 8 minutes · Better with sound" and, under the buttons, "No sound? Check the silent switch."
 
-**Type.** Fraunces for titles, Literata for subtitles and hints (both OFL, loaded from jsdelivr). Chapter header at the top centre: seven small diamonds (current filled saffron), the numeral in letter-spaced small caps, the title in Fraunces italic. At each chapter start the title shows large in the centre for about two seconds, then settles into the header. Subtitles at the bottom centre: the line being spoken in full cream, the previous line faded to 0.45, at most two lines, `clamp(1rem, 0.9rem + 0.5vw, 1.25rem)`, on a light scrim. Text never sits inside a moving plane.
+**Type.** Fraunces (upright and true italic) for titles, Literata for subtitles and hints (both OFL, loaded from jsdelivr). At each chapter start the title shows large in the centre for about two seconds, then settles into a small cartouche in the frame's top-left corner (numeral in letter-spaced small caps, title in Fraunces italic), with seven small diamonds along the top border (current filled saffron, reached ones outlined saffron, others cream at low opacity). The top centre stays clear for the art. Subtitles at the bottom centre: the line being spoken in full cream, the previous line faded to 0.45, at most two lines, `clamp(1rem, 0.9rem + 0.5vw, 1.25rem)`, on a light scrim. Text never sits inside a moving plane.
 
 ## 5. Sound
 
@@ -116,8 +131,12 @@ Known limit: Chrome on Linux often has no speech voices at all, so the placehold
 
 ## 7. Accessibility
 
-Every hotspot is a real focusable control (`role="button"`, `tabindex="0"`, an `aria-label` that matches its hint) with a visible focus ring. Subtitles are an `aria-live` region. Calm mode (default on with `prefers-reduced-motion`) keeps every line, sound and picture, pins the camera, stops ambient motion and turns drags into taps. Text contrast at least 4.5:1, enforced by `tests/contrast.test.js`. Settings: sound, voice, subtitles, sound captions, calm mode.
+Every hotspot is a real focusable control (`role="button"`, an `aria-label` that matches its hint) with a visible focus ring. Only active hotspots are tabbable; inactive ones are `tabindex="-1"` and `aria-hidden`, so Tab follows the story, not the depth of the planes. At each chapter start focus moves to the chapter heading, then to the first active hotspot. Subtitles are an `aria-live` region. Starting quietly turns subtitles and sound captions on. If something breaks, a small message with a "Reload" button appears instead of a frozen scene. Calm mode (default on with `prefers-reduced-motion`) keeps every line, sound and picture, pins the camera, stops ambient motion and turns drags into taps. Text contrast at least 4.5:1, enforced by `tests/contrast.test.js`. Settings: sound, voice, subtitles, sound captions, calm mode.
 
-## 8. Out of scope
+## 8. The link
+
+The piece is shared as a link, so its preview is its first impression: a title, a one-line description and a 1200x630 `og-image.png` rendered from the title card with headless Chrome (code-drawn, so D9 holds), through Open Graph and Twitter card meta.
+
+## 9. Out of scope
 
 Scrolling, haptics, accounts, analytics, a share card, Urdu or Telugu script, any person or face, photos, AI-generated images or voices (unless the owner decides otherwise), and a framework or bundler.
