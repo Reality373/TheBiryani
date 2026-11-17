@@ -1,160 +1,123 @@
-# Dum — design
+# Dum — design (v2)
 
-**What it is.** A four-minute interactive web piece about Hyderabadi chicken dum biryani, made for the November "Thankful for This Food" challenge. You cook it, seal it, wait for it, open it and eat it. It is built to make the viewer hungry, mostly through sound, waiting and sensory writing.
+**What it is.** A short interactive web piece about Hyderabadi chicken dum biryani. You marinate, fry, layer, seal, wait for, open and eat it, with your own hands, in a kitchen on a rainy night. It should look like a piece of artwork, sound like a real kitchen, and make you hungry.
 
-**Status.** Statuses follow [decisions.md](decisions.md): *decided* by the user, *proposed* by Claude, or *open*. Everything in this file that is not marked decided is a proposal and is built as the default.
+**Status.** v1 (one line of text and one yellow button per beat, flat paper-cut art in a phone-width strip) was rejected by the owner on 15 Nov 2026. This file replaces it. Decisions and their status are in [decisions.md](decisions.md). Build order, file layout and interfaces are in [plan.md](plan.md).
 
-**Reading order for implementers:** this file, then [plan.md](plan.md). Research is in [research/](research/); each section below names the report it relies on.
+## 1. What the owner asked for (decided)
 
-## 1. Fixed constraints (decided)
+Everything in decisions.md D1–D10 still holds: the dish and method, no person on screen, the craving goal, the eating journey with spice easter eggs, cozy, illustrated art only (no photos, no AI images), a public web link within a week of 14 Nov. New on 15 Nov:
 
-- Dish and method: Hyderabadi chicken dum biryani. Chicken marinated in curd and ginger-garlic paste, fried till golden, made into the base, rice added, then dum.
-- No person is needed. The arc is "I always know I will be happy after".
-- Goal: "I wish I had this biryani right now", even from someone who doesn't like biryani.
-- An eating journey bite by bite, with easter eggs for biting a whole spice.
-- Cozy, with a good story.
-- Illustrated art only. No photographs, no AI-generated images.
-- Ships as a public web link, within a week of 14 Nov 2026.
+- **D12** It must look like a piece of artwork: 2.5D layered scenes, the way Genshin Impact shows some of its stories. Inspiration from collectui.com.
+- **D13** The focus is the visuals, the sound and the interaction. It must not be a click-to-skip flow.
+- **D14** Explain why each thing is done.
+- **D15** A voice-over tells it, so nobody has to read.
+- **D16** The viewer should enjoy the process.
 
-## 2. What the gap research changed
+## 2. Rules every chapter follows
 
-| Finding | Source | Consequence |
+1. **You do things to the food and the kitchen, and the words follow from what you did.** There is no generic "next" button anywhere.
+2. **Every touch answers at once** in picture and in sound (under 100 ms). Sound follows the gesture: speed, distance, pressure.
+3. **Nothing can be failed. Nothing runs on a timer the viewer can miss.** The piece waits for the viewer's hands.
+4. **Every drag also works as a tap, Enter or Space** (one press = one step). Calm mode turns every drag into taps and stops camera drift and ambient motion.
+5. **Each cooking action gets its why,** spoken at the moment it happens, in one short sentence.
+6. **The voice carries the words.** Subtitles mirror the voice (on by default). Sound captions in [brackets] are a separate toggle.
+7. **Never lost.** After 2.5 s idle, the next touchable thing pulses with a saffron ring and a short italic hint appears beside it ("stir it in"). It shows once per hotspot and fades on first touch.
+8. **Variety.** No two beats in a row use the same gesture.
+9. **The camera frames what you touch.** It pushes in on the active object so every target is big; hit areas are at least 48 CSS px.
+
+## 3. Chapters
+
+A title card opens the piece; seven chapters; an end card closes it. Each chapter starts from its own known state, so any chapter can be opened alone with `?ch=<id>`. Lines are voice-over: **say** is the story, **why** is the reason. Whys marked *(cook)* are Claude's wording for the owner to confirm or correct.
+
+| # | Chapter | Shot | What you do | What you hear |
+|---|---|---|---|---|
+| — | Title card | Ornamental card | "Begin with sound" or "Begin quietly" (this unlocks audio) | Rain fades in |
+| I | **The Marinade** | Close: steel bowl of chicken on the counter | Drag the curd bowl over and tip it in; tap the ginger-garlic paste; tap chilli, turmeric and salt in turn; stir in circles until the white turns sunset orange | Thick plops, dry puffs, a wet fold that speeds up with your stir |
+| II | **The Fry** | Close: heavy pot of hot oil on the stove | Drag each piece of chicken into the oil; hold on the pot until the edges go golden (release and hold again any time); drop in dark fried onions; tap the whole spices in one by one | Sizzle bursts per piece, a sizzle bed that swells while you hold, crackle, a thick simmer |
+| III | **The Layers** | Close: into the pot, masala at the bottom | Tap the ladle to spread rice in layers; drag across the rice to pour saffron milk (the streaks follow your finger); scatter mint and onions; drizzle ghee | Soft pours, a thin trickle, small drops |
+| IV | **The Seal** | Room, medium: pot on the stove | Drag the lid on; press the dough rope round the rim, press by press (drag along the rim or tap) | A lid's clink, dull thumb presses, then the room goes quiet |
+| V | **The Wait** | Room, wide | Slide the tawa under the pot; turn the knob from high to low; then, in any order: wipe the fogged window, try the lid (it refuses), push the thread of steam; finally turn the flame off | Flame hiss following the knob, everything muffled as if from the next room, rain louder at the window, a squeaky rub, a dull knock, cooling ticks |
+| VI | **The Opening** | Room close, then into the pot | Drag along the dough to crack the seal (cracks follow your finger); drag the lid up (steam leaks as it rises, then bursts); serve with the big spoon, down the side and up | Cracking dough, a steam rush, the muffle opening, one chime, the spoon scraping the bottom |
+| VII | **The Plate** | Close: the plate on the table | Six bites, each a different gesture (below); whole spices turn up in some bites | Spoon on steel, then quiet; a short sting for each spice found |
+| — | End card | Room, warm | Look at the spices you found; "Go again" | Rain easing, a warm drone |
+
+**The six bites.** 1: gather rice from the edge of the mound into the spoon. 2: tap a piece of chicken to break it onto the spoon. 3: sweep rice, chicken and an onion curl together. 4: dip the spoon in the dahi chutney. 5: drag the serving spoon from the pot for a second helping (the plate refills). 6: sweep what is left into one last spoonful. Between bites the spoon lifts toward the viewer and the mound shrinks. Easter eggs: one or two of the seven spices turn up per plate, shown on the spoon; found spices are kept for the end card ("3 of 7 found").
+
+### Lines
+
+| Chapter | Say | Why |
 |---|---|---|
-| The user's method is **pakki** (meat cooked first), not the kachchi method the visual report described. No source names "fried golden first" as its own style. | [03](research/03-hyderabadi-details.md) §1 | Never say "kachchi" or "authentic". End card says "Made the home way: chicken first, then rice, then dum." |
-| Real home dum is nearly silent: a few minutes on high, then about 20 on low with a tawa under the pot, then a 10-minute rest. | 03 §3 | The wait is quiet: a faint hiss and one thread of steam at the seal. No rolling boil, no trembling pot. The rest becomes a beat: "Ten more minutes." |
-| Mirchi ka salan and dahi ki chutney are the standard pair. | 03 §4 | Both are on the table. The "raita bite" becomes the dahi chutney bite; salan gets a line. |
-| Star anise is contested in Hyderabadi biryani. Bay leaf is tej patta (long, three-veined). Whole spices are normally left on the plate. | 03 §2 | Star anise is the rare egg and its line admits the argument. Tej patta is drawn long and veined. |
-| Wording works through expected taste, and sensory + setting + pleasure phrases lifted the appeal of a disliked food type. Reading load must stay low. | [04](research/04-craving-evidence.md) §1 | Lines are short, concrete and about the taste experience. One or two senses per line, never a paragraph. |
-| A delay lowered enjoyment when the thing waited for was only imagined. | 04 §3 | The pot stays visible and audible through the whole wait. |
-| Satiation from imagined eating needs tens of repetitions, but identical beats should not loop. | 04 §5 | Six bites, each a different thing (steam, rice, chicken, onion, dahi, the last spoon). |
-| Nothing shows that any of this converts someone who dislikes the dish. The best-supported cue is a visibly happy eater. | 04 §7 | Stays open (O2, O5). Default is nobody on screen: no face and no hands. Only showing it to people answers it. |
-| iOS has no Vibration API. dvh jumps on iOS (WebKit 266835). Gradient masks do not interpolate. Animating `mask-position` repaints heavily. | [05](research/05-platform-and-accessibility.md), [06](research/06-visual-effect-techniques.md) | No haptics. Stage sized with `svh`. Effects move baked layers with `transform` and `opacity` only. |
-| No animation library is needed. Raw Web Audio is enough. | 05 §3, [07](research/07-web-audio.md) §4 | Zero dependencies. |
-| On iPhone the silent switch mutes Web Audio unless `navigator.audioSession.type = "playback"` (iOS 17+, experimental), which also stops the viewer's own music. | 07 §3 | "Start with sound" is an explicit choice, so it sets `playback` when available, and a hint says "No sound? Check the silent switch." |
-| WCAG 2.2: hold and stir need single-tap and keyboard alternatives; moving content over 5 s needs a stop control; targets at least 24 px; text contrast 4.5:1. | 05 §4 | Every action is a real button. Calm mode stops ambient motion. Contrast is tested automatically. |
-| Fraunces (display) and Literata (text) are OFL with no reserved name. | [08](research/08-assets-and-licences.md) §1 | Those two faces. |
+| Marinade | "It starts an hour before. Curd first, thick and cold." · "Ginger and garlic, ground to a paste." · "Chilli, turmeric, salt. The white turns the colour of a sunset." · "Fold it through. Then leave it alone." | "The curd softens the chicken and holds the spices to it." *(cook)* · "An hour in the curd, and it softens all the way through." *(cook)* |
+| Fry | "Hot oil. The chicken goes in." · "The kitchen stops being a kitchen." · "Golden at the edges. Next door, someone has started wondering what you're making." · "Fried onions, dark and sweet." · "Whole spices: elaichi, clove, a piece of cinnamon, one long bay leaf." · "The masala thickens and holds on to the chicken." | "Frying it first browns the edges, and the browning is flavour." *(cook)* · "Whole, not ground. They give up their smell slowly, through the long cook." *(cook)* |
+| Layers | "Rice, most of the way cooked, every grain on its own." · "Saffron milk. Watch it travel." · "Mint. More fried onion. A spoon of ghee, because nobody is watching." | "Only most of the way. The steam will finish it." · "Poured, not stirred. It stays in streaks, so every spoonful is a little different." *(cook)* |
+| Seal | "Now the lid, and dough around the rim, pressed down with your thumb." · "Whatever is in there now stays in there." | "The dough seals the lid. The steam has nowhere to go, so it cooks the rice. That is the dum." |
+| Wait | "A few minutes on high." · "This is the dum. Nothing to stir. Nothing to check." · "Outside, the rain has not stopped. Good. Nobody is going anywhere." · "You can't open it yet. Everyone knows. Nobody says anything." · "One thread of steam finds a gap in the dough. The whole house smells of it now." · "Flame off. Ten more minutes. This is the hardest part." | "The tawa spreads the heat, so the bottom doesn't burn." · "High heat builds the steam. Low heat keeps it." · "Open it now and the steam is gone, and the rice stays hard." · "Off the heat it is still cooking. The rest lets the grains settle, so they don't break." |
+| Opening | "The lid lifts, and for a second the steam is all there is." · "Then saffron. Then mint. Then the fried onions, darker than you remembered." · "Serve from the side, all the way down." | "Rice from the top, chicken from the bottom. Every plate gets both." |
+| Plate | 1: "The first bite. Steam, then rice that smells of saffron, then the heat, a second late." · "You didn't know you were this hungry." 2: "The chicken finds you. Soft from the curd, the ginger and garlic still in it." · "Now it makes sense." 3: "Rice, chicken, a curl of fried onion. Nobody is talking. Nobody needs to." 4: "A spoon of cold dahi chutney. The heat steps back, just enough to keep going." · "Salan on the side: sour, nutty, a little dangerous." 5: "A second helping. You said you'd stop." 6: "The last bite. You slow down on purpose and gather what's left into one spoonful." · "This is the one you save." | — |
+| End | "The plate is empty. You lean back. Something warm and heavy settles in." · "You knew you'd be happy." · "You were right." · small text: "Made the home way: chicken first, then rice, then dum." | — |
 
-## 3. The experience
-
-A fixed stage fills the screen. There is no scrolling. One button at the bottom is always the next thing to do, and nothing advances on a timer the viewer can miss. Narration appears one short line at a time.
-
-Two views carry everything:
-
-- **Kitchen:** a home kitchen at night, from the side. Rain on the window, a stove with a low flame, the pot. Used for arrival, seal, wait, the lid-lift and the ending.
-- **Top-down:** a round vessel or plate seen from above. Used for the cooking steps, the opened pot and the plate.
-
-### Scenes
-
-| # | Scene | View | What you do | What you hear | Tier |
-|---|---|---|---|---|---|
-| 0 | Arrival | Kitchen, wide | Choose "Start with sound" or "Start quietly" | Rain | Core |
-| 1 | Marinate | Top-down bowl | Add curd, paste, spices; fold | Soft wet stir | Cook |
-| 2 | Fry | Top-down pot | Hold to fry till golden (a tap also works) | Sizzle and crackle | Cook |
-| 3 | Base | Top-down pot | Add fried onions and whole spices | Thick simmer | Cook |
-| 4 | Layer | Top-down pot | Add rice, saffron milk, mint, onions, ghee | Quiet, small pours | Cook |
-| 5 | Seal | Kitchen, medium | Hold to press the dough round the rim | A dull press, then hush | Core |
-| 6 | Wait | Kitchen, pulled back, dim | Press "Wait" through five paced lines | Everything muffled, rain, a faint hiss | Core |
-| 7 | Lid-lift | Kitchen, close, then top-down | Break the seal | Dough cracks, steam rushes, the room opens up, a chime | Core |
-| 8 | Eat | Top-down plate | Take six bites | A spoon, then quiet | Core |
-| 9 | Glow | Kitchen, wide, warmer | Go again | Rain easing, a warm drone | Core |
-
-**Tiers are the cut line.** Core ships first and is complete without the rest: it opens on "The rice is in. The saffron is in." Cook scenes slot in between Arrival and Seal. Easter eggs and the spice box come after that.
-
-**The wait** is the centre of the piece. The camera pulls back, the light drops, the sound goes dull as if heard from the next room. Each press of "Wait" brings one line and the button rests for about two seconds before it can be pressed again. That pacing is the only timing in the piece, and it cannot be failed.
-
-**The lid-lift** is the one loud moment. The seal cracks, the lid rises, a backlit plume of steam fills the frame, the muffle opens over about a second and a half, and one chime sounds. Then the view drops to the open pot from above: pale rice, saffron streaks, dark fried onion, mint.
-
-**Calm mode** (on by default when the system asks for reduced motion, and a visible toggle) keeps every line, sound and picture. It swaps camera moves for crossfades, stops ambient motion (rain, steam drift, flame flicker), turns holds into single taps, and shows the plume as a still.
-
-### Script (draft, for the user to review)
-
-Lines are final wording candidates, not placeholders. Once `js/data/script.js` exists it is the source of truth and this table is history.
-
-| Scene | Lines |
-|---|---|
-| Arrival | Title: **Dum**. Under it: "A small, slow story about Hyderabadi dum biryani. About four minutes. Better with sound." |
-| Marinate | "It starts an hour before. Curd first, thick and cold." · "Ginger and garlic, ground to a paste. It stays on your fingers until tomorrow." · "Chilli, turmeric, salt. The white turns the colour of a sunset." · "Fold it through. Then leave it alone." |
-| Fry | "Hot oil. The chicken goes in." · "The kitchen stops being a kitchen." · "Golden at the edges. Next door, someone has started wondering what you're making." |
-| Base | "Fried onions, dark and sweet." · "Whole spices: elaichi, clove, a piece of cinnamon, one long bay leaf." · "The masala thickens and holds on to the chicken." |
-| Layer | "Rice, most of the way cooked, every grain on its own." · "Saffron milk. Watch it travel." · "Mint. More fried onion. A spoon of ghee, because nobody is watching." |
-| Seal (core opening) | "The rice is in. The saffron is in." · "Now the lid, and dough around the rim, pressed down with your thumb." · after the hold: "Whatever is in there now stays in there." |
-| Wait | "A few minutes on high. Then the flame goes low." · "This is the dum. Nothing to stir. Nothing to check." · "You can't open it yet. Everyone knows. Nobody says anything." · "One thread of steam finds a gap in the dough. The whole house smells of it now." · "Flame off. Ten more minutes. This is the hardest part." |
-| Lid-lift | "The lid lifts, and for a second the steam is all there is." · "Then saffron. Then mint. Then the fried onions, darker than you remembered." · "Serve from the side, all the way down. Rice from the top, chicken from the bottom." |
-| Eat 1 | "The first bite. Steam, then rice that smells of saffron, then the heat, a second late." · "You didn't know you were this hungry." |
-| Eat 2 | "The chicken finds you. Soft from the curd, the ginger and garlic still in it." · "Now it makes sense." |
-| Eat 3 | "Rice, chicken, a curl of fried onion. Nobody is talking. Nobody needs to." |
-| Eat 4 | "A spoon of cold dahi chutney. The heat steps back, just enough to keep going." · "Salan on the side: sour, nutty, a little dangerous." |
-| Eat 5 | "A second helping. You said you'd stop." |
-| Eat 6 | "The last bite. You slow down on purpose and gather what's left into one spoonful." · "This is the one you save." |
-| Glow | "The plate is empty. You lean back. Something warm and heavy settles in." · "You knew you'd be happy." · "You were right." · small: "Made the home way: chicken first, then rice, then dum." |
-
-Easter eggs. One or two turn up per plate, at random, between bites. Found spices are kept in a small spice box on the end card ("3 of 7 found") so there is a reason to go again.
-
-| Spice | Line | Chance |
-|---|---|---|
-| Elaichi (green cardamom) | "Elaichi. It was hiding in the rice. For a moment your whole mouth is a perfume shop." | Common |
-| Clove | "A clove. Sharp, then your tongue goes a little numb. You reach for water." | Common |
-| Cinnamon bark | "A piece of cinnamon. Woody, warm, sweet at the edges. You chew longer than you should." | Common |
-| Peppercorn | "A whole peppercorn. A small bright bang at the back of your nose." | Common |
-| Bay leaf | "The bay leaf. Nobody eats the bay leaf. And yet." | Common |
-| Green chilli | "A green chilli, soft from the pot. It was not as mild as it looked." · "Dahi. Quickly." | Common |
-| Star anise | "Star anise. Half the city says it doesn't belong in here. It tastes like a sweet you had once." | Rare |
-
-Sound captions follow the Netflix convention found in 07 §8: lowercase, in square brackets, present tense, describing the sound. They show by default when the viewer starts quietly, and can be switched on or off. Examples: `[rain against the window]`, `[onions sizzling]`, `[muffled, from the next room]`, `[dough cracks]`, `[steam rushes out]`, `[a soft chime]`.
+Spice lines are unchanged from v1 and live in `js/data/spices.js`.
 
 ## 4. Look
 
-The world is a dark, warm night, not a cream page. The palette is the Kalamkari dye set (indigo, madder, turmeric, iron black) lit by one flame.
+**The idea.** Each chapter is one painted scene you look into, built from five to eight depth planes that shift against each other as the camera drifts (pointer on desktop, slow automatic drift on touch). Inside it, the scene reads like a grainy screen-print or gouache poster. Around it, a folk-print ornamental frame. Borrow the device of Genshin's storybook cutscenes (layered planes, slow camera, subtitles over the picture, ornamental framing), not its motifs.
 
-| Token | Hex | Use |
-|---|---|---|
-| `--night` | `#141A2E` | Ground: the room at night |
-| `--indigo` | `#27356B` | Window, rain, cool shapes |
-| `--iron` | `#0E0D12` | Deepest shadow, text on saffron |
-| `--madder` | `#A33B2C` | Borders, the dough's shadow, accents |
-| `--saffron` | `#F2A516` | Light, the flame, the primary button |
-| `--copper` | `#B8693A` | The pot |
-| `--rice` | `#F6EBD3` | Rice, and all text on dark |
-| `--mint` | `#5E8C4A` | Herbs, used sparingly |
+**References** (CollectUI, Illustration category, 15 Nov):
+- *Layered hills with small figures*: big simple shapes, each plane hazier and bluer with distance, soft grain. The depth recipe.
+- *Forest and lake at dusk*: dense stippled texture, one small warm light in large cool masses. The lighting idea.
+- *Rug Studio landing page*: thick border, vine ring, arched panel with a sunburst, triangle trim, four or five inks. The frame and the cards.
 
-- **Paper-cut construction.** Flat shapes in a few layers, each with a baked shadow (a darker offset copy of the shape, no live filter). Edges are slightly irregular, as if cut by hand. Gradients are reserved for light: the flame's glow and the light shaft behind the plume.
-- **Type.** Fraunces for the title and the big moments (soft, a little wonky). Literata for narration. Captions are Literata italic, smaller. Text never sits on moving art: it has its own layer with a dark scrim behind it.
-- **One signature.** The sealed pot and the plume that comes out of it. Everything else stays quiet so that moment is the only loud one.
-- **Texture.** One static paper-grain tile over the whole stage, generated once at load.
-- **Later polish, not core:** streetlight through a window grille throwing a slow lattice pattern on the wall; small parallax between layers.
+**Two kinds of shot.**
+- **Room**: the kitchen from the side. Used by Seal, Wait, the start of the Opening and the end card. One shared world.
+- **Close**: a three-quarter view looking down about 35 degrees at the counter or table (circles become ellipses about 0.45 as tall as wide), with the room far behind, soft and blurred. Used by Marinade, Fry, Layers, the inside of the pot in the Opening, and the Plate.
 
-How each effect is built is fixed by 06's recommendation table: ambient steam as pre-blurred sprites moved by CSS; the plume as 40 to 60 canvas particles stamped from one sprite with `lighter` compositing over a baked light shaft; saffron as streak shapes grown by `scale` and `opacity`; rain as sliding streak sprites; flame as an opacity flicker on a radial glow; camera as a transform on the stage wrapper with text outside it.
+**The room** (proven in the 15 Nov concept; world coordinates are a 1600 x 1000 view drawn out to x -220..1820, y -100..1100 so the camera never shows an edge; phones see only about x 570..1030, so that column must tell the whole picture):
+- Sky: deep blue gradient (#0B1030 to #1E2A63 to #3A3F7A), warm city haze low down, a soft moon behind cloud.
+- Far skyline: low-contrast silhouettes: the Charminar near x 730, a mosque with domes, water tanks, tiny warm windows.
+- Near rooftops: darker flat roofs with parapets, a water tank on stilts, wires, a neem crown, 8–10 lit windows and one teal TV window.
+- Rain: thin slanted streaks in two layers.
+- The wall, with a real hole cut for the window so the city moves behind the frame (the 2.5D effect, and the strongest part of the concept): deep indigo plaster, a cusped Deccani arch window (x 610–990, y 90–470) in madder-brown wood with a jali lattice in the arch, a sill with a tulsi plant and a brass lota; a printed Kalamkari border band across the wall (y 500–536); shelves of spice jars, steel boxes and hanging ladles at left; an arched niche with a small oil lamp at right; a towel, a calendar, a small pale-ochre house gecko.
+- Counter, stove and the copper handi: a stone counter (top edge y 740), a steel stove with a tawa and a low blue-and-saffron flame, the wide-bellied hammered copper pot sealed with a pale dough rope with thumb dents, one thread of steam; beside it saffron milk, fried onions, chai, a matchbox, a steel masala dabba.
+- Dust motes drifting up through the warm glow.
+- Foreground: dark framing shapes with warm rim light, readable at a glance: a string of dried red chillies and a garlic braid top left, the bottoms of hanging copper pans top right, a brass vessel and plates at the bottom. Blur at most 1 px; a shape that cannot be read is removed.
+
+**Craft rules** (what separates artwork from clip-art):
+1. Light logic: every object has a lit side, a shadow side, a rim light toward its source, and a baked cast shadow. No object is a single flat fill.
+2. Value: the hero (pot, then food) is the brightest, warmest, most saturated thing. Corners are darkest.
+3. Atmospheric perspective: far planes lower in contrast, bluer, lighter; near planes darker and more saturated.
+4. Hand-cut edges: no bare rectangles or ruler lines on anything organic or handmade (`wobble`, `blob` in `js/art/lib.js`).
+5. Density: dozens of small readable things in a wide view; the focal column stays calm enough for the hero to win.
+6. Screen-print texture: halftone dot patterns shade big surfaces; a film grain overlay on everything (soft-light around 0.34, overlay around 0.07).
+7. Warm glows run saffron to copper to madder to transparent with `mix-blend-mode: screen`. Never let saffron fade over indigo through olive or brown.
+8. Palette: night #141A2E, indigo #27356B, iron #0E0D12, madder #A33B2C, saffron #F2A516, copper #B8693A, cream #F6EBD3, mint #5E8C4A, plus their tints and shades. Food may add its own true colours (chicken browns, chilli green, saffron orange #E0861A).
+9. Food must pass the appetite test: warm saturated colour, individual rice grains, glossy highlights, pale rice against dark onion, a little bright green, steam. Grey or uniform food fails.
+
+**Frame and cards.** A thin saffron line inset 14 px (8 px on phones) with small Kalamkari corner flowers over every scene. The title and end cards follow Rug Studio in this project's inks (night, madder, saffron, mint, cream): thick madder border, vine-and-flower ring, triangle trim, a cusped arch panel with a saffron sunburst behind a sealed-pot emblem, cream display type.
+
+**Type.** Fraunces for titles, Literata for subtitles and hints (both OFL, loaded from jsdelivr). Chapter header at the top centre: seven small diamonds (current filled saffron), the numeral in letter-spaced small caps, the title in Fraunces italic. At each chapter start the title shows large in the centre for about two seconds, then settles into the header. Subtitles at the bottom centre: the line being spoken in full cream, the previous line faded to 0.45, at most two lines, `clamp(1rem, 0.9rem + 0.5vw, 1.25rem)`, on a light scrim. Text never sits inside a moving plane.
 
 ## 5. Sound
 
-All synthesised with the Web Audio API in one module; recipes are in 07 §1 and §2. No audio files.
+All synthesised with the Web Audio API (`js/core/audio.js`), plus recorded voice files if the owner records them. Existing voices: rain, flame hiss, sizzle, simmer, drone, tap, thud, crack, steam rush, chime, spoon. Each chapter adds what it needs (plops, powder puffs, wet stir, pours, trickle, clink, press, knob click, rub, knock, cooling tick, scrape, sting) as its own small module. Rules:
+- **Sound follows the gesture.** Continuous voices (stir, sizzle, rub, flame) take their level from the gesture every frame through `audio.level()`.
+- **The muffle.** Everything but the rain runs through one lowpass. Sealing the pot starts closing it; in the Wait it sits at about 600 Hz; lifting the lid opens it over about 1.5 s.
+- **Under the voice.** While a line is spoken, everything else ducks by about 6 dB.
+- Audio starts only from the title card's "Begin with sound". It fades and suspends when the tab is hidden.
 
-| Voice | Used in | Recipe |
-|---|---|---|
-| Rain | Everywhere, quieter indoors | Two decorrelated noise layers plus drop ticks |
-| Flame hiss | Kitchen scenes | Low filtered noise |
-| Sizzle | Fry | Highpassed noise bed plus Poisson-timed crackle ticks |
-| Simmer | Base | Sine bubbles with rising pitch |
-| Steam rush | Lid-lift | Noise through a bandpass sweeping 2 to 6 kHz, into the reverb |
-| Chime | Lid-lift | Additive partials |
-| Drone | Glow | Detuned saws through a slow lowpass |
-| Taps | Buttons, spoon | Short filtered clicks |
+## 6. Voice
 
-- **The muffle.** Everything except the rain runs through one lowpass. In the wait it closes to about 600 Hz; at the lid-lift it opens with an exponential ramp.
-- **Unlock and interruptions.** Audio starts only from the "Start with sound" tap. When the page is hidden the engine fades and suspends; when it returns it resumes, with a "Tap to bring the sound back" prompt if the browser needs a gesture.
-- **Not verifiable here.** How any of it sounds on a phone speaker (07's listening-test list). That needs the user's phone.
+Open question O9: whose voice. Until it is answered the build uses a placeholder that is easy to swap:
+- Every line has an id. If `audio/voice/<id>.mp3` is listed for it, that file plays; otherwise the browser's speech synthesis speaks it (an English voice, rate about 0.92); if there is no synthesis voice or the viewer began quietly, the subtitle simply stays up for a time based on its length.
+- Lines queue. A new action never cuts a line off; it follows it. No chapter step waits on a line finishing, so a stuck voice can never stall the piece.
+- The title card notes "Voice is a placeholder" until real recordings exist.
 
-## 6. Build
+Known limit: Chrome on Linux often has no speech voices at all, so the placeholder may be silent on the owner's desktop while working on phones.
 
-- **Zero-build static site.** `index.html`, CSS, ES modules. No framework, bundler or runtime dependency. Fonts come from a CDN with system fallbacks. `package.json` exists only to mark the folder as ES modules and to name the test and serve commands.
-- **Layout.** A stage wrapper holds the art (inline SVG plus two canvases). A separate HTML layer on top holds narration, captions and controls, so text stays sharp when the stage is scaled.
-- **Scene contract.** Each scene is a module with an `id`, a `mount` that builds its art once, and an async `play` that resolves when the viewer has finished it. The runner plays them in order. Everything a scene needs (audio, steam, narration, input, preferences, camera) arrives in one context object.
-- **Tests.** `node --test` covers the pure logic: the runner, paced input, hold-or-tap, preferences, script integrity, the spice picker, and the contrast of every text and button colour pair in the tokens.
-- **Checked by eye.** Layout at phone width (390 × 844) and at 320 px, through browser screenshots.
-- **Cannot be checked here.** Sound, frame rate and heat on a real mid-range phone, and whether it makes anyone hungry.
+## 7. Accessibility
 
-Files, interfaces and task order are in [plan.md](plan.md).
+Every hotspot is a real focusable control (`role="button"`, `tabindex="0"`, an `aria-label` that matches its hint) with a visible focus ring. Subtitles are an `aria-live` region. Calm mode (default on with `prefers-reduced-motion`) keeps every line, sound and picture, pins the camera, stops ambient motion and turns drags into taps. Text contrast at least 4.5:1, enforced by `tests/contrast.test.js`. Settings: sound, voice, subtitles, sound captions, calm mode.
 
-## 7. Out of scope
+## 8. Out of scope
 
-Scrolling, haptics, accounts, analytics, a shareable image card, Urdu or Telugu script, a person or a face (unless the user decides O2 the other way), and any recorded audio.
+Scrolling, haptics, accounts, analytics, a share card, Urdu or Telugu script, any person or face, photos, AI-generated images or voices (unless the owner decides otherwise), and a framework or bundler.

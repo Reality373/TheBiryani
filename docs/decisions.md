@@ -22,7 +22,12 @@ Sources: the brainstorm chat of 7 Nov 2026 ([research/00-brainstorm-chat.md](res
 | D8 | **Submitted as a public web link.** | 14 Nov | |
 | D9 | **Art is illustrated only.** No photograph and no AI-generated image for the hero plate. | 14 Nov | Changes the visual report's hybrid recommendation; see P3. |
 | D10 | **Local commits are fine.** Nothing is pushed or published without asking. | 14 Nov | |
-| D11 | **Working method:** the lead model plans, architects and reviews; smaller models (Sonnet at medium or low effort) do the well-scoped tasks as subagents. | 14 Nov | |
+| D11 | **Working method:** the lead model plans, architects and reviews; smaller models (Sonnet at medium or low effort) do the well-scoped tasks as subagents. | 14 Nov | Restated 15 Nov: Sonnet and Haiku do the tasks, the lead only architects and plans. |
+| D12 | **v1 rejected.** The site must look like a piece of artwork, using 2.5D layered scenes the way Genshin Impact shows some of its stories. Inspiration from collectui.com. | 15 Nov | Supersedes P3 and P8. |
+| D13 | **The focus is visuals, sound and interaction.** It must not be a click-to-skip flow. | 15 Nov | |
+| D14 | **Explain why** each cooking step is done. | 15 Nov | |
+| D15 | **Voice-over** so the viewer doesn't have to read. | 15 Nov | Amends P5: recorded voice files are allowed. |
+| D16 | **The viewer should enjoy the process.** | 15 Nov | |
 
 ## Proposed
 
@@ -53,6 +58,13 @@ Sources: the brainstorm chat of 7 Nov 2026 ([research/00-brainstorm-chat.md](res
 | O6 | Whether the steam, the saffron bleed and the sizzle look and sound right on a mid-range phone. | Only a prototype on a real phone. The user's device. |
 | O7 | Whether the Hyderabadi details (spices shown, accompaniments, vessel, terms) ring true. | The user, as the cook; ideally one more Hyderabadi reader. |
 | O8 | A shareable "your biryani" ending card. | Out of scope unless the core finishes early. |
+| O9 | **Whose voice** does the voice-over: the owner's (recorded on a phone), the browser's built-in voice, or an AI voice. Built with a swappable placeholder until answered. | The owner. |
+| O10 | Whether code-drawn food passes the appetite test up close. | The W1-food concept, then the owner. |
+| O11 | The whys marked *(cook)* in design.md §3. | The owner, as the cook. |
+
+## Superseded on 15 Nov
+
+P3 (paper-cut look) and P8 (one button on a fixed stage) by D12 and D13. P2's arc stays, now as seven chapters (design.md §3). The v1 design and plan are in git history before branch `v2`.
 
 ## Conflicts recorded, not smoothed over
 
