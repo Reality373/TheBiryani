@@ -7,5 +7,5 @@ export const chapters = [
   { id: 'wait', mood: 'night', numeral: 'V', title: 'The Wait', built: false },
   { id: 'opening', mood: 'burst', numeral: 'VI', title: 'The Opening', built: false },
   { id: 'plate', mood: 'lamp', numeral: 'VII', title: 'The Plate', built: false },
-  { id: 'end', mood: 'moon', numeral: '', title: '', built: false },
+  { id: 'end', mood: 'moon', numeral: '', title: '', built: true },
 ];

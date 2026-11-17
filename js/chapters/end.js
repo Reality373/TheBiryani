@@ -9,8 +9,8 @@ export default {
   art: () => import('../art/end.js'),
   async play({ stage, voice, audio, ui, prefs, params, signal, calm, auto }) {
     const el = stage.el;
-    Object.assign(el.dataset, { pot: 'lifted', flame: 'off', light: 'warm' });
-    el.style.setProperty('--lift', '1');
+    // The lid rests beside the pot by now; 'lifted' would leave it hanging in mid-air.
+    Object.assign(el.dataset, { pot: 'open', flame: 'off', light: 'warm' });
     audio.muffle(0);
     audio.stop('flame');
     audio.bed('drone', 0.4, 4);
