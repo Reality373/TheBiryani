@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dum link preview</title>
+<!-- The link-preview image: the title card as a 1200 x 630 poster. tools/og.sh screenshots it. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/files/fraunces-latin-soft-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Literata Variable';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: block;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/literata@5/files/literata-latin-wght-normal.woff2') format('woff2');
+}
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--night); }
+body { font-family: var(--font-text); -webkit-font-smoothing: antialiased; color: var(--rice); }
+
+#og {
+  position: relative; box-sizing: border-box; width: 1200px; height: 630px;
+  display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+  border: 22px solid var(--madder); box-shadow: inset 0 0 0 2px var(--saffron);
+  background: var(--night) radial-gradient(rgba(246, 235, 211, 0.07) 1.3px, transparent 1.7px) 0 0 / 15px 15px;
+}
+.trim { position: absolute; left: 0; right: 0; height: 14px; background: var(--trim) repeat-x center / auto 100%; }
+.trim.top { top: 6px; transform: scaleY(-1); }
+.trim.bottom { bottom: 6px; }
+
+#medal { justify-self: center; }
+#medal svg { display: block; height: 520px; width: auto; aspect-ratio: 400 / 450; overflow: visible; }
+
+.col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; max-width: 480px; justify-self: center; }
+.dots svg { display: block; width: 190px; height: auto; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-variation-settings: 'SOFT' 100; font-size: 170px; line-height: 0.95; color: var(--rice); }
+p { margin: 0; }
+.text { text-wrap: balance; font-size: 31px; line-height: 1.4; color: var(--rice); }
+.meta { margin-top: 10px; text-wrap: balance; font-size: 20px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rice); }
+</style>
+</head>
+<body>
+<div id="og">
+  <i class="trim top"></i><i class="trim bottom"></i>
+  <div id="medal"></div>
+  <div class="col">
+    <div class="dots" id="dots"></div>
+    <h1>Dum</h1>
+    <p class="text">A small, slow story about Hyderabadi dum biryani.</p>
+    <p class="meta">You cook it. You wait. You eat it.</p>
+  </div>
+</div>
+<script type="module">
+  import { medal, dotRow, trimTile } from '../js/art/card.js';
+  document.documentElement.style.setProperty('--trim', trimTile());
+  document.getElementById('medal').innerHTML = medal();
+  document.getElementById('dots').innerHTML = dotRow();
+</script>
+</body>
+</html>
