@@ -199,6 +199,10 @@ html[data-card] #corner-buttons { top: calc(var(--cb) + 14px); right: calc(var(-
 #card-list li { break-inside: avoid; margin: 0 0 0.75rem; }
 #card-list .step { display: block; font-weight: 400; font-size: 1rem; line-height: 1.35; }
 #card-list .why { display: block; font-style: italic; font-size: 0.9rem; line-height: 1.35; opacity: 0.8; }
+/* With a list the card is taller: a smaller medal, and the trims stay at the screen edges while the card scrolls. */
+#card[data-list] .card-trim { position: fixed; }
+#card[data-list] .card-medal svg { height: min(28svh, 64vw); }
+@media (min-width: 900px) and (orientation: landscape) { #card[data-list] .card-medal svg { height: min(56svh, 36vw); } }
 @media (min-width: 900px) { #card[data-list] .card-col { max-width: 54rem; } #card-list { columns: 2; column-gap: 2.4rem; } }
 #card-meta, #card-foot, #card-note { margin: 0; font-size: 0.875rem; letter-spacing: 0.02em; color: var(--rice); }
 #card-meta { letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.78rem; }
