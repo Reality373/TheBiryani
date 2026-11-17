@@ -1,6 +1,6 @@
-// Art for chapter IV, The Seal: the shared room at night, plus three things the room does not have:
-// a rope guide along the rim (so the dough is visible before it is pressed), the steam puffs at the lid's edge,
-// and one override: room.js hides #r-dough while the pot is lidded, and the seal needs it there.
+// Art for chapter IV, The Seal: the shared room at night, plus two things the room does not have:
+// a rope guide along the rim (so the rim reads before the first press), and the steam puffs at the lid's edge.
+// The dough itself is the room's #r-dough; the chapter lights each lump through its --on variable.
 // Chapter logic is in js/chapters/seal.js. The puffs and the rope are toggled from there.
 import { room } from './room.js';
 import { plane, blob, rng, range } from './lib.js';
@@ -14,8 +14,6 @@ export default function art() {
   }).join('');
 
   const fx = plane('seal-fx', 0.78, `<style>
-      [data-pot='lidded'] #r-dough{opacity:1 !important}
-      #r-dough .lm{opacity:var(--on,0) !important} /* the chapter lights each lump by its eighth; no fade, so a press shows at once */
       @media (max-width:600px){[data-pot='open'] #r-lid .lidT{transform:translate(-70px,207px) rotate(2deg)}} /* inside the phone column; LID_PHONE in chapters/seal.js */
       #seal-fx #s-rope{opacity:0;transition:opacity .6s}
       [data-pot='lidded'] #seal-fx #s-rope{opacity:.7}

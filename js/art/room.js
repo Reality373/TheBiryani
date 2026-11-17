@@ -8,13 +8,20 @@
 // Mood changes light only: sky, haze, rain density, glow, dimness and an optional overlay plane.
 import { plane, wobble, blob, halftone, linear, radial, mix, shade, rng, range, C, f } from './lib.js';
 
+// Light only (design.md section 4). Through the window: sky, clouds, moon, horizon. On the wall and counter: glows,
+// pools, the stove's haze and mist veils. Fields: sky (4 stops), clouds (opacity), moon (opacity) and moonS (its size),
+// stars (count factor), horizon [colour, opacity], rain (count factor), shade (corner dark), glow (wall glow factor),
+// lamp (niche lamp size), haze, over [colour, opacity, blend] (whole room), pool [colour, opacity] (counter lamp pool),
+// under [colour, opacity] (pot underside), amber [colour, opacity] (wall above the pot), rise [colour, opacity] (haze
+// over the stove), bloom [colour, opacity] (warm bloom filling the wall), mist (white veils, opacity), silver (window
+// frame and sill, 0..1).
 const MOODS = {
-  dusk: { sky: ['#1A1240', '#4B2B7E', '#9B4A8A', '#D98258'], moon: 0.2, haze: 0.9, rain: 0.3, shade: 0.12, glow: 0.9, lamp: 1.5, over: null },
-  stove: { sky: ['#0B1030', '#1E2A63', '#3A3F7A', '#7A4A78'], moon: 0.4, haze: 0.8, rain: 0.8, shade: 0.28, glow: 1.35, lamp: 1, over: ['#E39A3A', 0.2, 'screen'] },
-  steam: { sky: ['#17214F', '#34437F', '#5A649B', '#8A7FA8'], moon: 0.3, haze: 1, rain: 0.6, shade: 0.18, glow: 1.05, lamp: 1, over: ['#B9C7E4', 0.32, 'normal'] },
-  night: { sky: ['#0B1030', '#1E2A63', '#3A3F7A', '#7A4A78'], moon: 0.55, haze: 0.8, rain: 1, shade: 0.42, glow: 1, lamp: 1, over: null },
-  burst: { sky: ['#0E1236', '#222E6B', '#3F4480', '#8A4E78'], moon: 0.45, haze: 0.9, rain: 0.9, shade: 0.12, glow: 1.9, lamp: 1, over: ['#F2A516', 0.5, 'screen'] },
-  moon: { sky: ['#101A4A', '#2A3B84', '#4C5CA2', '#8E78B0'], moon: 1, haze: 0.5, rain: 0.25, shade: 0.24, glow: 1.1, lamp: 1.1, over: null },
+  dusk: { sky: ['#2B1653', '#6B2F8E', '#B9508A', '#F4A071'], clouds: 0.7, moon: 0, moonS: 1, stars: 0.3, horizon: ['#FFC08A', 1], rain: 0.35, shade: 0.14, glow: 0.85, lamp: 1.7, haze: 0.9, over: ['#8A46B8', 0.2, 'normal'], pool: ['#FFB25C', 0.95], under: null, amber: null, rise: null, bloom: null, mist: 0, silver: 0 },
+  stove: { sky: ['#080B24', '#161F55', '#34305E', '#5E3462'], clouds: 1, moon: 0.25, moonS: 1, stars: 0.6, horizon: null, rain: 0.7, shade: 0.3, glow: 1.5, lamp: 0.9, haze: 0.8, over: ['#F08A2A', 0.28, 'screen'], pool: null, under: ['#FF9A3A', 0.9], amber: ['#FF8A2C', 0.85], rise: ['#FFA040', 0.4], bloom: null, mist: 0, silver: 0 },
+  steam: { sky: ['#4A5690', '#6E79AE', '#9AA0CC', '#C8C4DC'], clouds: 1, moon: 0.2, moonS: 1, stars: 0, horizon: null, rain: 0.55, shade: 0.04, glow: 0.8, lamp: 0.8, haze: 1.1, over: ['#E6ECF8', 0.14, 'normal'], pool: null, under: null, amber: null, rise: null, bloom: null, mist: 0.55, silver: 0 },
+  night: { sky: ['#03051A', '#0A1234', '#16204A', '#2A2458'], clouds: 0.7, moon: 0.2, moonS: 1, stars: 0.4, horizon: null, rain: 1.7, shade: 0.66, glow: 1.15, lamp: 0, haze: 0.6, over: null, pool: null, under: null, amber: null, rise: null, bloom: null, mist: 0, silver: 0 },
+  burst: { sky: ['#1A1446', '#33266E', '#5C3A7E', '#B0606A'], clouds: 0.8, moon: 0.2, moonS: 1, stars: 0.2, horizon: ['#FFB04A', 0.5], rain: 0.9, shade: 0.04, glow: 2.3, lamp: 1.3, haze: 1, over: ['#F2A516', 0.5, 'screen'], pool: ['#FFC060', 0.7], under: ['#FFB040', 0.8], amber: null, rise: null, bloom: ['#F6A830', 0.95], mist: 0, silver: 0 },
+  moon: { sky: ['#1A3A8A', '#2F5AB0', '#5A82CC', '#9EB8E6'], clouds: 0, moon: 1, moonS: 1.7, stars: 1.8, horizon: null, rain: 0.2, shade: 0.2, glow: 0.8, lamp: 0.6, haze: 0.4, over: null, pool: null, under: null, amber: null, rise: null, bloom: null, mist: 0, silver: 1 },
 };
 
 const poly = (pts, amp, r) => 'M' + pts.map(([x, y]) => `${f(x + (r() - 0.5) * 2 * amp)} ${f(y + (r() - 0.5) * 2 * amp)}`).join('L') + 'Z';
@@ -40,7 +47,7 @@ const ARCH_ONLY = `${pathOf(ARCH)}Z`;
 /* ------------------------------------------------------------------ CSS */
 const CSS = `
 <style>
-[data-flame='high']{--flame:1}[data-flame='low']{--flame:.38}[data-flame='off']{--flame:0}
+[data-flame='high']{--flame:1;--knob:0}[data-flame='low']{--flame:.38;--knob:.5}[data-flame='off']{--flame:0;--knob:1}
 [data-pot='sealed'],[data-pot='cracked'],[data-pot='lifted']{--seal:1}
 [data-pot='cracked'],[data-pot='lifted']{--crack:1}
 [data-pot='lifted']{--lift:1}
@@ -63,6 +70,10 @@ const CSS = `
 @keyframes r-ember{from{filter:none;opacity:.7}to{opacity:1}}
 #r-glow .w{opacity:calc((.1 + var(--flame,1) * .9) * var(--glow,1) * var(--m-glow,1));transition:opacity .5s}
 #r-heat .b{opacity:calc((.08 + var(--flame,1) * .92) * var(--glow,1) * var(--m-glow,1));transition:opacity .5s}
+#r-heat .hz{transform-box:fill-box;transform-origin:50% 100%;animation:r-haze 4.2s ease-in infinite;animation-delay:calc(var(--i) * -.6s)}
+@keyframes r-haze{0%{transform:translate(0,24px) scaleY(.85);opacity:0}30%{opacity:1}100%{transform:translate(-10px,-130px) scaleY(1.25);opacity:0}}
+#r-overlay .mb{animation:r-mist 34s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -5s)}
+@keyframes r-mist{from{transform:translateX(-36px)}to{transform:translateX(44px)}}
 #r-glow .lamp{animation:r-lamp 3.1s ease-in-out infinite alternate}
 @keyframes r-lamp{from{opacity:.75}to{opacity:1}}
 /* light */
@@ -76,8 +87,9 @@ const CSS = `
 #r-lid .lidT{transform-origin:800px 523px;transition:transform .3s ease-out}
 [data-pot='open'] #r-lid .lidT{transform:translate(-290px,207px) rotate(2deg);transition-duration:.7s}
 [data-pot='cracked'] #r-lid .lidT,[data-pot='lifted'] #r-lid .lidT{transform:translate(calc(var(--lift,0) * 34px),calc(var(--lift,0) * -175px)) rotate(calc(var(--lift,0) * -17deg))}
-[data-pot='lidded'] #r-dough,[data-pot='open'] #r-dough{opacity:0}
-#r-dough .lm{opacity:clamp(0, calc(var(--seal,0) * 15 - var(--i)), 1)}
+[data-pot='open'] #r-dough{opacity:0}
+/* each lump shows by its own --on (the chapter sets it per press), else by --seal in order */
+#r-dough .lm{opacity:var(--on, clamp(0, calc(var(--seal,0) * 15 - var(--i)), 1))}
 #r-dough .gap{opacity:clamp(0, calc(var(--seal,0) * 15 - 10), 1)}
 #r-dough .cr{opacity:clamp(0, calc(var(--crack,0) * 9 - var(--ci)), 1)}
 [data-pot='lidded'] #r-steam,[data-pot='open'] #r-steam{opacity:0}
@@ -100,7 +112,7 @@ const CSS = `
 #r-motes .mi{animation:r-mote 9s linear infinite;animation-delay:calc(var(--i) * -.6s)}
 @keyframes r-mote{0%{transform:translate(0,40px);opacity:0}15%{opacity:1}100%{transform:translate(24px,-180px);opacity:0}}
 #r-fg{filter:blur(.7px)}
-@media (prefers-reduced-motion:reduce){#r-sky .cl,#r-rainF .st,#r-rainN .st,#r-flame .fl,#r-steam .wp,#r-plume .pf,#r-motes .mi{animation:none}}
+@media (prefers-reduced-motion:reduce){#r-sky .cl,#r-rainF .st,#r-rainN .st,#r-flame .fl,#r-steam .wp,#r-plume .pf,#r-motes .mi,#r-heat .hz,#r-overlay .mb{animation:none}}
 </style>`;
 
 /* ------------------------------------------------------------------ sky, skyline, roofs, rain */
@@ -112,19 +124,22 @@ function skyPlane(m, R) {
     for (let i = 0; i < n; i++) s += `<path d="${blob(560 + i * 130 + range(r, -30, 30), y + range(r, -20, 20), range(r, 70, 130), range(r, 14, 26), 0.12, r, 12)}" fill="${col}"/>`;
     return s;
   };
-  const stars = Array.from({ length: 16 }, () => `<circle cx="${f(range(R, 480, 1120))}" cy="${f(range(R, 40, 230))}" r="${f(range(R, 0.7, 1.6))}" fill="#DDE4FF" opacity="${f(range(R, 0.3, 0.8) * (1 - m.rain * 0.5))}"/>`).join('');
+  const stars = Array.from({ length: Math.round(16 * m.stars) }, () => `<circle cx="${f(range(R, 480, 1120))}" cy="${f(range(R, 40, 230))}" r="${f(range(R, 0.7, 1.6))}" fill="#DDE4FF" opacity="${f(range(R, 0.3, 0.8) * (1 - m.rain * 0.3))}"/>`).join('');
+  const hz = m.horizon ? radial('r-horG', [[0, m.horizon[0], m.horizon[1]], [0.45, m.horizon[0], m.horizon[1] * 0.5], [1, m.horizon[0], 0]]) : '';
   const inner = `<defs>
     ${linear('r-skyG', [[0, a], [0.4, b], [0.75, c], [1, d]])}
     ${radial('r-moonG', [[0, '#EEF0FF', 0.9], [0.3, '#B9C3F0', 0.32], [1, '#B9C3F0', 0]])}
     ${radial('r-hazeG', [[0, C.copper, 0.55], [0.45, C.madder, 0.3], [1, C.madder, 0]])}
+    ${hz}
     ${halftone('r-skydots', '#7C88D8', { size: 9, r: 1.5, angle: 30, opacity: 0.3 })}
   </defs>
   <rect x="380" y="-100" width="1240" height="780" fill="url(#r-skyG)"/>
   ${stars}
-  <g opacity="${m.moon}"><circle cx="865" cy="190" r="120" fill="url(#r-moonG)"/><circle cx="865" cy="190" r="31" fill="#E9ECFA"/>
+  <g opacity="${m.moon}" transform="translate(865 190) scale(${m.moonS}) translate(-865 -190)"><circle cx="865" cy="190" r="120" fill="url(#r-moonG)"/><circle cx="865" cy="190" r="31" fill="#E9ECFA"/>
     <circle cx="856" cy="182" r="6" fill="#C9CFEA"/><circle cx="876" cy="200" r="4" fill="#C9CFEA"/><circle cx="871" cy="177" r="3" fill="#D3D8F0"/></g>
-  <g class="cl">${clouds(5, mix(b, '#6A74C0', 0.35), 190, 9)}<path d="${blob(850, 214, 96, 20, 0.1, R, 12)}" fill="url(#r-skydots)"/></g>
-  <g class="cl cl2">${clouds(9, mix(a, b, 0.5), 140, 8)}${clouds(14, mix(b, c, 0.4), 275, 8)}</g>
+  <g opacity="${m.clouds}"><g class="cl">${clouds(5, mix(b, '#6A74C0', 0.35), 190, 9)}<path d="${blob(850, 214, 96, 20, 0.1, R, 12)}" fill="url(#r-skydots)"/></g>
+  <g class="cl cl2">${clouds(9, mix(a, b, 0.5), 140, 8)}${clouds(14, mix(b, c, 0.4), 275, 8)}</g></g>
+  ${m.horizon ? `<ellipse cx="800" cy="372" rx="660" ry="160" fill="url(#r-horG)"/>` : ''}
   <ellipse cx="800" cy="480" rx="540" ry="190" fill="url(#r-hazeG)" opacity="${m.haze}"/>`;
   return plane('r-sky', 0, CSS + inner);
 }
@@ -294,10 +309,33 @@ function wallPlane(m) {
   const towel = `<g><circle cx="1072" cy="546" r="4" fill="#C79A4A" stroke="#1D0A08" stroke-width="1.2"/><path d="${wobble([[1046, 552], [1100, 552], [1104, 612], [1102, 680], [1048, 684], [1044, 612]], 1.5, r)}" fill="#E7D8B8" stroke="#1D0A08" stroke-width="1.6"/>
     ${[0, 1, 2, 3, 4].map((i) => `<rect x="1044" y="${562 + i * 24}" width="60" height="9" fill="${C.madder}" opacity=".8"/>`).join('')}${[0, 1, 2].map((i) => `<rect x="${1056 + i * 18}" y="552" width="8" height="132" fill="${C.madder}" opacity=".55"/>`).join('')}
     <path d="M1100 556V680" stroke="#05060f" stroke-opacity=".45" stroke-width="7"/><path d="M1048 682H1102" stroke="${C.cream}" stroke-width="3" stroke-dasharray="2 3"/></g>`;
-  const calendar = `<g transform="rotate(3 1370 180) translate(0 150)"><circle cx="1370" cy="116" r="3" fill="#C79A4A"/><rect x="1330" y="120" width="80" height="116" fill="#05060f" opacity=".4" transform="translate(5 5)"/>
-    <path d="${wobble([[1330, 120], [1410, 120], [1410, 236], [1330, 236]], 1, r)}" fill="${C.cream}" stroke="#1D0A08" stroke-width="1.6"/><rect x="1330" y="120" width="80" height="16" fill="${C.madder}"/>
-    <rect x="1338" y="142" width="64" height="40" fill="#27356B" stroke="#1D0A08" stroke-width="1.2"/><path d="M1338 182L1358 160L1372 174L1384 164L1402 182Z" fill="${C.mint}" opacity=".8"/><circle cx="1384" cy="154" r="6" fill="${C.saffron}"/>
-    ${Array.from({ length: 21 }, (_, i) => `<circle cx="${1342 + (i % 7) * 9}" cy="${198 + Math.floor(i / 7) * 10}" r="1.8" fill="#3A2A30"/>`).join('')}</g>`;
+  // Wall calendar: a card hung from a nail on a string. Two inks (indigo, madder) on cream paper; the curl is the bottom corner.
+  const cal = (() => {
+    const X = 1318, Y = 168, W = 100, H = 150, px = 1326, py = 174, pw = 84, ph = 64;
+    const dates = Array.from({ length: 28 }, (_, i) => {
+      const cx = 1331 + (i % 7) * 11.2, cy = 268 + Math.floor(i / 7) * 12;
+      return `<text x="${f(cx)}" y="${cy}" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="${i === 13 ? C.madder : '#27356B'}" font-weight="${i === 13 ? 700 : 400}">${i + 1}</text>`;
+    }).join('');
+    return `<g transform="translate(-32 158)"><circle cx="1368" cy="120" r="3.2" fill="#C79A4A" stroke="#1D0A08" stroke-width=".8"/><circle cx="1367" cy="119" r="1" fill="#FFE7A0"/>
+    <path d="M1368 121C1360 136 1376 156 1368 176" stroke="#8A6A3A" stroke-width="1.1" fill="none"/>
+    <g transform="rotate(2 1368 176)">
+      <path d="M${X + 4} ${Y + 5}H${X + W + 4}V${Y + H + 5}H${X + 4}Z" fill="#05060f" opacity=".4"/>
+      <path d="M${X} ${Y}H${X + W}V${Y + H - 12}L${X + W - 12} ${Y + H}H${X}Z" fill="${C.cream}" stroke="#1D0A08" stroke-width="1.2"/>
+      <path d="M${X + W - 12} ${Y + H}L${X + W} ${Y + H - 12}L${X + W - 12} ${Y + H - 14}Z" fill="#D8C08E" stroke="#1D0A08" stroke-width=".9"/>
+      <rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#27356B" stroke="#1D0A08" stroke-width=".8"/>
+      <circle cx="${px + 12}" cy="${py + 14}" r="4.5" fill="${C.cream}"/>
+      <path d="M${px + 28} ${py + 22}h3v36h-3zM${px + 52} ${py + 22}h3v36h-3z" fill="${C.madder}"/>
+      <path d="M${px + 27} ${py + 22}L${px + 29.5} ${py + 14}L${px + 32} ${py + 22}ZM${px + 51} ${py + 22}L${px + 53.5} ${py + 14}L${px + 56} ${py + 22}Z" fill="${C.madder}"/>
+      <path d="M${px + 34} ${py + 30}H${px + 49}V${py + 58}H${px + 34}Z" fill="${C.madder}"/>
+      <path d="M${px + 34} ${py + 30}Q${px + 41.5} ${py + 22} ${px + 49} ${py + 30}Z" fill="${C.madder}"/>
+      <path d="M${px + 38} ${py + 58}V${py + 43}Q${px + 41.5} ${py + 38} ${px + 45} ${py + 43}V${py + 58}Z" fill="${C.cream}"/>
+      <rect x="${px}" y="${py + 58}" width="${pw}" height="6" fill="${C.madder}"/>
+      <rect x="${px + 2}" y="${py + 2}" width="${pw - 4}" height="${ph - 4}" fill="none" stroke="${C.cream}" stroke-width=".6" opacity=".6"/>
+      <rect x="1326" y="244" width="84" height="12" fill="${C.madder}"/>
+      <text x="1368" y="253" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" letter-spacing="1.5" fill="${C.cream}">NOV</text>
+      ${dates}
+    </g></g>`;
+  })();
   const geckoG = `<g id="r-gecko"><g transform="translate(1078 384) rotate(-38) scale(.5)">${gecko()}</g><circle class="hit r-hit" cx="1078" cy="384" r="62"/></g>`;
 
   const inner = `<defs>${defs.join('')}${jdefs.join('')}</defs>
@@ -306,24 +344,42 @@ function wallPlane(m) {
   <rect x="-220" y="540" width="2040" height="200" fill="url(#r-tile)" opacity=".5"/><rect x="-220" y="536" width="2040" height="6" fill="#05060f" opacity=".4"/>
   <rect x="-220" y="498" width="2040" height="40" fill="url(#r-kal)"/><path d="M-220 500H1820M-220 536H1820" stroke="${C.saffron}" stroke-width="2.4" opacity=".8"/>
   <path d="M-220 539H1820" stroke="#05060f" stroke-opacity=".5" stroke-width="5"/>
-  ${shelves}${niche}${towel}${calendar}${window_}${tulsi}${lota}${geckoG}`;
+  ${shelves}${niche}${towel}${cal}${window_}${tulsi}${lota}${geckoG}`;
   return plane('r-wall', 0.62, inner, { label: 'The kitchen wall, with an arched window onto the rainy city' });
 }
 
 /* ------------------------------------------------------------------ glow, heat, shade */
+// A radial light [colour, opacity] fading to nothing at its edge: an ellipse of it, centred at (cx, cy).
+const lightEl = (id, cx, cy, rx, ry) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${id})"/>`;
+const lightG = (id, [col, op]) => radial(id, [[0, col, op], [0.5, col, op * 0.45], [1, col, 0]]);
+
 function glowPlane(m) {
   const inner = `<defs>
     ${radial('r-gw', [[0, C.saffron, 0.62], [0.28, C.copper, 0.42], [0.62, C.madder, 0.17], [1, C.madder, 0]])}
     ${radial('r-gl', [[0, C.saffron, 0.55], [0.4, C.copper, 0.28], [1, C.madder, 0]])}
+    ${m.amber ? lightG('r-ambG', m.amber) : ''}${m.bloom ? radial('r-bloomG', [[0, m.bloom[0], m.bloom[1]], [0.5, C.copper, m.bloom[1] * 0.6], [1, C.madder, 0]]) : ''}
     <clipPath id="r-clipWall"><path d="M-220 -100H1820V1100H-220Z ${OPENING}" clip-rule="evenodd"/></clipPath></defs>
   <g clip-path="url(#r-clipWall)"><g class="w"><ellipse cx="800" cy="610" rx="640" ry="500" fill="url(#r-gw)"/></g>
-  <g class="lamp" style="opacity:${m.lamp > 1 ? 1 : 0.9}"><circle cx="1190" cy="440" r="${f(150 * m.lamp)}" fill="url(#r-gl)"/></g></g>`;
+  ${m.amber ? lightEl('r-ambG', 800, 440, 480, 230) : ''}
+  ${m.bloom ? lightEl('r-bloomG', 800, 600, 1000, 700) : ''}
+  <g class="lamp" style="opacity:${m.lamp > 1 ? 1 : 0.9}"><circle cx="1190" cy="440" r="${f(150 * m.lamp)}" fill="url(#r-gl)"/></g></g>
+  ${m.silver ? `<g class="silver" opacity="${m.silver}" fill="none">
+    <path d="${OPENING}" stroke="#DDE8FF" stroke-width="5" stroke-opacity=".7" transform="translate(-4 -3)"/>
+    <path d="M574 470H1026" stroke="#E6EEFF" stroke-width="3"/><rect x="574" y="470" width="452" height="7" fill="#DDE8FF" opacity=".35" stroke="none"/></g>` : ''}`;
   return tweak(plane('r-glow', 0.63, inner), `mix-blend-mode:screen;--m-glow:${m.glow}`);
 }
 
 function heatPlane(m) {
-  const inner = `<defs>${radial('r-hb', [[0, '#FFD27A', 0.8], [0.3, C.saffron, 0.5], [0.65, C.copper, 0.2], [1, C.madder, 0]])}</defs>
-  <g class="b"><ellipse cx="800" cy="690" rx="330" ry="110" fill="url(#r-hb)"/><ellipse cx="800" cy="750" rx="480" ry="30" fill="url(#r-hb)" opacity=".6"/><ellipse cx="800" cy="610" rx="170" ry="100" fill="url(#r-hb)" opacity=".4"/></g>`;
+  const r = rng(55);
+  const inner = `<defs>${radial('r-hb', [[0, '#FFD27A', 0.8], [0.3, C.saffron, 0.5], [0.65, C.copper, 0.2], [1, C.madder, 0]])}
+    ${m.pool ? lightG('r-poolG', m.pool) : ''}${m.under ? lightG('r-underG', m.under) : ''}</defs>
+  <g class="b"><ellipse cx="800" cy="690" rx="330" ry="110" fill="url(#r-hb)"/><ellipse cx="800" cy="750" rx="480" ry="30" fill="url(#r-hb)" opacity=".6"/><ellipse cx="800" cy="610" rx="170" ry="100" fill="url(#r-hb)" opacity=".4"/></g>
+  ${m.under ? lightEl('r-underG', 800, 690, 360, 96) : ''}
+  ${m.pool ? lightEl('r-poolG', 1000, 752, 440, 62) : ''}
+  ${m.rise ? Array.from({ length: 9 }, (_, i) => {
+    const x = range(r, 690, 910), y = range(r, 600, 680), w = range(r, 0.8, 1.25);
+    return `<g class="hz" style="--i:${i}"><path d="M${f(x)} ${f(y)}q${f(-12 * w)} ${f(-30)} 0 ${f(-60)}t0 ${f(-60)}" stroke="${m.rise[0]}" stroke-opacity="${m.rise[1]}" stroke-width="${f(16 * w)}" fill="none" stroke-linecap="round"/><path d="M${f(x)} ${f(y)}q${f(-12 * w)} ${f(-30)} 0 ${f(-60)}t0 ${f(-60)}" stroke="#FFE3A0" stroke-opacity=".35" stroke-width="3" fill="none" stroke-linecap="round"/></g>`;
+  }).join('') : ''}`;
   return tweak(plane('r-heat', 0.79, inner), `mix-blend-mode:screen;--m-glow:${m.glow}`);
 }
 
@@ -336,10 +392,14 @@ function shadePlane(m) {
 }
 
 function overlayPlane(m) {
-  if (!m.over) return '';
-  const [col, op, blend] = m.over;
-  const inner = `<defs>${radial('r-ov', blend === 'screen' ? [[0, col, op], [0.3, C.copper, op * 0.6], [0.7, C.madder, op * 0.15], [1, C.madder, 0]] : [[0, col, op], [0.6, col, op * 0.7], [1, col, op * 0.5]], { cx: 0.5, cy: 0.6, r: 0.5 })}</defs><rect x="-220" y="-100" width="2040" height="1200" fill="url(#r-ov)"/>`;
-  return tweak(plane('r-overlay', 0.9, inner), `mix-blend-mode:${blend}`);
+  if (!m.over && !m.mist) return '';
+  const [col, op, blend] = m.over || ['#FFFFFF', 0, 'normal'];
+  const over = m.over ? `<defs>${radial('r-ov', blend === 'screen' ? [[0, col, op], [0.3, C.copper, op * 0.6], [0.7, C.madder, op * 0.15], [1, C.madder, 0]] : [[0, col, op], [0.6, col, op * 0.7], [1, col, op * 0.5]], { cx: 0.5, cy: 0.6, r: 0.5 })}</defs><rect x="-220" y="-100" width="2040" height="1200" fill="url(#r-ov)"/>` : '';
+  // Mist: soft white veils drifting across the room (steam mood), each fading to its edge.
+  const mist = m.mist ? `<defs>${radial('r-mistG', [[0, '#F4F7FF', 1], [0.6, '#E6ECFA', 0.55], [1, '#E6ECFA', 0]])}</defs>${[[300, 300, 520, 130], [1300, 260, 520, 140], [800, 560, 560, 110], [500, 760, 520, 90], [1250, 780, 480, 120]]
+    .map(([x, y, rx, ry], i) => `<ellipse class="mb" style="--i:${i}" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#r-mistG)" opacity="${f(m.mist)}"/>`).join('')}` : '';
+  const inner = over + mist;
+  return tweak(plane('r-overlay', 0.9, inner), `mix-blend-mode:${m.over ? blend : 'normal'}`);
 }
 
 /* ------------------------------------------------------------------ counter, stove, pot */
@@ -422,36 +482,39 @@ function counterPlane(m) {
     <circle cx="1008" cy="676" r="2.4" fill="#8C8FA8"/><circle cx="1024" cy="676" r="2.4" fill="#8C8FA8"/>
     <ellipse class="hit r-hit" cx="800" cy="676" rx="204" ry="28"/><ellipse class="hit r-hit" cx="1080" cy="684" rx="62" ry="22"/></g>`;
 
-  // dough
+  // dough: one rope along the lid's bottom rim (the ellipse below), cut into 14 lumps. Each lump is a sector of the rope
+  // that overlaps its neighbours, so the finished rope reads as one. A lump shows by --on (chapter) or by --seal.
+  const RX = 146, RY = 21, RCY = 525; // the rim's bottom edge; lump i is centred on u = i / 13 (x = 800 + RX cos)
+  const ropeAt = (u) => { const t = Math.PI * (1 - u); return [800 + RX * Math.cos(t), RCY + RY * Math.sin(t)]; };
+  const arc = (u0, u1) => { const [x0, y0] = ropeAt(u0), [x1, y1] = ropeAt(u1); return `M${f(x0)} ${f(y0)}A${RX} ${RY} 0 0 0 ${f(x1)} ${f(y1)}`; };
+  const N = 14, OV = 0.025; // OV: how far each lump runs into its neighbours (in u)
   const lumps = [];
-  const tones = ['#F0E0B8', '#E2C890', '#D4B278', '#EAC78A', '#F4E8C8'];
-  const N = 14;
   for (let i = 0; i < N; i++) {
-    const a = Math.PI * (1 - i / (N - 1));
-    let x = 800 + 146 * Math.cos(a), y = 527 + 22 * Math.sin(a);
-    if (i === 9) x += 7;
-    if (i === 8) x -= 5;
-    const th = (Math.atan2(-21 * Math.cos(a), 146 * Math.sin(a)) * 180) / Math.PI;
-    const rx = range(r, 21, 27), ry = range(r, 13, 16.5), tone = tones[Math.floor(r() * 5)];
-    const dk = mix(tone, '#5A3418', 0.6), lit = shade(tone, 0.35);
-    lumps.push(`<g class="lm" style="--i:${i}"><g transform="translate(${f(x)} ${f(y)}) rotate(${f(th)})">
-      <path d="${blob(3, 5, rx, ry, 0.1, r, 12)}" fill="#12080A" opacity=".8"/>
-      <path d="${blob(0, 0, rx, ry, 0.1, r, 12)}" fill="${tone}" stroke="#2A160D" stroke-opacity=".7" stroke-width="1.3"/>
-      <path d="${blob(-rx * 0.1, -ry * 0.55, rx * 0.8, ry * 0.4, 0.15, r, 8)}" fill="${dk}" opacity=".3"/>
-      <path d="${blob(rx * 0.15, ry * 0.5, rx * 0.7, ry * 0.32, 0.15, r, 8)}" fill="${lit}" opacity=".7"/>
-      <ellipse cx="${f(-rx * 0.1)}" cy="${f(-ry * 0.1)}" rx="${f(rx * 0.34)}" ry="${f(ry * 0.34)}" fill="${dk}" opacity=".75" transform="rotate(-20)"/>
-      <path d="M${f(-rx * 0.38)} ${f(ry * 0.12)}Q${f(-rx * 0.1)} ${f(ry * 0.4)} ${f(rx * 0.26)} ${f(ry * 0.1)}" fill="none" stroke="${lit}" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M${f(rx * 0.55)} ${f(-ry * 0.2)}q4 4 0 9" stroke="${dk}" stroke-width="1.4" fill="none" opacity=".7"/></g></g>`);
+    const s0 = Math.max(0, (i - 0.5) / (N - 1)), s1 = Math.min(1, (i + 0.5) / (N - 1));
+    const b0 = Math.max(0, s0 - OV), b1 = Math.min(1, s1 + OV);
+    const w = 12.8 + range(r, -1.6, 1.6); // slightly irregular thickness
+    // a thumb-press dent at the start of every other lump (where two lumps meet); drawn last so it sits on top
+    const [dx, dy] = ropeAt(s0);
+    const [ax, ay] = ropeAt(Math.min(1, s0 + 0.001)), [bx, by] = ropeAt(Math.max(0, s0 - 0.001));
+    const ang = (Math.atan2(ay - by, ax - bx) * 180) / Math.PI;
+    const dent = i > 0 && i % 2 === 1
+      ? `<g transform="translate(${f(dx)} ${f(dy)}) rotate(${f(ang)})"><ellipse rx="3.6" ry="5" fill="#8A5024" opacity=".5"/><ellipse cx="-.5" cy="-.9" rx="2.5" ry="3.5" fill="#B07A44" opacity=".45"/><path d="M-2.6 2.6Q0 4.8 2.6 2.6" stroke="#FFF4DA" stroke-width=".9" fill="none" opacity=".7"/></g>`
+      : '';
+    lumps.push(`<g class="lm" style="--i:${i}">
+      <path d="${arc(s0, s1)}" stroke="#3E2010" stroke-opacity=".8" stroke-width="${f(w + 1)}" fill="none" transform="translate(0 3.5)"/>
+      <path d="${arc(b0, b1)}" stroke="#EAD3A0" stroke-width="${f(w)}" fill="none"/>
+      <path d="${arc(b0, b1)}" stroke="#CDA868" stroke-width="2.6" fill="none" transform="translate(0 3.4)"/>
+      <path d="${arc(b0, b1)}" stroke="#FFF4DA" stroke-width="2.4" fill="none" transform="translate(0 -2.6)"/>${dent}</g>`);
   }
   const crackXs = Array.from({ length: 9 }, (_, i) => 674 + i * 31 + range(r, -6, 6));
   const cracks = crackXs.map((x, i) => {
-    const a = Math.acos((x - 800) / 146), yc = 526 + 21 * Math.sin(a);
-    const pts = [[x, yc - 16], [x + 4, yc - 8], [x - 3, yc - 1], [x + 4, yc + 7], [x - 1, yc + 15]];
-    return `<g class="cr" style="--ci:${i}"><path d="M${pts.map(([px, py]) => `${f(px)} ${f(py)}`).join('L')}" stroke="#14080A" stroke-width="2.4" fill="none" stroke-linejoin="round"/>
-      <path d="M${f(pts[2][0])} ${f(pts[2][1])}l${i % 2 ? 9 : -9} 4" stroke="#14080A" stroke-width="1.6" fill="none"/><path d="M${pts.map(([px, py]) => `${f(px + 1.5)} ${f(py)}`).join('L')}" stroke="#FFF1CC" stroke-opacity=".5" stroke-width=".9" fill="none"/>
-      <path d="M${f(pts[1][0] - 2)} ${f(pts[1][1])}l5 3l-4 4z" fill="#14080A"/></g>`;
+    const a = Math.acos((x - 800) / RX), yc = RCY + RY * Math.sin(a);
+    const pts = [[x, yc - 9], [x + 3, yc - 4], [x - 2, yc], [x + 3, yc + 4], [x - 1, yc + 8]];
+    return `<g class="cr" style="--ci:${i}"><path d="M${pts.map(([px, py]) => `${f(px)} ${f(py)}`).join('L')}" stroke="#14080A" stroke-width="2" fill="none" stroke-linejoin="round"/>
+      <path d="M${f(pts[2][0])} ${f(pts[2][1])}l${i % 2 ? 7 : -7} 3" stroke="#14080A" stroke-width="1.4" fill="none"/></g>`;
   }).join('');
-  const dough = `<g id="r-dough"><ellipse class="gap" cx="835" cy="546" rx="9" ry="7" fill="#0B0406"/>${lumps.join('')}${cracks}<path class="hit r-hit" d="M650 520H950L956 566Q800 596 644 566Z"/></g>`;
+  // the strip the focus ring and the hotspot follow: a band along the rope's bottom edge, outer curve less inner curve
+  const dough = `<g id="r-dough"><ellipse class="gap" cx="836" cy="545" rx="7" ry="4" fill="#0B0406"/>${lumps.join('')}${cracks}<path class="hit r-hit" d="M640 ${RCY}A160 27 0 0 0 960 ${RCY}L936 ${RCY}A136 15 0 0 1 664 ${RCY}Z"/></g>`;
 
   // rice inside rim
   const grains = `<ellipse cx="800" cy="518" rx="122" ry="15" fill="url(#r-riceG)"/><ellipse cx="800" cy="518" rx="122" ry="15" fill="url(#r-grain)"/>
