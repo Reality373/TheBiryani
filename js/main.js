@@ -97,21 +97,21 @@ async function run() {
   }
 
   for (let again = true; again; start = 0) {
-  for (let i = Math.max(0, start); i < list.length; i++) {
-    if (!auto) prefetch(list[i + 1]);
-    ctl = new AbortController();
-    const c = list[i];
-    const index = indexOf(chapters, c.id);
-    if (index >= 0) prefs.set('reached', advance(chapters, prefs.get('reached'), c.id));
-    await runChapter(c, index, ctl.signal);
-    if (jumpTo) {
-      const j = list.findIndex((x) => x.id === jumpTo);
-      jumpTo = null;
-      if (j >= 0) { i = j - 1; continue; }
+    for (let i = Math.max(0, start); i < list.length; i++) {
+      if (!auto) prefetch(list[i + 1]);
+      ctl = new AbortController();
+      const c = list[i];
+      const index = indexOf(chapters, c.id);
+      if (index >= 0) prefs.set('reached', advance(chapters, prefs.get('reached'), c.id));
+      await runChapter(c, index, ctl.signal);
+      if (jumpTo) {
+        const j = list.findIndex((x) => x.id === jumpTo);
+        jumpTo = null;
+        if (j >= 0) { i = j - 1; continue; }
+      }
+      if (c.id === 'end') prefs.set('reached', null);
     }
-    if (c.id === 'end') prefs.set('reached', null);
-  }
-  again = !auto && !want && list.at(-1)?.id === 'end'; // after the end, the piece can go round again
+    again = !auto && !want && list.at(-1)?.id === 'end'; // after the end, the piece can go round again
   }
   document.documentElement.dataset.done = '1';
 }

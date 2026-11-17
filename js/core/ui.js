@@ -125,15 +125,21 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       h.glyph.style.transform = `translate(${cx}px, ${cy}px)`;
       const tw = h.text.offsetWidth, th = h.text.offsetHeight;
-      const dx = h.gesture?.drag?.[0] ?? 0, dy = h.gesture?.drag?.[1] ?? 0;
-      let left = r.right + 14;
-      if (dx > 0 && Math.abs(dx) > Math.abs(dy)) left = r.left - 14 - tw; // drag goes right: text goes left
-      if (left + tw > innerWidth - 10) left = r.left - 14 - tw;
-      if (left < 10) left = Math.min(Math.max(10, cx - tw / 2), innerWidth - tw - 10);
-      let top = cy - th / 2;
-      if (left > r.left - 14 - tw && left < r.right + 14) top = r.bottom + 10; // squeezed: go under the target
-      top = Math.max(60, Math.min(top, zoneTop() - th - 8));
-      for (const o of placed) if (left < o.r && left + tw > o.l && top < o.b && top + th > o.t) top = o.b + 6; // do not overlap another hint
+      // Beside its own hotspot: above if there is room, else below, else the side with more room.
+      const lo = 60, hi = zoneTop() - th - 8;
+      let left = cx - tw / 2, top = r.top - th - 10;
+      if (top < lo) top = r.bottom + 10;
+      if (top > hi) {
+        top = Math.max(lo, Math.min(cy - th / 2, hi));
+        left = innerWidth - r.right > r.left ? r.right + 14 : r.left - 14 - tw;
+      }
+      left = Math.max(10, Math.min(left, innerWidth - tw - 10));
+      top = Math.max(lo, Math.min(top, hi));
+      for (const o of placed) {
+        if (left < o.r && left + tw > o.l && top < o.b && top + th > o.t) { // overlap: nudge this one away
+          top = o.b + 6 <= hi ? o.b + 6 : o.t - th - 6;
+        }
+      }
       placed.push({ l: left, r: left + tw, t: top, b: top + th });
       h.text.style.transform = `translate(${left}px, ${top}px)`;
     }

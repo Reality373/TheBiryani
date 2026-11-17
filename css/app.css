@@ -133,6 +133,7 @@ button.dia { cursor: pointer; }
 /* Hints: text beside the hotspot and a glyph for the gesture. */
 #hints { position: absolute; inset: 0; overflow: hidden; }
 .hint {
+  text-wrap: pretty; text-wrap: balance;
   position: absolute; left: 0; top: 0; margin: 0; padding: 0.35rem 0.85rem; white-space: nowrap;
   font-family: var(--font-text); font-style: italic; font-size: 1rem; color: var(--rice);
   background: rgba(14, 13, 18, 0.74); border-radius: 999px; opacity: 0; transition: opacity 350ms ease;
@@ -161,7 +162,7 @@ html[data-calm='true'] .g-ping { opacity: 0.6; transform: scale(1.7); }
 #bottom::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(14, 13, 18, 0.82), rgba(14, 13, 18, 0.5) 55%, transparent); opacity: 0; transition: opacity 500ms ease; }
 #bottom:has(#subs.is-on)::before { opacity: 1; }
 #cap { margin: 0 0 0.3rem; font-style: italic; font-size: 0.9rem; color: var(--rice); text-shadow: 0 1px 6px var(--iron); }
-#subs { max-width: 46rem; margin: 0 auto; opacity: 0; transition: opacity 500ms ease; font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem); line-height: 1.4; text-shadow: 0 1px 8px var(--iron); }
+#subs { text-wrap: pretty; text-wrap: balance; max-width: 46rem; margin: 0 auto; opacity: 0; transition: opacity 500ms ease; font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem); line-height: 1.4; text-shadow: 0 1px 8px var(--iron); }
 #subs.is-on { opacity: 1; }
 #subs p { margin: 0; }
 #sub-prev { opacity: 0.45; }
@@ -191,7 +192,7 @@ html[data-card] #corner-buttons { top: calc(var(--cb) + 14px); right: calc(var(-
 .card-col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; max-width: 30rem; }
 .card-dots svg { display: block; width: 8rem; height: auto; }
 #card-title { margin: 0; font-family: var(--font-display); font-weight: 600; font-variation-settings: 'SOFT' 100; font-size: clamp(3.4rem, 2.4rem + 6vw, 6.5rem); line-height: 0.95; color: var(--rice); }
-#card-text { margin: 0; font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem); line-height: 1.4; color: var(--rice); }
+#card-text { text-wrap: pretty; text-wrap: balance; margin: 0; font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem); line-height: 1.4; color: var(--rice); }
 #card-meta, #card-foot, #card-note { margin: 0; font-size: 0.875rem; letter-spacing: 0.02em; color: var(--rice); }
 #card-meta { letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.78rem; }
 #card-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
