@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Art preview (dev tool)</title>
+<!-- ?art=room|wait &cx= &cy= &mood= &flame=high|low|off &pot= &light= &tawa= &fog= &seal= &crack= &lift= &knob= &spread= &flamev= &zoom=1.8 &zx= &zy= &wipe=1 -->
+<style>
+  html, body { margin: 0; height: 100%; background: #05060f; overflow: hidden; }
+  #stage { position: fixed; inset: 0; --cx: 0; --cy: 0; --shift: 64px; overflow: hidden; background: #05060f; }
+  .camera { position: absolute; inset: 0; transition: transform .3s; }
+  .plane { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+    transform: translate3d(calc(var(--cx) * var(--d) * var(--shift)), calc(var(--cy) * var(--d) * var(--shift) * .4), 0); }
+  #grain { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; opacity: .34; }
+  #vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(5,6,15,.6) 100%); }
+  @media (max-width: 600px) { #stage { --shift: 26px; } }
+</style>
+<div id="stage"><div class="camera"></div><div id="grain"></div><div id="vig"></div></div>
+<script type="module">
+  const q = new URLSearchParams(location.search);
+  const st = document.getElementById('stage');
+  const cam = st.querySelector('.camera');
+  st.style.setProperty('--cx', q.get('cx') || 0);
+  st.style.setProperty('--cy', q.get('cy') || 0);
+  for (const k of ['flame', 'pot', 'light', 'tawa', 'fog']) if (q.has(k)) st.dataset[k] = q.get(k);
+  for (const [k, v] of [['seal', 'seal'], ['crack', 'crack'], ['lift', 'lift'], ['knob', 'knob'], ['spread', 'spread'], ['flamev', 'flame']])
+    if (q.has(k)) st.style.setProperty('--' + v, q.get(k));
+  // grain
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), im = g.createImageData(256, 256);
+  for (let i = 0; i < im.data.length; i += 4) { const v = Math.random() * 255; im.data.set([v, v, v, 255], i); }
+  g.putImageData(im, 0, 0);
+  document.getElementById('grain').style.background = `url(${c.toDataURL()})`;
+  const mod = await import(`../js/art/${q.get('art') || 'room'}.js`);
+  const art = mod.default ? mod.default({ mood: q.get('mood') }) : { planes: mod.room({ mood: q.get('mood') || 'night' }) };
+  const planes = art.planes && q.get('art') === 'room' ? mod.room({ mood: q.get('mood') || 'night' }) : art.planes;
+  cam.innerHTML = planes.join('');
+  if (q.has('zoom')) {
+    const W = innerWidth, H = innerHeight, s = Math.max(W / 1600, H / 1000);
+    const sx = W / 2 + (+(q.get('zx') || 800) - 800) * s, sy = H / 2 + (+(q.get('zy') || 500) - 500) * s;
+    cam.style.transformOrigin = `${sx}px ${sy}px`;
+    cam.style.transform = `scale(${q.get('zoom')})`;
+  }
+  if (q.has('wipe')) {
+    const p = document.getElementById('r-fog-wipe');
+    if (p) p.setAttribute('d', 'M640 150C700 200 760 140 820 220C870 280 900 300 950 380C900 400 820 420 700 400');
+  }
+  document.documentElement.dataset.ready = '1';
+</script>
