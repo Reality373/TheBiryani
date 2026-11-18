@@ -84,15 +84,15 @@ export function createHotspots({ stage, ui, calm, auto }) {
       raf = core.finished ? 0 : requestAnimationFrame(frame);
     };
     on('pointerdown', (e) => {
-      if (core.finished || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      if (core.finished || down || (e.pointerType === 'mouse' && e.button !== 0)) return; // a second finger does not restart the drag
       el.setPointerCapture?.(e.pointerId);
       core.touch();
       const w = world(e);
-      down = { sx: e.clientX, sy: e.clientY, at: performance.now(), t: performance.now(), x: w.x, y: w.y, first: true, moved: false };
+      down = { id: e.pointerId, sx: e.clientX, sy: e.clientY, at: performance.now(), t: performance.now(), x: w.x, y: w.y, first: true, moved: false };
       if (opts.hold && !calmed()) raf = requestAnimationFrame(frame);
     });
     on('pointermove', (e) => {
-      if (!down || core.finished) return;
+      if (!down || down.id !== e.pointerId || core.finished) return;
       if (Math.hypot(e.clientX - down.sx, e.clientY - down.sy) > TAP_PX) down.moved = true;
       if (!down.moved || !opts.drag || calmed()) return;
       const now = performance.now();
@@ -103,7 +103,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
       down.first = false; down.x = w.x; down.y = w.y; down.mt = now;
     });
     const up = (e) => {
-      if (!down) return;
+      if (!down || down.id !== e.pointerId) return;
       const d = down;
       down = null;
       cancelAnimationFrame(raf);
