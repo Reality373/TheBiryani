@@ -3,7 +3,7 @@ export const chapters = [
   { id: 'spices', mood: 'dusk', numeral: 'I', title: 'The Spices', built: true },
   { id: 'onions', mood: 'stove', numeral: 'II', title: 'The Onions', built: true },
   { id: 'marinade', mood: 'dusk', numeral: 'III', title: 'The Marinade', built: true },
-  { id: 'rest', mood: 'night', numeral: 'IV', title: 'The Rest', built: false },
+  { id: 'rest', mood: 'night', numeral: 'IV', title: 'The Rest', built: true },
   { id: 'fry', mood: 'stove', numeral: 'V', title: 'The Fry', built: true },
   { id: 'rice', mood: 'steam', numeral: 'VI', title: 'The Rice', built: true },
   { id: 'layers', mood: 'steam', numeral: 'VII', title: 'The Layers', built: true },
