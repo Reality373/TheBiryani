@@ -54,6 +54,7 @@ export default {
   art: () => import('../art/marinade.js'),
   async play(ctx) {
     const { stage, hotspot, voice, audio, signal, params, wait } = ctx;
+    audio.muffle(0); audio.stop('flame'); audio.stop('drone'); // a jump may leave the wait's hush or the end's drone behind
     const el = stage.el;
     const at = STATES[params.get('state')] ?? 0;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));

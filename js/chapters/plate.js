@@ -34,6 +34,7 @@ export default {
   art: () => import('../art/plate.js'),
   async play(ctx) {
     const { stage, hotspot, voice, audio, prefs, signal, params, auto } = ctx;
+    audio.muffle(0); audio.stop('flame'); audio.stop('drone'); audio.bed('rain', 0.25); // a jump may leave the wait's hush or the end's drone behind
     const A = await import('../art/plate.js');
     const { rest, flank, chicken0, dahi, center } = A.LAY;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));

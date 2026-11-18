@@ -39,6 +39,9 @@ export default {
   async play(ctx) {
     const { stage, hotspot, voice, audio, signal, params, calm } = ctx;
     const el = stage.el;
+    // The stage is shared: a replay or a backward jump finds the room as the later chapters left it.
+    for (const v of ['--seal', '--knob', '--flame', '--crack', '--lift', '--glow', '--spread']) el.style.removeProperty(v);
+    el.dataset.fog = 'off';
     const state = params.get('state');
     const at = STATE[state] ?? 0;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
@@ -246,6 +249,7 @@ export default {
       allDone.then(() => {
         dumOn = false;
         winSpot.dispose(); lidSpot.dispose(); steamSpot?.dispose();
+        rub(0); rainSettle(); // the window's release() is skipped when its last wipe finishes it mid-drag
         resolve();
       });
     });

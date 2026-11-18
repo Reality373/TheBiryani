@@ -8,6 +8,7 @@ export default {
   id: 'end',
   art: () => import('../art/end.js'),
   async play({ stage, voice, audio, ui, prefs, params, signal, calm, auto }) {
+    signal.addEventListener('abort', () => audio.stop('drone', 1), { once: true });
     const el = stage.el;
     // The lid rests beside the pot by now; 'lifted' would leave it hanging in mid-air.
     Object.assign(el.dataset, { pot: 'open', flame: 'off', light: 'warm' });

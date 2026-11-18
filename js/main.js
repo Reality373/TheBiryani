@@ -48,7 +48,14 @@ document.addEventListener('visibilitychange', async () => {
 // ---- the parts ----
 let ctl = null; // AbortController of the running chapter
 let jumpTo = null;
-const jump = (id) => { jumpTo = id; voice.clear(); ctl?.abort(); };
+// Chapter beds are not listed here (they register in audio.js), so only the shared ones are stopped; each chapter sets its own sound on play.
+const jump = (id) => {
+  jumpTo = id;
+  voice.clear();
+  for (const bed of ['rain', 'flame', 'sizzle', 'simmer', 'drone']) audio.stop(bed, 0.5);
+  audio.muffle(0, 0.5);
+  ctl?.abort();
+};
 const ui = createUI({ prefs, calm, auto, chapters, onJump: jump });
 const stage = createStage({ el: document.getElementById('stage'), camera: document.getElementById('camera'), calm, auto, params: q });
 const hotspot = createHotspots({ stage, ui, calm, auto });
