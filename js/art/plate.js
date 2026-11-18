@@ -179,4 +179,6 @@ ${F.servingSpoon({ p: 's', x: lx, y: ly, len: 200, rot: 8 })}
 }
 
 // Markup for a whole spice on the spoon (the spice's own icon, as a nested svg).
-export const spiceMarkup = (id) => '<circle r="21" fill="#FFE9B0" fill-opacity=".55"/>' + spiceIcon(id).replace('<svg ', '<svg x="-24" y="-24" width="48" height="48" overflow="visible" ');
+// Scaled to about half the bowl and seated on the rice at the bowl's middle (the CSS on .b-spice overrides the group's
+// own transform, so the placement lives here); the cream halo sits behind it.
+export const spiceMarkup = (id) => '<g transform="translate(-2 -9) scale(.55)"><circle r="30" fill="#FFE9B0" fill-opacity=".55"/>' + spiceIcon(id).replace('<svg ', '<svg x="-24" y="-24" width="48" height="48" overflow="visible" ') + '</g>';
