@@ -155,9 +155,10 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
         else left = o.r + 6 + tw <= innerWidth - 10 ? o.r + 6 : Math.max(10, o.l - tw - 6);
       }
       // Still crowded (a row of small targets on a phone): drop this text; its ring and glyph still show it.
-      const clash = placed.some((o) => left < o.r && left + tw > o.l && top < o.b && top + th > o.t);
+      // Same words already shown (four chicken pieces, one hint), or no clear spot: drop this text; the ring stays.
+      const clash = placed.some((o) => o.say === h.text.textContent || (left < o.r && left + tw > o.l && top < o.b && top + th > o.t));
       h.text.style.visibility = clash ? 'hidden' : '';
-      if (!clash) placed.push({ l: left, r: left + tw, t: top, b: top + th });
+      if (!clash) placed.push({ l: left, r: left + tw, t: top, b: top + th, say: h.text.textContent });
       h.text.style.transform = `translate(${left}px, ${top}px)`;
     }
     hraf = hints.size ? requestAnimationFrame(place) : 0;
