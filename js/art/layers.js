@@ -100,7 +100,7 @@ function onionCurls() {
 }
 
 function insidePlane() {
-  return plane('ly-in', 0.52, `<defs>${radial('ly-mas', [[0, '#A4461E'], [0.55, '#7A2A12'], [1, '#3A1208']])}
+  return plane('ly-in', 0.52, `<defs>${radial('ly-mas', [[0, '#A4461E'], [0.55, '#7A2A12'], [1, '#3A1208']])}${radial('ly-lift', [[0, '#FFF6DC', 0.9], [0.5, '#FFE9B8', 0.35], [1, '#FFE9B8', 0]])}
 <filter id="ly-soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.4"/></filter>
 <clipPath id="ly-in-clip"><ellipse ${ELL}/></clipPath></defs>
 <style>
@@ -157,12 +157,12 @@ export default function art() {
   const ricePlane = plane('ly-rice-pot', 0.42, `${F.foodDefs('lh')}${ricePot()}`, { label: 'The pot of part-cooked rice, with its ladle' });
   const pot = plane('ly-pot', 0.5, F.handi({ p: 'lh', cx: POT.cx, cy: POT.cy, w: POT.w, tilt: POT.tilt, fill: 'empty', seed: 6 }));
   // The puffs of steam rise out of the pot's mouth, above the rim, so they sit in this plane and not in the clipped interior.
-  const puffs = [1, 2, 3].map((n) => `<g class="ly-puff" id="ly-p${n}">${F.steam({ p: 'lh', x: 640 + n * 60, y: 300, h: 150, w: 80, n: 2, seed: 20 + n })}</g>`).join('');
+  const puffs = [1, 2, 3].map((n) => `<g class="ly-puff" id="ly-p${n}">${F.steam({ p: 'lh', x: 640 + n * 60, y: 134, h: 150, w: 80, n: 2, seed: 20 + n })}</g>`).join('');
   const steam = plane('ly-steam', 0.66, `<style>
   #ly-steam .ly-puff{opacity:0}
   #ly-steam .ly-puff.on{animation:ly-puff 2.4s ease-out both}
   @keyframes ly-puff{0%{opacity:0}25%{opacity:.85}100%{opacity:0}}
-</style><g id="ly-steam-top">${F.steam({ p: 'lh', x: POT.cx + 20, y: 200, h: 230, w: 120, n: 5, seed: 8 })}</g>${puffs}`
+</style><g id="ly-steam-top">${F.steam({ p: 'lh', x: POT.cx + 20, y: 134, h: 170, w: 110, n: 5, seed: 8 })}</g>${puffs}`
     + F.steam({ p: 'lh', x: LADLE.x, y: 640, h: 90, w: 50, n: 2, seed: 3 }));
   const props = plane('ly-props', 0.6, propsPlane(), { label: 'Saffron milk, mint, fried onions, ghee and its spoon' });
   return { planes: [...back.planes, ricePlane, pot, insidePlane(), steam, props, back.front] };
