@@ -171,7 +171,7 @@ export default {
     const onionBeat = () => new Promise((resolve) => {
       const plate = $('#f-plate'), onions = $('#f-onions');
       let ox = 0, oy = 0, tipped = false;
-      frame(1.2, 400, 920, 520); // the plate and the pot both in view
+      frame(1.2, 480, 920, 520); // the plate and the pot both in view
       const tip = () => {
         tipped = true;
         move(plate, 0, 0, 600);
@@ -197,7 +197,7 @@ export default {
     const waterBeat = () => new Promise((resolve) => {
       const w = $('#f-water'), src = w.querySelector('.f-src');
       w.style.opacity = '1';
-      frame(1.2, 420, 960, 520);
+      frame(1.2, 480, 960, 520);
       hotspot(w, {
         label: 'pour in the hot water',
         gesture: 'tap',
@@ -238,7 +238,7 @@ export default {
     const lidBeat = () => new Promise((resolve) => {
       const host = $('#f-lidRest'), node = host.querySelector('.f-src');
       host.style.opacity = '1';
-      frame(1.2, 420, 960, 520);
+      frame(1.2, 480, 960, 520);
       let p = 0, fired = false;
       const put = (v, ms) => { node.style.transition = ms ? `transform ${ms}ms ease-out` : 'none'; node.style.transform = `translate(${v * LID_PATH[0]}px, ${v * LID_PATH[1]}px)`; };
       const fin = () => { fired = true; put(1, 250); later(() => { lidOn(false); voice.say('fry.lid'); }, 250); return true; };
@@ -262,12 +262,12 @@ export default {
 
     // ---- the flow ----
     if (at < 1) {
-      frame(1.2, 400, 740, 500); // the bowl and the pot both in view, even on a phone
+      frame(1.2, 480, 740, 500); // the bowl and the pot both in view, even on a phone
       await run(tipBeat);
       if (signal.aborted) return;
     }
     if (at < 2) {
-      frame(1.4, 420, 800, 420);
+      frame(1.4, 480, 800, 420);
       await run(() => holdBeat(1, null, 'hold on the pot'));
       if (signal.aborted) return;
       voice.say('fry.golden');
@@ -277,7 +277,7 @@ export default {
     if (at < 4) { await run(waterBeat); if (signal.aborted) return; }
     if (at < 5) { await run(lidBeat); if (signal.aborted) return; }
     if (at < 6) {
-      frame(1.3, 420, 800, 430);
+      frame(1.3, 480, 800, 430);
       await run(() => holdBeat(2, gravy, 'hold while it cooks'));
       if (signal.aborted) return;
       audio.stop('flame', 2); // off the heat
@@ -286,7 +286,7 @@ export default {
       await Promise.race([voice.say('fry.whyNinety'), gone]);
       return;
     }
-    frame(1.3, 420, 800, 430); // done (dev): the gravy thick, holds here
+    frame(1.3, 480, 800, 430); // done (dev): the gravy thick, holds here
     await gone;
   },
 };
