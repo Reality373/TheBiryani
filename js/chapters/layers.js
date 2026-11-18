@@ -73,6 +73,7 @@ export default {
   art: () => import('../art/layers.js'),
   async play(ctx) {
     const { stage, hotspot, voice, audio, signal, params } = ctx;
+    audio.muffle(0); audio.stop('flame'); audio.stop('drone'); audio.bed('rain', 0.25); // a jump may leave the wait's hush or the end's drone behind
     const $ = (sel) => stage.$(sel);
     const at = STATE[params.get('state')] ?? 0;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
