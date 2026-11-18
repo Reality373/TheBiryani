@@ -53,10 +53,13 @@
       <div class="card-in">
         <div class="card-medal" id="card-medal"></div>
         <div class="card-col">
+          <p class="print-only print-title">Dum: Hyderabadi chicken dum biryani (pakki)</p>
           <div class="card-dots" id="card-dots"></div>
           <h1 id="card-title"></h1>
           <p id="card-text"></p>
+          <section id="card-need" hidden><h2 id="card-need-h"></h2><div id="card-groups"></div></section>
           <section id="card-recipe" hidden><h2>The recipe, and why</h2><ol id="card-list"></ol></section>
+          <p class="print-only print-credit">Adapted from Swasthi's restaurant-style chicken biryani, indianhealthyrecipes.com</p>
           <p id="card-meta"></p>
           <div id="card-icons"></div>
           <div id="card-choices"></div>
@@ -70,10 +73,21 @@
     <div id="ui">
       <div id="scrim-top" aria-hidden="true"></div>
       <nav id="diamonds" aria-label="Chapters"></nav>
-      <header id="cartouche" hidden>
-        <p id="cart-num"></p>
-        <h2 id="cart-title" tabindex="-1"></h2>
-      </header>
+      <div id="tl">
+        <header id="cartouche" hidden>
+          <p id="cart-num"></p>
+          <h2 id="cart-title" tabindex="-1"></h2>
+        </header>
+        <aside id="ingr" hidden aria-label="Ingredients for this step">
+          <button id="ingr-pill" type="button" aria-expanded="false" aria-controls="ingr-panel"><span id="ingr-count"></span></button>
+          <div id="ingr-panel">
+            <svg class="ingr-fl" viewBox="-14 -14 28 28" aria-hidden="true" focusable="false"><use href="#corner-flower"/></svg>
+            <h2 id="ingr-head">For this step</h2>
+            <ul id="ingr-list"></ul>
+          </div>
+        </aside>
+      </div>
+      <p id="ingr-live" class="sr-only" aria-live="polite"></p>
       <div id="chapter-big" aria-hidden="true"><p id="big-num"></p><p id="big-title"></p></div>
       <div id="hints" aria-hidden="true"></div>
       <div id="bottom">
