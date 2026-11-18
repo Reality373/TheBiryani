@@ -135,12 +135,18 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
       }
       left = Math.max(10, Math.min(left, innerWidth - tw - 10));
       top = Math.max(lo, Math.min(top, hi));
-      for (const o of placed) {
-        if (left < o.r && left + tw > o.l && top < o.b && top + th > o.t) { // overlap: nudge this one away
-          top = o.b + 6 <= hi ? o.b + 6 : o.t - th - 6;
-        }
+      // Overlap: nudge this one below, else above, else beside the hint it hits; repeat, since a nudge can land on another.
+      for (let n = 0; n < 8; n++) {
+        const o = placed.find((o) => left < o.r && left + tw > o.l && top < o.b && top + th > o.t);
+        if (!o) break;
+        if (o.b + 6 <= hi) top = o.b + 6;
+        else if (o.t - th - 6 >= lo) top = o.t - th - 6;
+        else left = o.r + 6 + tw <= innerWidth - 10 ? o.r + 6 : Math.max(10, o.l - tw - 6);
       }
-      placed.push({ l: left, r: left + tw, t: top, b: top + th });
+      // Still crowded (a row of small targets on a phone): drop this text; its ring and glyph still show it.
+      const clash = placed.some((o) => left < o.r && left + tw > o.l && top < o.b && top + th > o.t);
+      h.text.style.visibility = clash ? 'hidden' : '';
+      if (!clash) placed.push({ l: left, r: left + tw, t: top, b: top + th });
       h.text.style.transform = `translate(${left}px, ${top}px)`;
     }
     hraf = hints.size ? requestAnimationFrame(place) : 0;
