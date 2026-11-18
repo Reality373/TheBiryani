@@ -3,10 +3,21 @@ import { medal, dotRow, trimTile } from '../art/card.js';
 import { spiceIcon } from '../art/spices.js';
 import { canJump, indexOf } from './progress.js';
 import { labels } from '../data/labels.js';
+import { serves, ingredients as byChapter } from '../data/cookbook.js';
 
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+// What a tick says aloud: "thick curd, not sour" -> "Thick curd".
+export const shortName = (name) => { const s = name.split(',')[0].trim(); return s[0].toUpperCase() + s.slice(1); };
+const checkSvg = () => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const s = document.createElementNS(NS, 'svg'), p = document.createElementNS(NS, 'path');
+  s.setAttribute('class', 'chk'); s.setAttribute('viewBox', '0 0 16 16'); s.setAttribute('aria-hidden', 'true');
+  p.setAttribute('d', 'M2.5 8.5l3.6 3.4L13.5 4.2');
+  s.append(p);
+  return s;
+};
 
 export function createUI({ prefs, calm, auto, chapters, onJump }) {
   const root = document.documentElement;
@@ -173,18 +184,73 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
     setTimeout(() => { h.text.remove(); h.glyph.remove(); }, 350);
   }
 
+  // ---- the ingredient card: what this step needs, ticked off as it is added ----
+  // Desktop: the panel is always open under the cartouche. Phones: a pill ("Ingredients · 3/14") opens it over the scene.
+  const ingr = $('ingr'), ingrList = $('ingr-list'), pill = $('ingr-pill'), ingrLive = $('ingr-live');
+  let ingrItems = [], ticked = new Set(), shownFor = null;
+  const setCount = () => { $('ingr-count').textContent = `Ingredients · ${ticked.size}/${ingrItems.length}`; };
+  pill.addEventListener('click', () => {
+    const open = !ingr.classList.contains('is-open');
+    ingr.classList.toggle('is-open', open);
+    pill.setAttribute('aria-expanded', String(open));
+  });
+  // The chapter's list, or hidden when it has none (or id is null). Ticks last only while the same chapter is shown.
+  // only: optional list of ingredient ids, for a chapter that uses part of a group (the spices measure only the powders).
+  function showIngredients(id, only) {
+    const items = (id ? byChapter[id] ?? [] : []).filter((it) => !only || only.includes(it.id));
+    if (id !== shownFor) ticked = new Set();
+    shownFor = items.length ? id : null;
+    ingrItems = items;
+    ingr.hidden = !items.length;
+    ingr.classList.remove('is-open');
+    pill.setAttribute('aria-expanded', 'false');
+    ingrList.replaceChildren(...items.map(({ id: iid, name, amount }) => {
+      const li = el('li');
+      li.dataset.id = iid;
+      li.append(checkSvg(), el('b', null, amount), ' ', el('span', 'nm', name));
+      if (ticked.has(iid)) li.classList.add('is-added');
+      return li;
+    }));
+    setCount();
+  }
+  // Unknown ids and repeats are ignored. The live region says the short name, only for a tick.
+  function tick(id) {
+    const i = ingrItems.findIndex((x) => x.id === id);
+    if (i < 0 || ticked.has(id)) return;
+    ticked.add(id);
+    const li = ingrList.children[i];
+    li.classList.add('is-added');
+    if (!calm()) li.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
+    setCount();
+    ingrLive.textContent = `${shortName(ingrItems[i].name)} added`;
+  }
+
   // ---- cards ----
   // choices: strings, or { label, sound: true | false | 'keep' }. Choosing sets the sound pref inside the click, so audio unlocks.
-  // list: [{ step, why }] under the text, as an ordered recipe. Its absence leaves the card as it was.
-  function card({ kind = 'title', title, text, meta, foot, note, list = [], icons = [], choices = [] }) {
+  // list: [{ step, why }] under the text, as an ordered recipe. Its absence leaves the card as it was. A list also gets
+  //   the "Print the recipe" button, which is not a choice, so auto mode still picks the last one.
+  // ingredients: [{ heading, items: [{ name, amount }] }], shown above the list as "You will need (serves ...)".
+  // While a card is open the ingredient card is hidden (html[data-card] in app.css).
+  const printBtn = el('button', null, 'Print the recipe');
+  printBtn.type = 'button';
+  printBtn.addEventListener('click', () => window.print());
+  function card({ kind = 'title', title, text, meta, foot, note, list = [], ingredients = [], icons = [], choices = [] }) {
     const c = $('card');
     c.dataset.kind = kind;
     $('card-medal').innerHTML = medal();
     $('card-dots').innerHTML = dotRow();
     $('card-title').textContent = title ?? '';
     for (const [id, v] of [['card-text', text], ['card-meta', meta], ['card-foot', foot], ['card-note', note]]) { $(id).textContent = v ?? ''; $(id).hidden = !v; }
+    $('card-need').hidden = !ingredients.length;
+    $('card-need-h').textContent = `You will need (serves ${serves})`;
+    $('card-groups').replaceChildren(...ingredients.map(({ heading, items }) => {
+      const sec = el('section'), ul = el('ul');
+      ul.append(...items.map(({ name, amount }) => { const li = el('li'); li.append(el('b', null, amount), ' ', el('span', null, name)); return li; }));
+      sec.append(el('h3', null, heading), ul);
+      return sec;
+    }));
     $('card-recipe').hidden = !list.length;
-    $('card-list').replaceChildren(...list.map(({ step, why }) => { const li = el('li'); li.append(el('span', 'step', step), el('span', 'why', why)); return li; }));
+    $('card-list').replaceChildren(...list.map(({ step, why }) => { const li = el('li'); li.append(el('span', 'step', step)); if (why) li.append(el('span', 'why', why)); return li; }));
     c.toggleAttribute('data-list', list.length > 0);
     const iconBox = $('card-icons'), box = $('card-choices');
     iconBox.replaceChildren(); box.replaceChildren();
@@ -214,15 +280,19 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
         b.addEventListener('click', () => pick(i));
         box.append(b);
       });
+      if (list.length) box.append(printBtn);
       box.firstElementChild?.focus({ preventScroll: true });
       if (auto) setTimeout(() => pick(choices.length - 1), 50);
     });
   }
 
   const ui = {
-    chapter, subtitle, caption, card, hint, unhint,
+    chapter, subtitle, caption, card, hint, unhint, ingredients: showIngredients, tick,
     headingFocused: () => document.activeElement === $('cart-title') || document.activeElement === document.body,
   };
   syncPrefs();
+  // Dev switch: ?ingr=<chapterId> shows that chapter's ingredient card for screenshots.
+  const devIngr = new URLSearchParams(location.search).get('ingr');
+  if (devIngr) showIngredients(devIngr);
   return ui;
 }

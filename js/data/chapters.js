@@ -1,6 +1,6 @@
 // Ordered chapter list: { id, numeral, title, mood, built }. mood is the colour-script mood passed on as ctx.mood. main.js loads only entries with built: true (or the one named by ?ch=). The lead flips the flags.
 export const chapters = [
-  { id: 'spices', mood: 'dusk', numeral: 'I', title: 'The Spices', built: false },
+  { id: 'spices', mood: 'dusk', numeral: 'I', title: 'The Spices', built: true },
   { id: 'onions', mood: 'stove', numeral: 'II', title: 'The Onions', built: false },
   { id: 'marinade', mood: 'dusk', numeral: 'III', title: 'The Marinade', built: true },
   { id: 'rest', mood: 'night', numeral: 'IV', title: 'The Rest', built: false },

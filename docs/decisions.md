@@ -28,6 +28,10 @@ Sources: the brainstorm chat of 7 Nov 2026 ([research/00-brainstorm-chat.md](res
 | D14 | **Explain why** each cooking step is done. | 15 Nov | |
 | D15 | **Voice-over** so the viewer doesn't have to read. | 15 Nov | Amends P5: recorded voice files are allowed. |
 | D16 | **The viewer should enjoy the process.** | 15 Nov | |
+| D17 | **A complete interactive cooking guide, then the eating.** Every step from the start: measuring the spices in the right proportions, frying the onions, making the marinade, marinating, rinsing and soaking the rice, frying the chicken, par-boiling the rice, layering, sealing, dum, serving; when each spice goes in. | 18 Nov | Eleven chapters (js/data/chapters.js). |
+| D18 | **Recipe drafted by Claude from a published pakki recipe, not reviewed by the owner.** | 18 Nov | Source: Swasthi, indianhealthyrecipes.com/chicken-biryani/ (restaurant style). Data in js/data/cookbook.js. Supersedes O11. |
+| D19 | **Learn on screen, recipe to keep.** Waits pass in seconds; the end card has the full recipe with quantities and a Print button. No cook-along timers. | 18 Nov | |
+| D20 | **Length 15 to 20 minutes, all detail.** | 18 Nov | Supersedes rule 10's 8-minute budget. |
 
 ## Proposed
 
