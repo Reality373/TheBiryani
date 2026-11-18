@@ -195,8 +195,9 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
     pill.setAttribute('aria-expanded', String(open));
   });
   // The chapter's list, or hidden when it has none (or id is null). Ticks last only while the same chapter is shown.
-  function showIngredients(id) {
-    const items = id ? byChapter[id] ?? [] : [];
+  // only: optional list of ingredient ids, for a chapter that uses part of a group (the spices measure only the powders).
+  function showIngredients(id, only) {
+    const items = (id ? byChapter[id] ?? [] : []).filter((it) => !only || only.includes(it.id));
     if (id !== shownFor) ticked = new Set();
     shownFor = items.length ? id : null;
     ingrItems = items;

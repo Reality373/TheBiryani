@@ -170,7 +170,7 @@ export default {
     };
 
     // ---- start state ----
-    if (at >= 1) { ui?.ingredients?.('marinade'); for (const id of POWDERS) land(id, true); }
+    if (at >= 1) { ui?.ingredients?.('marinade', POWDERS); for (const id of POWDERS) land(id, true); }
     if (at >= 2) {
       ui?.ingredients?.('rice');
       const ids = at >= 3 ? WHOLE : HALF;
@@ -188,7 +188,7 @@ export default {
 
     // ---- the flow ----
     if (at === 0) {
-      ui?.ingredients?.('marinade');
+      ui?.ingredients?.('marinade', POWDERS);
       voice.say('spices.intro');
       await Promise.race([powdersBeat(), gone]);
       if (signal.aborted) return;
