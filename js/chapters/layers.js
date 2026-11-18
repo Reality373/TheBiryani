@@ -145,7 +145,7 @@ export default {
         release() {
           audio.level('trickle', 0, 0.3);
           tiltCup(false);
-          if (cur && pour > 0) streaks++;
+          if (cur && cur.length > 60) streaks++; // a short wobble of the finger is not a streak
           cur = null;
           if (streaks >= STREAKS) spot.finish();
         },
@@ -155,8 +155,12 @@ export default {
 
     // ---- the toppings: three hotspots at once; the chapter goes on when all three are done ----
     const drip = (x, y) => {
-      $('#ly-ghee')?.insertAdjacentHTML('beforeend', F.glisten({ x, y, w: 92, h: 40, n: 8, seed: ++seeds }));
+      $('#ly-ghee')?.insertAdjacentHTML('beforeend', F.glisten({ x, y, w: 92, h: 40, n: 6, seed: ++seeds }));
     };
+    // The sheen over the whole top, once the ghee has gone in: many small marks, the pot's lit side.
+    const sheen = () => $('#ly-ghee')?.insertAdjacentHTML('beforeend',
+      `<ellipse cx="760" cy="300" rx="262" ry="130" fill="url(#ly-gheeG)" opacity=".26" style="mix-blend-mode:screen"/>` +
+      F.glisten({ x: 760, y: 300, w: 480, h: 220, n: 34, seed: 7 }));
     const mintBeat = () => new Promise((resolve) => {
       const spot = hotspot($('#ly-mint-hot'), {
         label: 'add the mint',
@@ -212,6 +216,7 @@ export default {
       $('#ly-mint')?.classList.add('on');
       $('#ly-curls')?.classList.add('on');
       for (let i = 0; i < 6; i++) drip(GHEE.x - 230 + i * 92, 300 + (i % 2) * 60);
+      sheen();
       $('#ly-spoon')?.setAttribute('opacity', '0');
       $('#ly-steam-top')?.style.setProperty('opacity', '1');
       frame(1.15, 760, 330, 0);
@@ -234,6 +239,7 @@ export default {
     await Promise.race([Promise.all([mintBeat(), onionBeat(), gheeBeat()]), gone]);
     if (signal.aborted) return;
     voice.say('layers.ghee');
+    sheen();
     $('#ly-steam-top')?.style.setProperty('opacity', '1');
     audio.stop('simmer', 2.5);
     await ctx.wait(2600);

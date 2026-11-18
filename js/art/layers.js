@@ -17,7 +17,7 @@ export const CUP = { x: 1030, y: 470 };
 export const MINT = { x: 975, y: 700, w: 220 };
 export const ONION = { x: 975, y: 840, w: 200 };
 export const GHEE = { x: 740, y: 822 };
-export const LAYER_COUNT = [600, 800, 1000]; // grains per rice layer: they stack to a full top
+export const LAYER_COUNT = [500, 680, 860]; // grains per rice layer: they stack to a full top (kept low: the chapter stays under 5000 elements)
 
 const IVORY = ['#F6EBD3', '#FBF2DC', '#F1E0BA', '#FFF7E8'];
 const ELL = `cx="${f(IN.cx)}" cy="${f(IN.cy)}" rx="${f(IN.rx)}" ry="${f(IN.ry)}"`;
@@ -27,7 +27,7 @@ function ricePot() {
   const rx = r.w / 2, ry = rx * 0.45, d = r.w * 0.32;
   const ccx = r.cx, ccy = r.cy + ry * 0.2, crx = rx * 0.84, cry = ry * 0.8; // the bowl's interior
   return F.bowl({ p: 'lh', cx: r.cx, cy: r.cy, w: r.w, fill: 'empty', depth: 0.32, seed: 9 }) +
-    F.riceMound({ p: 'lh', cx: ccx, cy: ccy, rx: crx, ry: cry, h: 30, count: 480, grain: 1.05, seed: 12, saffron: 0.15,
+    F.riceMound({ p: 'lh', cx: ccx, cy: ccy, rx: crx, ry: cry, h: 30, count: 400, grain: 1.05, seed: 12, saffron: 0.15,
       clip: { cx: ccx, cy: ccy, rx: crx, ry: cry } }) +
     ladle();
 }
