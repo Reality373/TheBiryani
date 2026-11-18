@@ -154,7 +154,7 @@ export default {
     const onionBeat = () => new Promise((resolve) => {
       const plate = $('#f-plate'), onions = $('#f-onions');
       let ox = 0, oy = 0, tipped = false;
-      frame(1.3, 460, 920, 520);
+      frame(1.2, 400, 920, 520); // the plate and the pot both in view
       const tip = () => {
         tipped = true;
         move(plate, 0, 0, 600);
@@ -184,7 +184,7 @@ export default {
       $('#f-masala').style.opacity = '1';
     };
     const spiceBeat = () => new Promise((resolve) => {
-      frame(1.35, 360, 1040, 700);
+      frame(1.35, 360, 1040, 790); // the spice row sits in the top 70% of a phone
       let left = SPICES.length;
       SPICES.forEach((s, i) => {
         hotspot($(`#f-sp${i}`), {
@@ -236,7 +236,7 @@ export default {
       await Promise.race([voice.say('fry.thick'), gone]);
       return;
     }
-    frame(1.35, 360, 1040, 700); // spiced (dev): the masala thick, holds here
+    frame(1.35, 360, 1040, 790); // spiced (dev): the masala thick, holds here
     await gone;
   },
 };
