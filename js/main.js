@@ -77,6 +77,7 @@ async function runChapter(c, index, signal) {
     stage, hotspot, voice, audio, ui, prefs, params: q, auto, calm, signal, mood: c.mood,
     wait: (ms) => (auto ? Promise.resolve() : Promise.race([sleep(ms), aborted])),
   };
+  ui.ingredients(null); // a chapter shows its own card; the last one's must not linger
   await ui.chapter(index, c.numeral, c.title);
   if (signal.aborted) return;
   await Promise.race([mod.play(ctx), aborted]);
