@@ -293,7 +293,7 @@ export default {
       spot.done.then(() => later(resolve, 1300));
     });
     const rinse = async (n) => {
-      frame(1.5, 560, 930, 540); // the rice bowl and the sink, inside the phone's column
+      frame(1.1, 560, 930, 400); // the rice bowl and the sink, inside the phone's column; high enough that the clock stays in view
       voice.say(`rest.rinse${n}`);
       if (n === 1) voice.say('rest.whyRinse');
       await fillBeat();
