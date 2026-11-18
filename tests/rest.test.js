@@ -5,9 +5,12 @@ import { along, milkAt, turnClock, stepClock, handsAt, nightVeil, tagText, RINSE
 import art from '../js/art/rest.js';
 import lines from '../js/data/lines/rest.js';
 
-test('the water is milkiest after the first rinse and nearly clear after the third; clear after a fill', () => {
+test('the water is milkiest after the first rinse and nearly clear after the third; each fill comes in cloudy', () => {
   assert.ok(MILK[0] > MILK[1] && MILK[1] > MILK[2] && MILK[2] < 0.2);
-  assert.ok(milkAt(1, 0) < 0.1, 'a fresh fill is clear');
+  assert.ok(milkAt(1, 0) > 0.3, 'the first fill is already cloudy');
+  assert.ok(milkAt(3, 0) < 0.1, 'the third fill is nearly clear already');
+  assert.ok(milkAt(1, 0) > milkAt(2, 0) && milkAt(2, 0) > milkAt(3, 0), 'each fill is clearer than the last');
+  assert.ok(milkAt(1, 1) === MILK[0], 'swirled to the top, the water is at the rinse\'s peak');
   assert.ok(milkAt(1, 1) > milkAt(1, 0.5) && milkAt(1, 0.5) > milkAt(1, 0), 'swirling clouds it more');
   assert.ok(milkAt(1, 1) > milkAt(2, 1) && milkAt(2, 1) > milkAt(3, 1), 'each rinse is less cloudy than the one before');
   assert.equal(milkAt(2, 2), milkAt(2, 1), 'progress is clamped');

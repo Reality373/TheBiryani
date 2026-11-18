@@ -34,8 +34,8 @@ export const MIN_PER_DEG = 1 / 3; // a quarter turn (90 degrees) is 30 minutes
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 // Progress 0..1 along a path (a drag vector) after a pointer move of (dx, dy): the projection onto the path.
 export const along = (p, dx, dy, path) => clamp01(p + (dx * path[0] + dy * path[1]) / (path[0] ** 2 + path[1] ** 2));
-// Cloudiness of the water (0 clear, 1 white): clear after a fill, then up to the rinse's own level as it is swirled.
-export const milkAt = (rinse, progress) => 0.03 + (MILK[rinse - 1] - 0.03) * clamp01(progress);
+// Cloudiness of the water (0 clear, 1 white): a fill comes in cloudy (half the rinse's peak), and the swirl takes it up to the peak.
+export const milkAt = (rinse, progress) => MILK[rinse - 1] / 2 + (MILK[rinse - 1] / 2) * clamp01(progress);
 // The clock's minutes after turning it by deg degrees. Before the rice is soaking it cannot pass PRE_SOAK_MAX.
 export const turnClock = (minutes, deg, soaked) => {
   const next = Math.max(0, minutes + deg * MIN_PER_DEG);
@@ -202,9 +202,9 @@ export default {
     });
 
     // ---- the rinse: fill under the tap, swirl, pour off over the sink ----
-    const fillNow = () => {
+    const fillNow = (milk) => {
       water.style.opacity = '1';
-      setMilk(0.03, 200);
+      setMilk(milk, 200);
       flow(stream, true, 150);
       audio.level('tap-water', 0.5, 0.2);
       later(() => { flow(stream, false, 300); audio.level('tap-water', 0, 0.6); }, 1400);
@@ -214,7 +214,7 @@ export default {
       const from = { x: riceAt.x, y: riceAt.y };
       const path = [TAP.x - from.x, TAP.y - from.y];
       let p = 0;
-      const go = () => { moveRice(TAP.x, TAP.y, 0, 650); later(fillNow, 650); };
+      const go = () => { moveRice(TAP.x, TAP.y, 0, 650); later(() => fillNow(milkAt(rinsesDone + 1, 0)), 650); };
       const spot = hotspot(rice, {
         label: 'bring the rice under the tap',
         gesture: { drag: path },
@@ -314,7 +314,7 @@ export default {
         gesture: 'tap',
         step() {
           moveRice(TAP.x, TAP.y, 0, 650);
-          later(fillNow, 650);
+          later(() => fillNow(0.03), 650); // fresh water for the soak: clear
           ui.tick?.('rice');
           soaked = true;
           voice.say('rest.whySoak');
