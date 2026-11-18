@@ -147,19 +147,24 @@ export default function art() {
 <path d="M1030 337Q1042 334 1044 328" fill="none" stroke="#B8693A" stroke-width="5" stroke-linecap="round"/>
 <path d="M1002 336Q990 318 1002 296Q1014 318 1002 336Z" fill="#FFB52E"/><path d="M1002 333Q996 320 1002 306Q1008 320 1002 333Z" fill="#FFF1B8"/></g>`;
 
-  // ---- the cloth: folded (a drag target), and the drape that lies over the bowl once it is on ----
+  // ---- the cloth: a folded cotton kitchen towel (a drag target), and the drape over the bowl once it is on.
+  // Both carry the madder-and-cream check (mx-check). Three layers are the thirds of the fold; the fringe hangs off the front edge.
   const cl = rng(81), [clx, cly] = POS.cloth;
-  const stripe = (x0, y0, x1, y1) => `<path d="${wobble([[x0, y0], [(x0 + x1) / 2, (y0 + y1) / 2], [x1, y1]], 1.2, cl, false)}" fill="none" stroke="#A33B2C" stroke-width="4" stroke-linecap="round" stroke-opacity=".9"/>`;
-  const slab = (y, w, lift) => `<path d="${wobble([[clx - w / 2, y], [clx, y - 3], [clx + w / 2, y], [clx + w / 2 + 2, y + 14], [clx, y + 17], [clx - w / 2 - 2, y + 14]], 1.6, cl)}" fill="${lift ? '#F6EBD3' : '#E6D3AA'}" stroke="${INK}" stroke-width="1.5"/>
-${stripe(clx - w / 2 + 6, y + 6, clx + w / 2 - 6, y + 6)}${stripe(clx - w / 2 + 8, y + 13, clx + w / 2 - 8, y + 13)}`;
+  const sagPath = (y, w, sag) => wobble([[clx - w / 2, y], [clx, y - 2], [clx + w / 2, y], [clx + w / 2 + 2, y + 14], [clx, y + 14 + sag], [clx - w / 2 - 2, y + 14]], 1.2, cl);
+  const fringe = (y, w) => Array.from({ length: 9 }, (_, i) => {
+    const x = clx - w / 2 + 4 + (i * (w - 8)) / 8;
+    return `<path d="M${f(x)} ${f(y)}l${f(range(cl, -1, 1))} ${f(range(cl, 6, 8))}" stroke="#F6EBD3" stroke-width="1.6" stroke-linecap="round"/>`;
+  }).join('');
+  const towelLayer = (y, w, lit) => `<path d="${sagPath(y, w, 4)}" fill="url(#mx-check)" stroke="${INK}" stroke-width="1.4"/>`
+    + `<path d="M${f(clx - w / 2 + 4)} ${f(y + 1.5)}Q${f(clx)} ${f(y - 1.2)} ${f(clx + w / 2 - 4)} ${f(y + 1.5)}" fill="none" stroke="#fff" stroke-opacity="${lit ? 0.75 : 0.45}" stroke-width="1.8" stroke-linecap="round"/>`
+    + `<path d="M${f(clx - w / 2 + 6)} ${f(y + 13)}Q${f(clx)} ${f(y + 17)} ${f(clx + w / 2 - 6)} ${f(y + 13)}" fill="none" stroke="#3A1C10" stroke-opacity=".35" stroke-width="1.4"/>`;
   const cloth = `<g id="m-cloth"><g id="m-clothT"><ellipse cx="${clx + 5}" cy="${cly + 24}" rx="62" ry="12" fill="#0a0405" fill-opacity=".5"/>
-${slab(cly + 6, 104, false)}${slab(cly - 4, 98, true)}${slab(cly - 14, 90, false)}
-<path d="${wobble([[clx - 40, cly - 12], [clx, cly - 17], [clx + 38, cly - 12]], 1, cl, false)}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2.4" stroke-linecap="round"/></g>
+${fringe(cly + 22, 104)}${towelLayer(cly + 6, 104, false)}${towelLayer(cly - 4, 98, true)}${towelLayer(cly - 14, 90, false)}</g>
 <ellipse class="hit" cx="${clx}" cy="${cly + 4}" rx="68" ry="44"/></g>`;
   const drape = `<g id="m-drape" style="opacity:0;transform-box:fill-box;transform-origin:50% 60%;transform:scale(.92);transition:opacity .7s,transform .8s cubic-bezier(.3,.9,.3,1)">
 <path d="${blob(BOWL.cx + 4, BOWL.cy + 12, 192, 98, 0.05, cl, 16)}" fill="#0a0405" fill-opacity=".4"/>
-<path d="${wobble([[BOWL.cx - 188, BOWL.cy + 16], [BOWL.cx - 176, BOWL.cy - 40], [BOWL.cx - 80, BOWL.cy - 82], [BOWL.cx + 40, BOWL.cy - 88], [BOWL.cx + 150, BOWL.cy - 56], [BOWL.cx + 196, BOWL.cy + 10], [BOWL.cx + 170, BOWL.cy + 72], [BOWL.cx + 80, BOWL.cy + 98], [BOWL.cx - 40, BOWL.cy + 104], [BOWL.cx - 150, BOWL.cy + 78]], 3, cl)}" fill="url(#mx-cloth)" stroke="${INK}" stroke-width="2"/>`
-    + [-110, -40, 30, 100].map((o) => `<path d="${wobble([[BOWL.cx + o - 24, BOWL.cy - 74 + Math.abs(o) * 0.12], [BOWL.cx + o * 1.18, BOWL.cy + 14], [BOWL.cx + o * 1.12 + 22, BOWL.cy + 92 - Math.abs(o) * 0.12]], 2, cl, false).replace(/Q ([\d.-]+) ([\d.-]+)/, (m, a, b) => `Q ${+a + o * 0.35} ${b}`)}" fill="none" stroke="#A33B2C" stroke-width="7" stroke-opacity=".75" stroke-linecap="round"/>`).join('')
+<path d="${wobble([[BOWL.cx - 188, BOWL.cy + 16], [BOWL.cx - 176, BOWL.cy - 40], [BOWL.cx - 80, BOWL.cy - 82], [BOWL.cx + 40, BOWL.cy - 88], [BOWL.cx + 150, BOWL.cy - 56], [BOWL.cx + 196, BOWL.cy + 10], [BOWL.cx + 170, BOWL.cy + 72], [BOWL.cx + 80, BOWL.cy + 98], [BOWL.cx - 40, BOWL.cy + 104], [BOWL.cx - 150, BOWL.cy + 78]], 3, cl)}" fill="url(#mx-check)" stroke="${INK}" stroke-width="2"/>`
+    + `<path d="M${BOWL.cx - 152} ${BOWL.cy + 76}Q${BOWL.cx - 30} ${BOWL.cy + 126} ${BOWL.cx + 168} ${BOWL.cy + 70}" fill="none" stroke="#F6EBD3" stroke-width="3" stroke-dasharray="4 3" stroke-opacity=".85"/>`
     + `<path d="${blob(BOWL.cx + 40, BOWL.cy + 40, 150, 60, 0.05, cl, 14)}" fill="#3A1C10" fill-opacity=".22"/>`
     + `<path d="M${BOWL.cx - 130} ${BOWL.cy - 40}Q${BOWL.cx - 20} ${BOWL.cy - 84} ${BOWL.cx + 100} ${BOWL.cy - 60}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
 <path d="M${BOWL.cx - 160} ${BOWL.cy + 40}Q${BOWL.cx - 60} ${BOWL.cy + 30} ${BOWL.cx - 20} ${BOWL.cy + 70}M${BOWL.cx + 60} ${BOWL.cy + 20}Q${BOWL.cx + 120} ${BOWL.cy + 30} ${BOWL.cx + 150} ${BOWL.cy + 60}" fill="none" stroke="#8A6E4A" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/></g>`;
@@ -179,7 +184,7 @@ ${radial('mx-pool', [[0, '#FFFBF0'], [0.7, '#F3EBDC'], [1, '#C8CEE0']], { cx: 0.
 ${linear('mx-raw', [[0, '#F7D6C0'], [0.5, '#E0A088'], [1, '#B26A58']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
 ${linear('mx-coat', [[0, '#FFB24C'], [0.45, '#E4681E'], [1, '#8C2A10']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
 ${radial('mx-coatpool', [[0, '#F8A84A'], [0.55, '#E4701E'], [1, '#B0401A']], { cx: 0.4, cy: 0.35, r: 0.8 })}
-${linear('mx-cloth', [[0, '#FAF0DA'], [0.6, '#E6D3AA'], [1, '#B79C70']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
+<pattern id="mx-check" patternUnits="userSpaceOnUse" width="18" height="18"><rect width="18" height="18" fill="#F6EBD3"/><rect width="9" height="18" fill="#A33B2C" fill-opacity=".42"/><rect width="18" height="9" fill="#A33B2C" fill-opacity=".42"/><rect x="4" width="1.2" height="18" fill="#6A1E12" fill-opacity=".5"/><rect y="4" width="18" height="1.2" fill="#6A1E12" fill-opacity=".5"/></pattern>
 ${halftone('mx-ht', '#5A1A08', { size: 7, r: 1.2, angle: 30, opacity: 0.35 })}</defs>`;
 
   const css = `<style>
