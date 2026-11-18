@@ -126,7 +126,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
       h.glyph.style.transform = `translate(${cx}px, ${cy}px)`;
       const tw = h.text.offsetWidth, th = h.text.offsetHeight;
       // Beside its own hotspot: above if there is room, else below, else the side with more room.
-      const lo = 60, hi = zoneTop() - th - 8;
+      const lo = 86, hi = zoneTop() - th - 8;
       let left = cx - tw / 2, top = r.top - th - 10;
       if (top < lo) top = r.height > 160 ? r.top + 12 : r.bottom + 10; // a tall target (the window) keeps its hint inside its top
       if (top > hi) {
