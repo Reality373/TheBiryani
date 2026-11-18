@@ -14,7 +14,7 @@ import { plane, blob, rng, range, f, wobble, radial, linear, halftone } from './
 // World geometry shared with the chapter.
 export const BOWL = { cx: 800, cy: 575, w: 340 };
 export const IN = { cx: 800, cy: 580, rx: 150, ry: 64 }; // the inside of the mixing bowl where the food sits
-export const POS = { curd: [668, 350], paste: [700, 365], lemon: [850, 385], oil: [965, 380], tray: [706, 345], birista: [936, 345], herbs: [770, 438], greenchilli: [905, 440], cloth: [1010, 482], spoon: [888, 378] };
+export const POS = { curd: [668, 350], paste: [700, 365], lemon: [850, 385], oil: [965, 380], tray: [706, 345], birista: [936, 345], herbs: [770, 438], greenchilli: [905, 440], cloth: [958, 480], spoon: [888, 378] };
 export const BP = [[684, 330, -12], [795, 322, 8], [908, 336, -6], [796, 398, 14]]; // the four pieces on the board: x, y, rotation
 export const BOARD = { cx: 800, cy: 358, w: 420, h: 170 };
 export const HEAPS = ['paste', 'lemon', 'oil', 'chilli', 'turmeric', 'salt', 'masala', 'coriander', 'cumin', 'herbs', 'greenchilli', 'birista'];
@@ -213,7 +213,7 @@ ${Array.from({ length: 6 }, (_, i) => `<path d="M${bcx - bw / 2 + 12} ${bcy - bh
     + `<path d="M${f(clx - w / 2 + 6)} ${f(y + 13)}Q${f(clx)} ${f(y + 17)} ${f(clx + w / 2 - 6)} ${f(y + 13)}" fill="none" stroke="#3A1C10" stroke-opacity=".35" stroke-width="1.4"/>`;
   const cloth = `<g id="m-cloth"><g id="m-clothT"><ellipse cx="${clx + 5}" cy="${cly + 24}" rx="62" ry="12" fill="#0a0405" fill-opacity=".5"/>
 ${fringe(cly + 22, 104)}${towelLayer(cly + 6, 104, false)}${towelLayer(cly - 4, 98, true)}${towelLayer(cly - 14, 90, false)}</g>
-<ellipse class="hit" cx="${clx}" cy="${cly + 4}" rx="68" ry="44"/></g>`;
+<ellipse class="hit" cx="${clx}" cy="${cly + 4}" rx="54" ry="44"/></g>`;
   const drape = `<g id="m-drape" style="opacity:0;transform-box:fill-box;transform-origin:50% 60%;transform:scale(.92);transition:opacity .7s,transform .8s cubic-bezier(.3,.9,.3,1)">
 <path d="${blob(BOWL.cx + 4, BOWL.cy + 12, 192, 98, 0.05, cl, 16)}" fill="#0a0405" fill-opacity=".4"/>
 <path d="${wobble([[BOWL.cx - 188, BOWL.cy + 16], [BOWL.cx - 176, BOWL.cy - 40], [BOWL.cx - 80, BOWL.cy - 82], [BOWL.cx + 40, BOWL.cy - 88], [BOWL.cx + 150, BOWL.cy - 56], [BOWL.cx + 196, BOWL.cy + 10], [BOWL.cx + 170, BOWL.cy + 72], [BOWL.cx + 80, BOWL.cy + 98], [BOWL.cx - 40, BOWL.cy + 104], [BOWL.cx - 150, BOWL.cy + 78]], 3, cl)}" fill="url(#mx-check)" stroke="${INK}" stroke-width="2"/>`
