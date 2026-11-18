@@ -25,25 +25,45 @@ export const SPICES = [
 
 const LAYER_SEED = (i, k) => 20 + i * 3 + k; // one seed per drawn layer, so no two clip ids clash
 
+// Each piece's size and bone, so the heap in the bowl is uneven (piece 2, at the left rim, is the drumstick with its bone out).
+const CUTS = [{ w: 118, h: 80 }, { w: 104, h: 74 }, { w: 116, h: 84, bone: true }, { w: 96, h: 70 }];
+
 // One piece: three chicken layers (raw, half-fried, golden), the top one fading in as the pot cooks it.
 function piece(i) {
-  const p = PIECES[i];
+  const p = PIECES[i], c = CUTS[i];
   const layers = [{ raw: true }, { doneness: 0.5 }, { doneness: 1 }].map((o, k) =>
-    `<g class="f-l" style="opacity:${k === 0 ? 1 : 0}">${F.chicken({ p: 'ft', x: p.x, y: p.y, w: 112, h: 78, rot: p.rot, seed: LAYER_SEED(i, k), ...o })}</g>`).join('');
+    `<g class="f-l" style="opacity:${k === 0 ? 1 : 0}">${F.chicken({ p: 'ft', x: p.x, y: p.y, w: c.w, h: c.h, rot: p.rot, bone: !!c.bone, seed: LAYER_SEED(i, k), ...o })}</g>`).join('');
   return `<g class="f-pc" id="f-pc${i}"><ellipse class="hit" cx="${p.x}" cy="${p.y}" rx="66" ry="54"/>${layers}</g>`;
 }
 
 export default function art() {
   const back = close({ surface: 'counter', mood: 'stove', pool: { x: 800, y: 700, rx: 520, ry: 230 } });
   // Behind the pot: burner, flame tongues round the base, the warm glow on the stove.
+  // A gas flame: a narrow tongue, wide at the burner, tapering to a point that leans and curls a little.
+  // Blue at the base, saffron at the tip (the gradient in the fx defs). Heights vary; the pot hides the middle.
   const tongues = Array.from({ length: 16 }, (_, k) => {
     const r = rng(40 + k), t = k / 15;
-    const x = 470 + t * 660, y = 712 + Math.sin(Math.PI * t) * 18, h = 46 + 40 * Math.sin(Math.PI * t) + r() * 14, w = 22 + r() * 8;
-    const lean = (r() - 0.5) * 12; // each tongue leans a little, the tip off to one side
-    return `<path class="f-tg" style="animation-delay:${f(-r() * 0.8)}s" d="M${f(x - w / 2)} ${f(y)}C${f(x - w / 2)} ${f(y - h * 0.45)} ${f(x - w * 0.15 + lean)} ${f(y - h * 0.75)} ${f(x + lean)} ${f(y - h)}C${f(x + w * 0.15 + lean)} ${f(y - h * 0.75)} ${f(x + w / 2)} ${f(y - h * 0.45)} ${f(x + w / 2)} ${f(y)}Z" fill="url(#fx-flame)"/>`;
+    const x = 480 + t * 640, y = 712 + Math.sin(Math.PI * t) * 14;
+    const h = 70 + 56 * Math.sin(Math.PI * t) + r() * 34, w = 11 + r() * 5;
+    const lean = (r() - 0.5) * 22; // the tip off to one side
+    const tip = [x + lean, y - h];
+    return `<path class="f-tg" style="animation-delay:${f(-r() * 0.8)}s" d="M${f(x - w / 2)} ${f(y)}C${f(x - w * 0.62)} ${f(y - h * 0.42)} ${f(x - w * 0.22 + lean * 0.4)} ${f(y - h * 0.72)} ${f(tip[0])} ${f(tip[1])}C${f(x + w * 0.22 + lean * 0.4)} ${f(y - h * 0.72)} ${f(x + w * 0.62)} ${f(y - h * 0.42)} ${f(x + w / 2)} ${f(y)}Z" fill="url(#fx-flame)"/>`;
   }).join('');
+  // The front row: short tongues in front of the pot's foot (between the pot and the food), so the flames wrap it.
+  const frontTongues = Array.from({ length: 11 }, (_, k) => {
+    const r = rng(90 + k), t = k / 10;
+    const x = 500 + t * 600, y = 718 - Math.sin(Math.PI * t) * 6;
+    const h = 46 + 30 * Math.sin(Math.PI * t) + r() * 22, w = 10 + r() * 5;
+    const lean = (r() - 0.5) * 18;
+    const tip = [x + lean, y - h];
+    return `<path class="f-tg" style="animation-delay:${f(-r() * 0.8)}s" d="M${f(x - w / 2)} ${f(y)}C${f(x - w * 0.62)} ${f(y - h * 0.42)} ${f(x - w * 0.22 + lean * 0.4)} ${f(y - h * 0.72)} ${f(tip[0])} ${f(tip[1])}C${f(x + w * 0.22 + lean * 0.4)} ${f(y - h * 0.72)} ${f(x + w * 0.62)} ${f(y - h * 0.42)} ${f(x + w / 2)} ${f(y)}Z" fill="url(#fx-flame)"/>`;
+  }).join('');
+  const fire = plane('f-fire', 0.58, `<style>
+  #f-fire .f-tg{transform-box:fill-box;transform-origin:50% 100%;animation:f-flick .55s ease-in-out infinite alternate}
+  @media (prefers-reduced-motion:reduce){#f-fire .f-tg{animation:none}}
+</style>${frontTongues}`);
   const fx = plane('f-fx', 0.42, `${F.foodDefs('fx')}
-${linear('fx-flame', [[0, '#8EC0FF'], [0.3, '#4A86E0'], [0.7, '#F2A516'], [1, '#FFE08A']], { x1: 0, y1: 1, x2: 0, y2: 0 })}
+${linear('fx-flame', [[0, '#3D7FE0'], [0.34, '#8CC2FF'], [0.62, '#F7C85A'], [1, '#F2A516']], { x1: 0, y1: 1, x2: 0, y2: 0 })}
 ${radial('fx-glow', [[0, '#FFD27A', 0.9], [0.45, '#F2A516', 0.35], [1, '#E0701A', 0]])}
 <style>
   #f-fx .f-tg{transform-box:fill-box;transform-origin:50% 100%;animation:f-flick .55s ease-in-out infinite alternate}
@@ -54,6 +74,7 @@ ${radial('fx-glow', [[0, '#FFD27A', 0.9], [0.45, '#F2A516', 0.35], [1, '#E0701A'
 <ellipse cx="800" cy="706" rx="380" ry="58" fill="#17151E" stroke="#3A3446" stroke-width="3"/>
 ${[-220, -110, 0, 110, 220].map((dx) => `<path d="M${800 + dx} 670L${800 + dx * 1.04} 720" stroke="#3A3446" stroke-width="4" stroke-linecap="round"/>`).join('')}
 ${tongues}
+<ellipse cx="800" cy="700" rx="430" ry="70" fill="url(#fx-glow)" opacity=".7" style="mix-blend-mode:screen"/>
 <ellipse class="f-flick" cx="800" cy="690" rx="560" ry="170" fill="url(#fx-glow)" style="mix-blend-mode:screen"/>`);
 
   // The pot: copper body and rim, then the oil, the masala (faded in later), the shimmer and the bubbles.
@@ -84,18 +105,21 @@ ${F.handi({ p: 'fp', cx: POT.cx, cy: POT.cy, w: POT.w, tilt: POT.tilt, fill: 'em
 
   // The touchable things on the counter, in front of the pot.
   const top = plane('f-top', 0.66, `${F.foodDefs('ft')}
+${radial('ft-mar', [[0, '#F08A4A'], [0.6, '#D0501E'], [1, '#9A3A18']], { cx: 0.45, cy: 0.4, r: 0.7 })}
 <style>
   #f-top .hit{fill:transparent;stroke:none}
   #f-top .f-pc:not(.hotspot) .hit,#f-top .f-sp:not(.hotspot) .hit,#f-top #f-plate:not(.hotspot) .hit{pointer-events:none}
   #f-top #f-onions{pointer-events:none}
   #f-top .f-l{transition:opacity .3s}
 </style>
-${F.bowl({ p: 'ft', cx: BOWL.cx, cy: BOWL.cy, w: BOWL.w, fill: 'chicken', tint: 1, seed: 3 })}
+${F.bowl({ p: 'ft', cx: BOWL.cx, cy: BOWL.cy, w: BOWL.w, fill: 'empty', seed: 3 })}
+<ellipse cx="${BOWL.cx + 4}" cy="${BOWL.cy + 6}" rx="98" ry="38" fill="url(#ft-mar)"/>
+<ellipse cx="${BOWL.cx - 30}" cy="${BOWL.cy - 4}" rx="34" ry="7" fill="#FFD2A8" fill-opacity=".55"/>
 ${PIECES.map((_, i) => piece(i)).join('')}
 <g id="f-plate">${F.plate({ p: 'ft', cx: PLATE.cx, cy: PLATE.cy, w: PLATE.w })}<ellipse class="hit" cx="${PLATE.cx}" cy="${PLATE.cy}" rx="110" ry="62"/></g>
 <g id="f-onions">${F.biristaCluster({ p: 'ft', x: ONION.x, y: ONION.y, w: 120, h: 40, n: 18, seed: 4 })}</g>
 ${SPICES.map((s, i) => `<g class="f-sp" id="f-sp${i}"><rect class="hit" x="${s.x - 50}" y="${s.y - 44}" width="100" height="88" rx="28"/>${F.spice(s.kind, { p: 'ft', x: s.x, y: s.y, rot: s.rot, s: s.s })}</g>`).join('')}`,
   { label: 'Chicken, fried onions and whole spices' });
 
-  return { planes: [...back.planes, fx, pot, top, back.front] };
+  return { planes: [...back.planes, fx, pot, fire, top, back.front] };
 }

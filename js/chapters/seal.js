@@ -8,7 +8,7 @@
 //   lidded   lid on the pot, rim bare (the next touchable is the rim)
 //   sealing  lid on, four of eight presses done (the "why" line is not said again)
 //   sealed   everything done: pot sealed, room dim and muffled
-// Hotspots: #r-lid (drag from its side onto the pot) and #r-dough (drag [300, 0] along the rim; one press per step).
+// Hotspots: #r-lid (drag from its side onto the pot) and #r-dough (tap = one press; a drag along the rim also presses, as an extra).
 // The lid's side position is in art/seal.js; on phones it starts nearer the pot (LID_PHONE), inside the phone's column.
 import '../sound/seal.js';
 
@@ -128,7 +128,7 @@ export default {
       };
       const spot = hotspot(dough, {
         label: 'press the dough round the rim',
-        gesture: { drag: [300, 0] },
+        gesture: 'tap', // one press per tap; the drag along the rim still works as an extra
         step() {
           const s = pressed.indexOf(false);
           if (s >= 0) { pressed[s] = true; feedback(); }

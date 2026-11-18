@@ -157,10 +157,11 @@ export default {
     const drip = (x, y) => {
       $('#ly-ghee')?.insertAdjacentHTML('beforeend', F.glisten({ x, y, w: 92, h: 40, n: 6, seed: ++seeds }));
     };
-    // The sheen over the whole top, once the ghee has gone in: many small marks, the pot's lit side.
+    // The sheen over the top, once the ghee has gone in: small warm glints only, no tint over the grains (it washed them brown).
+    // A thin cream light over the lit upper left of the rice, screen-blended: lifts the grains without tinting them.
     const sheen = () => $('#ly-ghee')?.insertAdjacentHTML('beforeend',
-      `<ellipse cx="760" cy="300" rx="262" ry="130" fill="url(#ly-gheeG)" opacity=".26" style="mix-blend-mode:screen"/>` +
-      F.glisten({ x: 760, y: 300, w: 480, h: 220, n: 34, seed: 7 }));
+      `<ellipse cx="700" cy="250" rx="200" ry="110" fill="url(#ly-lift)" opacity=".5" style="mix-blend-mode:screen"/>` +
+      F.glisten({ x: 760, y: 300, w: 400, h: 180, n: 16, seed: 7 }));
     const mintBeat = () => new Promise((resolve) => {
       const spot = hotspot($('#ly-mint-hot'), {
         label: 'add the mint',
