@@ -128,7 +128,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
       // Beside its own hotspot: above if there is room, else below, else the side with more room.
       const lo = 60, hi = zoneTop() - th - 8;
       let left = cx - tw / 2, top = r.top - th - 10;
-      if (top < lo) top = r.bottom + 10;
+      if (top < lo) top = r.height > 160 ? r.top + 12 : r.bottom + 10; // a tall target (the window) keeps its hint inside its top
       if (top > hi) {
         top = Math.max(lo, Math.min(cy - th / 2, hi));
         left = innerWidth - r.right > r.left ? r.right + 14 : r.left - 14 - tw;

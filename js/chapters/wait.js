@@ -130,7 +130,7 @@ export default {
 
     // ---- the knob, high to low ----
     const knobBeat = () => new Promise((resolve) => {
-      frame(1.8, 128, 880, 800);
+      frame(1.8, 300, 924, 800);
       const spot = hotspot(knobEl, {
         label: 'turn the knob down',
         gesture: { drag: [120, 0] },
@@ -254,7 +254,7 @@ export default {
     const restBeat = async () => {
       voice.say('wait.off');
       voice.say('wait.whyRest');
-      frame(1.8, 128, 880, 830);
+      frame(1.8, 300, 924, 830);
       const spot = hotspot(knobEl, {
         label: 'turn the flame off',
         gesture: { drag: [120, 0] },
@@ -300,7 +300,7 @@ export default {
       await Promise.race([tawaBeat(), gone]);
       if (signal.aborted) return;
     }
-    if (at === 2) { frame(1.8, 128, 880, 800, 0); await gone; return; }
+    if (at === 2) { frame(1.8, 300, 924, 800, 0); await gone; return; }
     if (at <= 1) {
       await Promise.race([knobBeat(), gone]);
       if (signal.aborted) return;
@@ -315,7 +315,7 @@ export default {
       await Promise.race([dumBeat(), gone]);
       if (signal.aborted) return;
     }
-    if (at === 5) { frame(1.8, 128, 880, 830, 0); flameOff(); await gone; return; }
+    if (at === 5) { frame(1.8, 300, 924, 830, 0); flameOff(); await gone; return; }
     await Promise.race([restBeat(), gone]);
   },
 };

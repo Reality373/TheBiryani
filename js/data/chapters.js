@@ -4,8 +4,8 @@ export const chapters = [
   { id: 'fry', mood: 'stove', numeral: 'II', title: 'The Fry', built: false },
   { id: 'layers', mood: 'steam', numeral: 'III', title: 'The Layers', built: false },
   { id: 'seal', mood: 'night', numeral: 'IV', title: 'The Seal', built: true },
-  { id: 'wait', mood: 'night', numeral: 'V', title: 'The Wait', built: false },
-  { id: 'opening', mood: 'burst', numeral: 'VI', title: 'The Opening', built: false },
+  { id: 'wait', mood: 'night', numeral: 'V', title: 'The Wait', built: true },
+  { id: 'opening', mood: 'burst', numeral: 'VI', title: 'The Opening', built: true },
   { id: 'plate', mood: 'lamp', numeral: 'VII', title: 'The Plate', built: false },
   { id: 'end', mood: 'moon', numeral: '', title: '', built: true },
 ];
