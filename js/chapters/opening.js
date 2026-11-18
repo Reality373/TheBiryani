@@ -43,6 +43,7 @@ export default {
   async play(ctx) {
     const { stage, hotspot, voice, audio, signal, params } = ctx;
     const el = stage.el;
+    el.dataset.fog = 'off'; // the window is clear after the wait
     const state = params.get('state');
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
     const wait = (ms) => ctx.wait(ms);

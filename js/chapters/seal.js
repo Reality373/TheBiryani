@@ -39,6 +39,10 @@ export default {
   async play(ctx) {
     const { stage, hotspot, voice, audio, signal, params } = ctx;
     const el = stage.el;
+    // The stage is shared: a replay or a backward jump finds the room as the later chapters left it.
+    for (const v of ['--seal', '--knob', '--flame', '--crack', '--lift', '--glow', '--spread']) el.style.removeProperty(v);
+    el.dataset.fog = 'off';
+    el.dataset.tawa = 'side';
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
     const state = params.get('state');
     const phase = state === 'sealed' ? 2 : state === 'lidded' || state === 'sealing' ? 1 : 0;
