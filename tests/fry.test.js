@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { inOil, cookStep, layerWeights, donenessAt, clockText } from '../js/chapters/fry.js';
 import lines from '../js/data/lines/fry.js';
+import { OIL, LAND } from '../js/art/fry.js';
 
 test('a piece counts as in the oil only inside the pot, not on the bowl or the rim', () => {
-  assert.equal(inOil(800, 367), true);
-  assert.equal(inOil(885, 378), true);
+  assert.equal(inOil(OIL.cx, OIL.cy), true);
+  assert.equal(inOil(LAND[1][0], LAND[1][1]), true);
   assert.equal(inOil(640, 690), false, 'the bowl');
-  assert.equal(inOil(800, 560), false, 'the front of the rim');
+  assert.equal(inOil(800, OIL.cy + OIL.ry + 20), false, 'the front of the rim');
 });
 
 test('a hold cooks the pieces to golden and stops there; a tap is a fixed step', () => {

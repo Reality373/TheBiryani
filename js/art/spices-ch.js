@@ -37,7 +37,7 @@ export const JAR = { cardamom: [695, 372], clove: [800, 372], bayleaf: [905, 372
 export const SLOT = {
   cardamom: [-140, -108, -76, -44].map((x, i) => [...t2(x, -36), [-20, 25, -8, 40][i]]),
   clove: [14, 46, 78, 110].map((x, i) => [...t2(x, -36), [-12, 12, -4, 18][i]]),
-  bayleaf: [[...t2(-105, 34), -8]], cinnamon: [[...t2(-8, 42), 4]], shahijeera: [[...t2(70, 32), 0]], mace: [[...t2(124, 42), 14]],
+  bayleaf: [[...t2(-105, 34), -8]], cinnamon: [[...t2(-8, 42), 4]], shahijeera: [[...t2(70, 32), 0]], mace: [[...t2(112, 36), 14]],
 };
 export const SPOON_S = Object.fromEntries(POWDERS.map((id) => [id, +(0.65 + 0.2 * Math.sqrt(tsp(AMOUNT[id]))).toFixed(2)]));
 const RX0 = 19, RY0 = 12; // the carrying spoon's bowl
@@ -110,25 +110,51 @@ ${label ? `<text x="${rx + (len - rx) / 2 + 2}" y="-5" text-anchor="middle" font
 }
 
 // ---- the whole spices, drawn at the origin ----
-function bark(s = 1, shadow = true) { // cassia: thick, dark, rough, one scroll
+function bark(s = 1, shadow = true) { // cassia quill: a rough, reddish-brown bark tube, rolled, with its open end showing the curl
   const r = rng(5);
-  let g = `${shadow ? '<ellipse cx="3" cy="6" rx="48" ry="12" fill="#0a0405" fill-opacity=".45"/>' : ''}
-<path d="${wobble([[-45, -10], [-20, -13], [20, -12], [44, -9], [45, 10], [20, 13], [-20, 12], [-44, 10]], 1.6, r)}" fill="#7E421C" stroke="#341606" stroke-width="1.3"/>
-<path d="${wobble([[-44, -9], [-18, -12], [20, -11], [43, -8], [43, -2], [18, -4], [-20, -4], [-44, -3]], 1.2, r)}" fill="#B8743A" fill-opacity=".85"/>
-<path d="${wobble([[-44, 3], [-18, 4], [20, 5], [43, 3], [44, 10], [20, 12], [-20, 11], [-44, 9]], 1.2, r)}" fill="#3E1A08" fill-opacity=".55"/>`;
-  for (let i = 0; i < 6; i++) g += `<path d="${wobble([[-40 + range(r, 0, 10), -8 + i * 3.2], [0, -8.5 + i * 3.3], [38 - range(r, 0, 10), -8 + i * 3.2]], 1.2, r, false)}" fill="none" stroke="#3A1A08" stroke-opacity=".55" stroke-width="${f(range(r, 0.6, 1.3))}" stroke-linecap="round"/>`;
-  for (let i = 0; i < 9; i++) g += `<circle cx="${f(range(r, -40, 40))}" cy="${f(range(r, -9, 9))}" r="${f(range(r, 0.6, 1.4))}" fill="${r() < 0.5 ? '#D49458' : '#2A1206'}" fill-opacity=".6"/>`;
-  g += `<ellipse cx="45" cy="0" rx="6.5" ry="11.5" fill="#6A3414" stroke="#2A1206" stroke-width="1.2"/><path d="M45-7A4.5 5 0 1 1 44 3.5Q43 0 47 -2" fill="none" stroke="#C98A55" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="-45" cy="0" rx="3" ry="10" fill="#5A2A10" fill-opacity=".7"/>`;
+  const body = wobble([[-42, -9], [-20, -12], [18, -12], [40, -9], [45, -2], [41, 8], [18, 11], [-20, 11], [-42, 8], [-46, 0]], 1, r);
+  let g = `${shadow ? '<ellipse cx="3" cy="6" rx="50" ry="12" fill="#0a0405" fill-opacity=".45"/>' : ''}
+<path d="${body}" fill="#8A3E1E" stroke="#3E1606" stroke-width="1.3"/>
+<path d="${wobble([[-40, -8], [-18, -10.5], [18, -10.5], [38, -7.5], [38, -4.5], [18, -7], [-18, -7], [-40, -4.5]], 0.8, r)}" fill="#C0683A" fill-opacity=".8"/>
+<path d="${wobble([[-40, 5], [-18, 7.5], [18, 8], [40, 5], [40, 8], [18, 10.5], [-20, 10.5], [-40, 8]], 0.8, r)}" fill="#3A1206" fill-opacity=".6"/>`;
+  for (let i = 0; i < 7; i++) g += `<path d="${wobble([[-38 + range(r, 0, 8), -7 + i * 2.4], [-2, -6.5 + i * 2.4 + range(r, -1, 1)], [34 - range(r, 0, 8), -7 + i * 2.4]], 1, r, false)}" fill="none" stroke="#3A1206" stroke-opacity=".5" stroke-width="${f(range(r, 0.6, 1.2))}" stroke-linecap="round"/>`;
+  for (let i = 0; i < 6; i++) g += `<ellipse cx="${f(range(r, -34, 30))}" cy="${f(range(r, -7, 6))}" rx="${f(range(r, 1.5, 3.2))}" ry="${f(range(r, 0.6, 1.2))}" fill="#E0A070" fill-opacity=".5" transform="rotate(${f(range(r, -20, 20))})"/>`;
+  g += `<ellipse cx="-44" cy="0" rx="3.5" ry="9" fill="#5A2410"/>
+<ellipse cx="44" cy="0" rx="6.5" ry="11" fill="#B5602E" stroke="#3E1606" stroke-width="1.2"/>
+<path d="M44-7.5A5 8 0 1 1 44 7.5A3.4 5.2 0 1 1 44-4.6A2 3 0 1 1 44 2.4" fill="none" stroke="#5A2410" stroke-width="1.3" stroke-linecap="round"/>
+<ellipse cx="44" cy="0" rx="1.4" ry="2.4" fill="#2A0E04"/>`;
   return `<g transform="scale(${s})">${g}</g>`;
 }
-function mace(s = 1, shadow = true) { // a lacy orange-red blade fanning out from a narrow base
-  const fingers = [[44, -26], [52, -14], [56, 0], [52, 14], [44, 26]];
-  let g = shadow ? '<ellipse cx="24" cy="6" rx="34" ry="22" fill="#0a0405" fill-opacity=".4"/>' : '';
-  for (const [x, y] of fingers) g += `<path d="M2 0Q${x * 0.5} ${y * 0.2} ${x} ${y}" fill="none" stroke="#9A2E10" stroke-width="7" stroke-linecap="round"/>`;
-  for (const [x, y] of fingers) g += `<path d="M2 0Q${x * 0.5} ${y * 0.2} ${x} ${y}" fill="none" stroke="#D9531E" stroke-width="5" stroke-linecap="round"/>`;
-  for (const [x, y] of fingers) g += `<path d="M4 -1Q${x * 0.5} ${y * 0.2 - 1} ${x - 2} ${y - 1}" fill="none" stroke="#F4A050" stroke-width="1.6" stroke-linecap="round" stroke-opacity=".85"/>`;
-  g += `<path d="M24 -12Q30 -4 26 8M36 -8Q42 0 38 10" fill="none" stroke="#C8441A" stroke-width="3" stroke-linecap="round"/><path d="${blob(2, 0, 9, 7, 0.1, rng(3), 8)}" fill="#B0380F" stroke="#5A1A06" stroke-width="1"/>`;
-  return `<g transform="translate(${-26 * s} 0) scale(${s})">${g}</g>`;
+function mace(s = 1, shadow = true) { // dried mace: a small knob of blade with lacy, branching strands, dull orange-tan; not a fan
+  const r = rng(17);
+  const segs = [];
+  const grow = (x, y, ang, len, depth) => {
+    const steps = 2 + Math.floor(r() * 2);
+    const pts = [[x, y]];
+    let px = x, py = y, a = ang;
+    for (let i = 0; i < steps; i++) {
+      a += range(r, -0.3, 0.3);
+      const l = (len / steps) * range(r, 0.8, 1.2);
+      px += Math.cos(a) * l; py += Math.sin(a) * l;
+      pts.push([px, py]);
+    }
+    segs.push({ pts, w: 3.6 - depth * 0.8 });
+    if (depth < 3) {
+      const n = depth === 0 ? 5 : 1 + Math.floor(r() * 2);
+      for (let i = 0; i < n; i++) grow(px, py, a + (depth === 0 ? -1.1 + i * 0.55 : range(r, -0.9, 0.9)), len * range(r, 0.45, 0.65), depth + 1);
+    }
+  };
+  for (let i = 0; i < 4; i++) grow(-22, range(r, -2, 2), -0.9 + i * 0.6, range(r, 15, 21), 0);
+  let g = shadow ? '<ellipse cx="14" cy="8" rx="44" ry="18" fill="#0a0405" fill-opacity=".4"/>' : '';
+  for (const { pts, w } of segs) {
+    const d = `M${pts.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')}`;
+    g += `<path d="${d}" fill="none" stroke="#5A2A10" stroke-opacity=".5" stroke-width="${f(w + 1.2)}" stroke-linecap="round" stroke-linejoin="round" transform="translate(1 1.4)"/>`;
+    g += `<path d="${d}" fill="none" stroke="#B8733E" stroke-width="${f(w)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    g += `<path d="${d}" fill="none" stroke="#E0A46A" stroke-opacity=".55" stroke-width="${f(w * 0.3)}" stroke-linecap="round" transform="translate(-.5 -.6)"/>`;
+  }
+  for (let i = 0; i < 8; i++) g += `<circle cx="${f(range(r, -18, 18))}" cy="${f(range(r, -12, 12))}" r="${f(range(r, 0.6, 1.2))}" fill="#7A3E1A" fill-opacity=".45"/>`;
+  g += `<path d="${blob(-22, 0, 5, 4.5, 0.1, rng(3), 8)}" fill="#A8602E" stroke="#4A2008" stroke-width="1"/>`;
+  return `<g transform="translate(${f(-4 * s)} 0) scale(${s})">${g}</g>`;
 }
 function seeds(n, spread, seed) { // shahi jeera: thin dark crescents in a heap
   const r = rng(seed);

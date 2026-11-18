@@ -22,7 +22,7 @@ export const STREAM = 'M871 405Q842 387 806 394'; // the oil, from the spout (at
 export const PLATE = { cx: 890, cy: 690, w: 150 };
 export const BOWL = { cx: 965, cy: 606, w: 84 };
 export const KNOB = { x: 604, y: 532 };
-export const CLOCK = { x: 955, y: 116, r: 46 };
+export const CLOCK = { x: 860, y: 160, r: 46 }; // the label under it stays in the phone column (x 560..1040)
 export const KNIFE_REST = { x: 770, y: 620, rot: -12, s: 0.6 };
 export const CRESCENT = 'M-13 0A13 12 0 0 0 13 0Q0 7 -13 0Z'; // one half-moon slice, drawn at the origin
 export const pose = (x, y, rot = 0, s = 1) => `translate(${f(x)}px, ${f(y)}px) rotate(${f(rot)}deg) scale(${f(s)})`;
@@ -33,15 +33,28 @@ const arc = (cx, cy, r, a0, a1) => { // angles in turns, clockwise from the top
   return `M${f(x0)} ${f(y0)}A${r} ${r} 0 ${a1 - a0 > 0.5 ? 1 : 0} 1 ${f(x1)} ${f(y1)}`;
 };
 
-// A whole onion at the origin: brown skin, the rings showing through, the neck and the root tuft.
-const WHOLE = `<ellipse cx="6" cy="10" rx="70" ry="56" fill="#0A0604" fill-opacity=".45"/>
-<ellipse rx="66" ry="54" fill="url(#o-skin)"/>
-<ellipse rx="48" ry="37" fill="none" stroke="#F6E2B8" stroke-opacity=".6" stroke-width="2.4"/>
-<ellipse rx="30" ry="22" fill="none" stroke="#E4B870" stroke-opacity=".7" stroke-width="2"/>
-<path d="M-8-52Q0-72 8-52Q4-47 0-49Q-4-47-8-52Z" fill="#9C7442"/>
-<path d="M-6 54L0 64L6 54Z" fill="#7A5A30"/>
-<ellipse cx="-24" cy="-22" rx="14" ry="7" fill="#FFF8E4" fill-opacity=".55" transform="rotate(-28 -24 -22)"/>`;
-const onion = (k) => `<g class="o-on" id="o-on${k}" transform="translate(${ONIONS[k].x} ${ONIONS[k].y}) scale(${ONION_S})"><ellipse class="hit" rx="120" ry="100"/>${WHOLE}</g>`;
+// A whole onion at the origin, root end down: a pointed, papery copper-brown bulb with a dry tip, faint lengthwise
+// lines, a flat root with its hairs, and a highlight on the shoulder.
+const BULB = 'M-3-76C26-60 62-30 64 8C66 48 40 62 0 62C-40 62-66 48-64 8C-62-30-26-60-3-76Z';
+const WHOLE = `<ellipse cx="6" cy="12" rx="70" ry="54" fill="#0A0604" fill-opacity=".45"/>
+<path d="${BULB}" fill="url(#o-skin)" stroke="#5E3A18" stroke-width="2.2" stroke-opacity=".8"/>
+<g fill="none" stroke="#5E3414" stroke-opacity=".3" stroke-width="2" stroke-linecap="round">
+<path d="M-2-70Q30-20 24 52"/><path d="M-2-70Q-30-16 -22 54"/><path d="M-2-70Q8-6 4 60"/><path d="M-2-70Q-14-10 -10 58"/><path d="M-2-70Q44-6 46 40"/>
+</g>
+<path d="M-4-80Q-1-92 5-82Q1-76-4-80Z" fill="#B88A56" stroke="#5E3A18" stroke-width="1.2"/>
+<ellipse cx="0" cy="62" rx="13" ry="5" fill="#E9D9B4" stroke="#8A6A40" stroke-width="1.2"/>
+<path d="M-7 66L-12 80M0 67L0 84M7 66L12 80" stroke="#9C7A4A" stroke-width="1.6" stroke-linecap="round"/>
+<ellipse cx="-30" cy="-18" rx="13" ry="22" fill="#FFF0D2" fill-opacity=".38" transform="rotate(14 -30 -18)"/>`;
+// The cut onion: a half, lying cut side up, so its white rings show; the skin rims the cut face.
+const HALF = `<ellipse cx="6" cy="12" rx="70" ry="48" fill="#0A0604" fill-opacity=".45"/>
+<ellipse rx="66" ry="46" fill="url(#o-skin)" stroke="#5E3A18" stroke-width="2.2" stroke-opacity=".8"/>
+<ellipse rx="58" ry="38" fill="#FBF3E2"/>
+<g fill="none" stroke="#D9C49A" stroke-width="2.2">
+<ellipse rx="46" ry="30"/><ellipse rx="34" ry="22" stroke-opacity=".9"/><ellipse rx="22" ry="14"/><ellipse rx="10" ry="6" stroke-opacity=".9"/>
+</g>
+<path d="M-52-6Q-58 8 -40 20" fill="none" stroke="#E6D4AE" stroke-width="2.4"/>
+<ellipse cx="-24" cy="-22" rx="12" ry="5" fill="#FFFFFF" fill-opacity=".55" transform="rotate(-18 -24 -22)"/>`;
+const onion = (k) => `<g class="o-on" id="o-on${k}" transform="translate(${ONIONS[k].x} ${ONIONS[k].y}) scale(${ONION_S})"><ellipse class="hit" rx="120" ry="100"/>${k === 'B' ? HALF : WHOLE}</g>`;
 
 // The cooked mass in the pan is drawn around the origin and placed with pose(); its crescents take --oc (the colour).
 const massCres = (() => {

@@ -8,21 +8,22 @@ import { close } from './close.js';
 import { plane, linear, radial, rng, f } from './lib.js';
 
 // Layout (world units). OIL is the oil surface inside the pot's rim.
-export const POT = { cx: 800, cy: 360, w: 640, tilt: 0.55 };
-export const OIL = { cx: 800, cy: 367, rx: 298, ry: 158 };
+// The pot is 440 wide at the mouth, so a phone's column (world x 560..1040, about 460 wide at its scale) holds all of it.
+export const POT = { cx: 800, cy: 476, w: 440, tilt: 0.55 };
+export const OIL = { cx: 800, cy: 481, rx: 205, ry: 109 };
 export const BOWL = { cx: 640, cy: 690, w: 240 };
 export const PIECES = [{ x: 628, y: 664, rot: -18 }, { x: 672, y: 676, rot: 22 }, { x: 604, y: 684, rot: 8 }, { x: 656, y: 648, rot: -6 }];
-export const LAND = [[700, 385], [885, 378], [772, 428], [905, 432]]; // where each piece settles in the oil
+export const LAND = [[731, 493], [858, 489], [781, 523], [872, 526]]; // where each piece settles in the oil
 export const PLATE = { cx: 1040, cy: 626, w: 200 };
 export const ONION = { x: PLATE.cx, y: PLATE.cy - 8 }; // the onion curls' rest point on the plate
-export const ONION_TO = { x: 800, y: 402 }; // where they land in the pot
+export const ONION_TO = { x: 800, y: 505 }; // where they land in the pot
 export const WATER = { cx: 1060, cy: 610 }; // the tumbler of hot water, where the plate stood
 export const LID = { cx: 1060, cy: 700, rx: 96, ry: 40 }; // the lid waiting on the counter; it goes over the pot
 
 const LAYER_SEED = (i, k) => 20 + i * 3 + k; // one seed per drawn layer, so no two clip ids clash
 
 // Each piece's size and bone, so the heap in the bowl is uneven (piece 2, at the left rim, is the drumstick with its bone out).
-const CUTS = [{ w: 118, h: 80 }, { w: 104, h: 74 }, { w: 116, h: 84, bone: true }, { w: 96, h: 70 }];
+const CUTS = [{ w: 94, h: 64 }, { w: 83, h: 59 }, { w: 93, h: 67, bone: true }, { w: 77, h: 56 }];
 
 // One piece: three chicken layers (raw, half-fried, golden), the top one fading in as the pot cooks it.
 function piece(i) {
@@ -100,7 +101,7 @@ ${F.handi({ p: 'fp', cx: POT.cx, cy: POT.cy, w: POT.w, tilt: POT.tilt, fill: 'em
 <ellipse class="f-flick" cx="800" cy="668" rx="300" ry="34" fill="#FFB347" opacity=".4" style="mix-blend-mode:screen"/>
 <g id="f-smoke" style="opacity:0;transition:opacity .6s">${F.steam({ p: 'fp', x: 800, y: 300, h: 260, w: 130, n: 5, seed: 9 })}</g>
 <g id="f-lidOn" style="opacity:0;transform:translateY(-70px);transition:opacity .4s,transform .5s cubic-bezier(.3,.9,.3,1)"><ellipse cx="${POT.cx}" cy="${POT.cy + 8}" rx="${OIL.rx + 22}" ry="${OIL.ry + 16}" fill="url(#fp-cop)" stroke="#2A1210" stroke-width="2.5"/><ellipse cx="${POT.cx - 10}" cy="${POT.cy - 2}" rx="${OIL.rx - 40}" ry="${OIL.ry - 40}" fill="none" stroke="#FFD9A8" stroke-opacity=".45" stroke-width="3"/><ellipse cx="${POT.cx}" cy="${POT.cy - 12}" rx="26" ry="14" fill="#3A1A16" stroke="#2A1210" stroke-width="2"/><ellipse cx="${POT.cx - 7}" cy="${POT.cy - 17}" rx="10" ry="4" fill="#FFE2B8" fill-opacity=".8"/></g>
-<ellipse id="f-potHit" class="hit" cx="800" cy="400" rx="330" ry="210"/>`, { label: 'The pot of hot oil' });
+<ellipse id="f-potHit" class="hit" cx="800" cy="430" rx="250" ry="150"/>`, { label: 'The pot of hot oil' });
 
   // The touchable things on the counter, in front of the pot.
   const top = plane('f-top', 0.66, `${F.foodDefs('ft')}
@@ -120,7 +121,7 @@ ${PIECES.map((_, i) => piece(i)).join('')}
 <g id="f-onions">${F.biristaCluster({ p: 'ft', x: ONION.x, y: ONION.y, w: 120, h: 40, n: 18, seed: 4 })}</g>
 <g id="f-water" style="opacity:0;transition:opacity .5s"><g class="f-src">${F.tumbler({ p: 'ft', cx: WATER.cx, cy: WATER.cy, w: 96, h: 120 })}</g><ellipse class="hit" cx="${WATER.cx}" cy="${WATER.cy + 50}" rx="70" ry="80"/></g>
 <g id="f-lidRest" style="opacity:0;transition:opacity .5s"><g class="f-src"><ellipse cx="${LID.cx + 6}" cy="${LID.cy + 14}" rx="${LID.rx}" ry="${LID.ry}" fill="#0a0405" fill-opacity=".5"/><ellipse cx="${LID.cx}" cy="${LID.cy}" rx="${LID.rx}" ry="${LID.ry}" fill="url(#ft-cop)" stroke="#2A1210" stroke-width="2"/><ellipse cx="${LID.cx}" cy="${LID.cy - 3}" rx="${LID.rx * 0.7}" ry="${LID.ry * 0.62}" fill="none" stroke="#FFD9A8" stroke-opacity=".5" stroke-width="2.4"/><ellipse cx="${LID.cx}" cy="${LID.cy - 12}" rx="14" ry="8" fill="#3A1A16" stroke="#2A1210" stroke-width="1.4"/><ellipse cx="${LID.cx - 4}" cy="${LID.cy - 15}" rx="6" ry="2.6" fill="#FFE2B8" fill-opacity=".8"/></g><ellipse class="hit" cx="${LID.cx}" cy="${LID.cy}" rx="${LID.rx + 8}" ry="${LID.ry + 14}"/></g>
-<g id="f-clock" style="opacity:0;transition:opacity .5s"><rect x="660" y="560" width="320" height="64" rx="14" fill="#140A10" fill-opacity=".82" stroke="#F2A516" stroke-opacity=".7" stroke-width="2"/><text id="f-clockA" x="820" y="587" text-anchor="middle" font-size="26" fill="#F6EBD3" style="font-family:var(--font-display,serif)"></text><text id="f-clockB" x="820" y="611" text-anchor="middle" font-size="18" fill="#F2A516" style="font-family:var(--font-text,serif)"></text></g>`,
+<g id="f-clock" style="opacity:0;transition:opacity .5s"><rect x="660" y="262" width="320" height="64" rx="14" fill="#140A10" fill-opacity=".82" stroke="#F2A516" stroke-opacity=".7" stroke-width="2"/><text id="f-clockA" x="820" y="289" text-anchor="middle" font-size="26" fill="#F6EBD3" style="font-family:var(--font-display,serif)"></text><text id="f-clockB" x="820" y="313" text-anchor="middle" font-size="18" fill="#F2A516" style="font-family:var(--font-text,serif)"></text></g>`,
   { label: 'Marinated chicken in a bowl, a tumbler of hot water and a lid' });
 
   return { planes: [...back.planes, fx, pot, fire, top, back.front] };
