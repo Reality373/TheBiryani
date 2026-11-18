@@ -1,6 +1,6 @@
 export const labels = {
   title: 'Dum',
-  tagline: 'A small, slow story about Hyderabadi dum biryani.',
+  tagline: 'Cook Hyderabadi dum biryani with your own hands, step by step. Then eat it.',
   length: 'A cooking guide · About 20 minutes · Better with sound',
   silentHint: 'No sound? Check the silent switch.',
   continue: 'Continue: {title}',
