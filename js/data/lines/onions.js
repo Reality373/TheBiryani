@@ -1,0 +1,21 @@
+// Lines for the onions chapter (docs/design.md section 3). Id is <chapter>.<key>, e.g. 'onions.start'.
+export default {
+  start: 'Two medium onions. Cut off the root end first, so the rings come apart.',
+  second: 'The second onion. Thin, even slices, the same as the first.',
+  even: 'Thin and even, so they brown together. A thick slice is still pale when the rest are done.',
+  oil: 'A quarter cup of oil, enough to coat the bottom of the pan in a thin layer.',
+  hot: 'Wait for the shimmer. Oil that is not hot enough soaks the onions, and they go soggy.',
+  tip: 'In they go, all at once. The pan answers with a long hiss.',
+  medium: 'Medium heat for about seven minutes. Pale first, then translucent, then golden.',
+  stir: 'Stir all the time, in circles, so every slice colours evenly.',
+  low: 'The knob goes down. Low for about four minutes, so they colour without catching.',
+  off: 'Heat off. Keep stirring and watch the colour. They still darken for a few minutes.',
+  golden: 'Golden now. Get them out soon, because they keep darkening in the pan.',
+  why: 'They keep darkening after the heat is off, and a few seconds too long turns them bitter.',
+  dark: 'Getting dark. Get them out now, before they turn bitter.',
+  notYet: 'Not yet. They are still pale. Keep stirring until they go golden.',
+  drain: 'Out onto the plate, spread thin, so the steam leaves and they crisp.',
+  crisp: 'They crisp as they cool, and darken one shade more on the steel.',
+  keep: 'Two spoonfuls aside now, for the top. They go on at the very end.',
+  done: 'The onions are done. Two spoonfuls are set aside for the top of the biryani.',
+};
