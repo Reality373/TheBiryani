@@ -246,6 +246,7 @@ export default {
       allDone.then(() => {
         dumOn = false;
         winSpot.dispose(); lidSpot.dispose(); steamSpot?.dispose();
+        rub(0); rainSettle(); // the window's release() is skipped when its last wipe finishes it mid-drag
         resolve();
       });
     });

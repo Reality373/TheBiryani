@@ -140,7 +140,7 @@ export default {
           cur.add(x, y, speed);
           pour += Math.hypot(dx, dy);
           audio.level('trickle', Math.min(0.5, speed / 1400), 0.08);
-          if (pourDone(streaks, pour)) { spot.finish(); return true; }
+          if (pourDone(streaks, pour)) { audio.level('trickle', 0, 0.3); tiltCup(false); spot.finish(); return true; } // release() will not run once it returns true
         },
         release() {
           audio.level('trickle', 0, 0.3);
