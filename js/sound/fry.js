@@ -1,6 +1,21 @@
 // Sound for chapter II, The Fry: a sizzle burst per piece, a small tick and splash per spice, a soft crackle for the
 // onions. The hot-oil bed is the existing sizzle bed, driven by the hold through audio.level().
-import { register, tick, rnd } from '../core/audio.js';
+import { register, tick, tone, rnd } from '../core/audio.js';
+
+register('fry-hiss', {
+  hit(ctx, noise, out) { // hot water meets hot oil: a long bright hiss
+    tick(ctx, noise, out, { freq: 6500, q: 0.7, len: 1.1, peak: 0.28 });
+    tick(ctx, noise, out, { type: 'lowpass', freq: 1200, q: 0.6, len: 0.35, peak: 0.3 });
+  },
+});
+
+register('fry-lid', {
+  hit(ctx, noise, out) { // a copper lid settling on a copper pot
+    tone(ctx, out, { f: 420, to: 300, dec: 0.35, peak: 0.3 });
+    tone(ctx, out, { f: 1130, to: 900, dec: 0.2, peak: 0.12 });
+    tick(ctx, noise, out, { freq: 2400, q: 1.5, len: 0.03, peak: 0.25 });
+  },
+});
 
 register('fry-sizzle', {
   hit(ctx, noise, out) {

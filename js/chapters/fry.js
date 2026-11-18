@@ -1,50 +1,64 @@
-// Chapter II, The Fry. Close: a heavy pot of hot oil on a gas burner, the stove's light from below. Beats: (1) drag a
-// piece of chicken from the bowl into the oil (four pieces; a tap drops the next one); (2) hold on the pot until the
-// pieces are golden (release calms it and keeps what was cooked; a tap is one fixed step); (3) drag the plate of fried
-// onions over the pot, or tap it, to tip them in; (4) tap the four whole spices in, all active at once. The masala
-// thickens, the sizzle settles into a simmer, and the chapter ends on "thick".
+// Chapter V, The Fry. Close: a heavy pot of hot oil on a gas burner, the stove's light from below. Beats: (1) drag the
+// bowl of marinated chicken over the pot (or tap): the whole bowl, marinade and all, goes into the oil with a big sizzle;
+// (2) hold on the pot: "4 to 5 min, medium", the edges colour (release calms it and keeps what was cooked; a tap is one
+// fixed step); (3) drag the plate of fried onions over the pot, or tap it; (4) tap the tumbler: a quarter cup of hot
+// water, a hiss and steam; (5) drag the lid over the pot (or tap); (6) hold on the pot: "10 to 15 min, covered", the
+// gravy thickens and darkens, the chicken reaches about ninety-five percent and comes off the heat.
 //
-// ?state= (dev, for screenshots; sets the chapter up at that point and plays on from there; spiced holds):
+// ?state= (dev, for screenshots; sets the chapter up at that point and plays on from there; done holds):
 //   start    the bowl full, the oil hot, nothing in (also the default)
-//   in       the first piece in the oil
-//   frying   all four pieces in, part cooked, not yet golden
-//   golden   golden at the edges, the onions waiting
-//   onions   the onions in, the spices waiting
-//   spiced   all spices in, the masala thick (holds here)
-// Hotspots: .f-pc (drag to the oil, or tap), #f-potHit (hold, or tap for a step), #f-plate (drag over the pot, or tap),
-// #f-sp0..3 (tap each spice). The chicken layers are crossfaded with food.chicken's doneness.
+//   in       the chicken tipped in, raw
+//   seared   edges coloured, the onions waiting
+//   onions   the onions in, the tumbler waiting
+//   water    the water in, the lid waiting
+//   lid      the lid on the pot, the long cook waiting
+//   done     the long cook finished, the gravy thick (holds here)
+// Hotspots: #f-bowl (drag [80, -170], or tap), #f-potHit (hold, or tap for a step), #f-plate (drag over the pot, or tap),
+// #f-water (tap), #f-lidRest (drag over the pot, or tap). The chicken layers are crossfaded with food.chicken's doneness.
 import '../sound/fry.js';
-import { OIL, PIECES, LAND, PLATE, ONION, ONION_TO, SPICES } from '../art/fry.js';
+import { OIL, PIECES, LAND, PLATE, ONION, ONION_TO, WATER, LID, POT } from '../art/fry.js';
 
-const HOLD_SEC = 4; // a hold takes this many seconds to take the pieces from raw to golden
+const HOLD_SEC = 4; // a hold takes this many seconds to take the pieces through one phase
 const TAP_COOK = 0.25; // one tap is this much cooking
-const STATE = { start: 0, in: 1, frying: 2, golden: 3, onions: 4, spiced: 5 };
-const PLACED = [0, 1, 4, 4, 4, 4]; // pieces already in the oil at each state
+const STATE = { start: 0, in: 1, seared: 2, onions: 3, water: 4, lid: 5, done: 6 };
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const BOWL_PATH = [80, -170];
+const LID_PATH = [POT.cx - LID.cx, POT.cy + 20 - LID.cy];
 
 // The centre of a piece lies in the oil (inside the rim, a little in from the edge).
 export const inOil = (x, y) => ((x - OIL.cx) / OIL.rx) ** 2 + ((y - OIL.cy) / OIL.ry) ** 2 <= 0.8;
-// Cooking by a hold: dt seconds of holding, capped at golden.
+// Cooking by a hold: dt seconds of holding, capped at the end of the phase.
 export const cookStep = (g, dt) => Math.min(1, g + dt / HOLD_SEC);
-// Opacity weights of the raw, half-fried and golden layers for a cook amount 0..1 (they always sum to 1).
+// Opacity weights of the raw, half-fried and golden layers for a doneness 0..1 (they always sum to 1).
 export const layerWeights = (g) => {
   const t = Math.min(1, Math.max(0, g));
   return [Math.max(0, 1 - 2 * t), 1 - Math.abs(2 * t - 1), Math.max(0, 2 * t - 1)];
+};
+// Doneness of the chicken for progress g (0..1) through a phase: the sear takes it from raw to about 0.6, the covered
+// cook on to about 0.95 (the rest happens in the steam of the dum).
+export const donenessAt = (phase, g) => (phase === 1 ? 0.6 * g : 0.6 + 0.35 * g);
+// The clock on the scene: elapsed minutes as m:ss, and the phase's label.
+export const clockText = (phase, g) => {
+  const sec = Math.round(g * (phase === 1 ? 4.5 : 13) * 60);
+  return { a: phase === 1 ? '4 to 5 min' : '10 to 15 min', b: `${phase === 1 ? 'medium heat' : 'covered, gentle flame'} · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` };
 };
 
 export default {
   id: 'fry',
   art: () => import('../art/fry.js'),
   async play(ctx) {
-    const { stage, hotspot, voice, audio, signal, params } = ctx;
+    const { stage, hotspot, voice, audio, ui, signal, params } = ctx;
     const el = stage.el;
-    const state = params.get('state');
-    const at = STATE[state] ?? 0;
+    const at = STATE[params.get('state')] ?? 0;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
     const $ = (sel) => stage.$(sel);
     const make = (markup) => { const t = document.createElementNS(SVG_NS, 'svg'); t.innerHTML = markup; return t.firstElementChild; };
+    const run = (beat) => Promise.race([beat(), gone]);
+    const timers = new Set();
+    const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; };
     let raf = 0;
-    signal.addEventListener('abort', () => { cancelAnimationFrame(raf); audio.level('sizzle', 0, 0.2); audio.stop('simmer', 0.5); }, { once: true });
+    signal.addEventListener('abort', () => { cancelAnimationFrame(raf); for (const t of timers) clearTimeout(t); audio.level('sizzle', 0, 0.2); audio.stop('simmer', 0.5); }, { once: true });
+    ui.ingredients(null); // nothing new goes in but what the earlier chapters made
 
     // The camera pushes in on what is touchable (the target stays in the top 70%); a phone is too narrow to push far.
     const frame = (want, span, x, y) => {
@@ -77,12 +91,12 @@ export default {
     };
     raf = requestAnimationFrame(cool);
 
-    // ---- the pieces: transforms only; the landed ones carry their cook level ----
+    // ---- the pieces: transforms only; the landed ones carry their doneness ----
     const landed = new Set();
-    let cook = 0, lands = 0;
+    let done = 0, lands = 0; // done: doneness 0..1 of the chicken
     const move = (node, x, y, ms) => { node.style.transition = ms ? `transform ${ms}ms ease-out` : 'none'; node.style.transform = `translate(${x}px, ${y}px)`; };
     const setCook = (g) => {
-      cook = g;
+      done = g;
       const w = layerWeights(g);
       for (const i of landed) [...$(`#f-pc${i}`).querySelectorAll('.f-l')].forEach((l, k) => { l.style.opacity = w[k].toFixed(3); });
     };
@@ -107,47 +121,50 @@ export default {
       const p = PIECES[i], [x, y] = LAND[i];
       move($(`#f-pc${i}`), x - p.x, y - p.y, ms);
       landed.add(i);
-      setCook(cook);
+      setCook(done);
     };
-    const drop = (i) => {
-      placeAt(i, 420);
-      splash(LAND[i][0], LAND[i][1], 110, 12);
-      audio.hit('fry-sizzle');
-      lands++;
-      if (lands === 1) voice.say('fry.in');
-      if (lands === PIECES.length) voice.say('fry.kitchen');
+    const clock = (phase, g) => { const t = clockText(phase, g); $('#f-clockA').textContent = t.a; $('#f-clockB').textContent = t.b; $('#f-clock').style.opacity = '1'; };
+    const fade = (sel, v) => { $(sel).style.opacity = String(v); };
+
+    // ---- beat 1: tip the whole bowl, marinade and all, into the hot pot ----
+    const tipIn = () => {
+      const bowl = $('#f-bowl');
+      bowl.style.transition = 'transform .55s ease-in-out';
+      bowl.style.transform = `translate(${BOWL_PATH[0]}px, ${BOWL_PATH[1]}px) rotate(34deg)`;
+      PIECES.forEach((_, i) => later(() => {
+        placeAt(i, 420);
+        splash(LAND[i][0], LAND[i][1], 110, 12);
+        audio.hit('fry-sizzle');
+        if (++lands === 1) { voice.say('fry.in'); fade('#f-marpool', 1); fade('#f-bowlMar', 0); }
+        if (lands === PIECES.length) later(() => { voice.say('fry.kitchen'); bowl.style.transform = ''; }, 700);
+      }, 450 + i * 160));
     };
-    const pieceBeat = (i) => new Promise((resolve) => {
-      const node = $(`#f-pc${i}`), p = PIECES[i];
-      let ox = 0, oy = 0;
-      hotspot(node, {
-        label: 'put it in the oil',
-        gesture: { drag: [LAND[i][0] - p.x, LAND[i][1] - p.y] },
-        step() { drop(i); return true; },
-        drag({ dx, dy }) {
-          ox += dx; oy += dy;
-          move(node, ox, oy, 0);
-          if (inOil(p.x + ox, p.y + oy)) { drop(i); return true; }
-        },
-        release() { if (!landed.has(i)) { ox = oy = 0; move(node, 0, 0, 350); } },
-      }).done.then(resolve);
+    const tipBeat = () => new Promise((resolve) => {
+      let p = 0, fired = false;
+      const bowl = $('#f-bowl');
+      const put = (v, ms) => { bowl.style.transition = ms ? `transform ${ms}ms ease-out` : 'none'; bowl.style.transform = `translate(${v * BOWL_PATH[0]}px, ${v * BOWL_PATH[1]}px) rotate(${v * 34}deg)`; };
+      const fin = () => { fired = true; tipIn(); return true; };
+      hotspot(bowl, {
+        label: 'tip the chicken into the pot',
+        gesture: { drag: BOWL_PATH },
+        step: fin,
+        drag({ dx, dy }) { p = Math.min(1, Math.max(0, p + (dx * BOWL_PATH[0] + dy * BOWL_PATH[1]) / (BOWL_PATH[0] ** 2 + BOWL_PATH[1] ** 2))); put(p, 0); if (p >= 0.85) return fin(); },
+        release() { if (!fired && p > 0) { p *= 0.6; put(p, 250); } },
+      }).done.then(() => later(resolve, 450 + PIECES.length * 160 + 900));
     });
 
-    // ---- beat 2: golden. Held: the bed swells, bubbles quicken, smoke rises; released: it calms, nothing is lost ----
-    const goldBeat = () => new Promise((resolve) => {
-      frame(1.4, 420, 800, 420);
+    // ---- beats 2 and 6: held on the pot. The bed swells, bubbles quicken, smoke rises; released, it calms, nothing is lost ----
+    const holdBeat = (phase, onProgress, label) => new Promise((resolve) => {
+      let g = 0;
+      clock(phase, g);
+      const set = (v) => { g = v; setCook(donenessAt(phase, g)); onProgress?.(g); clock(phase, g); };
       hotspot($('#f-potHit'), {
-        label: 'hold on the pot',
+        label,
         gesture: 'hold',
-        step() { setCook(Math.min(1, cook + TAP_COOK)); return cook >= 1; },
-        hold(dt) { heatTo = 1; setCook(cookStep(cook, dt)); return cook >= 1; },
-        release() { heatTo = 0.25; },
-      }).done.then(() => {
-        heatTo = 0.25;
-        voice.say('fry.golden');
-        voice.say('fry.whyFry');
-        resolve();
-      });
+        step() { set(Math.min(1, g + TAP_COOK)); return g >= 1; },
+        hold(dt) { if (phase === 1) heatTo = 1; set(cookStep(g, dt)); return g >= 1; },
+        release() { if (phase === 1) heatTo = 0.25; },
+      }).done.then(() => { heatTo = phase === 1 ? 0.25 : 0.1; resolve(); });
     });
 
     // ---- beat 3: the onions, dragged over the pot (or tapped) ----
@@ -173,70 +190,103 @@ export default {
           if (inOil(PLATE.cx + ox, PLATE.cy + oy)) { tip(); return true; }
         },
         release() { if (!tipped) { ox = oy = 0; move(plate, 0, 0, 350); move(onions, 0, 0, 350); } },
-      }).done.then(resolve);
+      }).done.then(() => later(() => { fade('#f-plate', 0); resolve(); }, 1400));
     });
 
-    // ---- beat 4: the four whole spices, all active at once; the last one thickens the masala ----
-    const settle = () => {
+    // ---- beat 4: the quarter cup of hot water ----
+    const waterBeat = () => new Promise((resolve) => {
+      const w = $('#f-water'), src = w.querySelector('.f-src');
+      w.style.opacity = '1';
+      frame(1.2, 420, 960, 520);
+      hotspot(w, {
+        label: 'pour in the hot water',
+        gesture: 'tap',
+        step() {
+          src.style.transition = 'transform .5s ease-in-out';
+          src.style.transform = 'translate(-210px, -150px) rotate(-62deg)';
+          later(() => { splash(840, 410, 110, 14); audio.hit('fry-hiss'); heatTo = 1; voice.say('fry.water'); }, 450);
+          later(() => { heatTo = 0.25; src.style.transform = ''; }, 1600);
+          later(() => { w.style.opacity = '0'; resolve(); }, 2300);
+          return true;
+        },
+      });
+    });
+
+    // ---- beat 5: the lid ----
+    const settle = () => { // the covered cook: the sizzle gives way to a simmer
       simmering = true; heatTo = 0.1;
       audio.stop('sizzle', 2);
       audio.bed('simmer', 0.5, 2);
-      $('#f-masala').style.opacity = '1';
     };
-    const spiceBeat = () => new Promise((resolve) => {
-      frame(1.35, 360, 1040, 790); // the spice row sits in the top 70% of a phone
-      let left = SPICES.length;
-      SPICES.forEach((s, i) => {
-        hotspot($(`#f-sp${i}`), {
-          label: `add the ${s.name}`,
-          gesture: 'tap',
-          step() {
-            move($(`#f-sp${i}`), s.to[0] - s.x, s.to[1] - s.y, 420);
-            splash(s.to[0], s.to[1], 34, 6);
-            audio.hit('fry-tick');
-            if (--left === 0) {
-              voice.say('fry.spices');
-              voice.say('fry.whySpices');
-              settle();
-              resolve();
-            }
-            return true;
-          },
-        });
-      });
+    const lidOn = (now) => {
+      const on = $('#f-lidOn');
+      if (now) on.style.transition = 'none';
+      on.style.opacity = '1'; on.style.transform = 'none';
+      for (const i of landed) $(`#f-pc${i}`).style.opacity = '0';
+      fade('#f-onions', 0);
+      $('#f-lidRest').style.opacity = '0';
+      if (!now) audio.hit('fry-lid');
+      settle();
+    };
+    const liftLid = (now) => { // off the heat, lid up: the thick dark gravy and the chicken show
+      const on = $('#f-lidOn');
+      if (now) on.style.transition = 'none';
+      on.style.opacity = '0'; on.style.transform = 'translateY(-70px)';
+      for (const i of landed) $(`#f-pc${i}`).style.opacity = '1';
+      fade('#f-onions', 1);
+    };
+    const lidBeat = () => new Promise((resolve) => {
+      const host = $('#f-lidRest'), node = host.querySelector('.f-src');
+      host.style.opacity = '1';
+      frame(1.2, 420, 960, 520);
+      let p = 0, fired = false;
+      const put = (v, ms) => { node.style.transition = ms ? `transform ${ms}ms ease-out` : 'none'; node.style.transform = `translate(${v * LID_PATH[0]}px, ${v * LID_PATH[1]}px)`; };
+      const fin = () => { fired = true; put(1, 250); later(() => { lidOn(false); voice.say('fry.lid'); }, 250); return true; };
+      hotspot(host, {
+        label: 'put the lid on',
+        gesture: { drag: LID_PATH },
+        step: fin,
+        drag({ dx, dy }) { p = Math.min(1, Math.max(0, p + (dx * LID_PATH[0] + dy * LID_PATH[1]) / (LID_PATH[0] ** 2 + LID_PATH[1] ** 2))); put(p, 0); if (p >= 0.85) return fin(); },
+        release() { if (!fired && p > 0) { p *= 0.6; put(p, 250); } },
+      }).done.then(() => later(resolve, 900));
     });
 
     // ---- the start state (design.md section 4: the stove lit, the pot hot, nothing in yet) ----
     el.dataset.light = 'normal';
-    const placed = PLACED[at];
-    for (let i = 0; i < placed; i++) placeAt(i, 0);
-    lands = placed;
-    setCook(at === 2 ? 0.3 : at >= 3 ? 1 : 0);
-    if (at >= 4) move($('#f-onions'), ONION_TO.x - ONION.x, ONION_TO.y - ONION.y, 0);
-    if (at >= 5) {
-      SPICES.forEach((s, i) => move($(`#f-sp${i}`), s.to[0] - s.x, s.to[1] - s.y, 0));
-      heat = heatTo = 0.1;
-      settle();
-      $('#f-masala').style.transition = 'none';
-    }
+    const gravy = (g) => { $('#f-masala').style.opacity = String(g.toFixed(2)); fade('#f-marpool', 1 - g); };
+    if (at >= 1) { PIECES.forEach((_, i) => placeAt(i, 0)); lands = PIECES.length; fade('#f-marpool', 1); fade('#f-bowlMar', 0); }
+    if (at >= 2) { setCook(donenessAt(1, 1)); clock(1, 1); }
+    if (at >= 3) { move($('#f-onions'), ONION_TO.x - ONION.x, ONION_TO.y - ONION.y, 0); fade('#f-plate', 0); }
+    if (at >= 5) { $('#f-water').style.opacity = '0'; $('#f-masala').style.transition = 'none'; lidOn(true); }
+    if (at >= 6) { heat = heatTo = 0.1; setCook(donenessAt(2, 1)); clock(2, 1); gravy(1); liftLid(true); }
 
     // ---- the flow ----
-    if (at < 2) {
-      frame(1.2, 400, 740, 500); // the bowl and the drop target both in view, even on a phone
-      for (let i = placed; i < PIECES.length; i++) {
-        await Promise.race([pieceBeat(i), gone]);
-        if (signal.aborted) return;
-      }
-    }
-    if (at < 3) { await Promise.race([goldBeat(), gone]); if (signal.aborted) return; }
-    if (at < 4) { await Promise.race([onionBeat(), gone]); if (signal.aborted) return; }
-    if (at < 5) {
-      await Promise.race([spiceBeat(), gone]);
+    if (at < 1) {
+      frame(1.2, 400, 740, 500); // the bowl and the pot both in view, even on a phone
+      await run(tipBeat);
       if (signal.aborted) return;
-      await Promise.race([voice.say('fry.thick'), gone]);
+    }
+    if (at < 2) {
+      frame(1.4, 420, 800, 420);
+      await run(() => holdBeat(1, null, 'hold on the pot'));
+      if (signal.aborted) return;
+      voice.say('fry.golden');
+      voice.say('fry.whyFry');
+    }
+    if (at < 3) { await run(onionBeat); if (signal.aborted) return; }
+    if (at < 4) { await run(waterBeat); if (signal.aborted) return; }
+    if (at < 5) { await run(lidBeat); if (signal.aborted) return; }
+    if (at < 6) {
+      frame(1.3, 420, 800, 430);
+      await run(() => holdBeat(2, gravy, 'hold while it cooks'));
+      if (signal.aborted) return;
+      audio.stop('flame', 2); // off the heat
+      liftLid(false);
+      voice.say('fry.thick');
+      await Promise.race([voice.say('fry.whyNinety'), gone]);
       return;
     }
-    frame(1.35, 360, 1040, 790); // spiced (dev): the masala thick, holds here
+    frame(1.3, 420, 800, 430); // done (dev): the gravy thick, holds here
     await gone;
   },
 };
