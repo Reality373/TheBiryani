@@ -25,11 +25,13 @@ Everything in decisions.md D1–D10 still holds: the dish and method, no person 
 7. **Never lost.** After 2.5 s idle, the next touchable thing pulses with a saffron ring, a short italic hint appears beside it ("stir it in"), and a small glyph shows the gesture along its path: a dotted arc for a stir, an arrow for a drag, a filling ring for a hold, a dot for a tap. It shows once per hotspot and fades on first touch. Calm mode shows the glyph still.
 8. **Variety.** No two beats in a row use the same gesture.
 9. **The camera frames what you touch.** It pushes in on the active object so every target is big; hit areas are at least 48 CSS px. The active hotspot always sits in the top 70% of the screen: the bottom of the screen belongs to the subtitles (22% on desktop, 28% on phones).
-10. **Short enough to love.** Each chapter takes 45–75 s and 2–4 gestures; the Plate keeps its six bites, each short. The whole piece runs 7–8 minutes, and the title card says so. Trim lines before trimming gestures.
+10. **Paced, not padded.** Each chapter takes 60–100 s; the whole guide runs 15–20 minutes (D20), and the title card says so. Trim lines before trimming gestures.
 11. **Every sound has a visual twin** (bubbles with the sizzle, a pointer jump with each knob click, a ripple with each plop), so the piece still answers every touch for someone watching without sound.
 12. **Ways out, but no skipping.** The piece remembers the furthest chapter reached. The title card offers "Continue" when there is one; the diamonds of reached chapters jump there; Settings has the chapter list and "Start over". Nothing skips the interaction inside a chapter, and chapters not yet reached cannot be jumped to.
 
 ## 3. Chapters
+
+**Updated 18 Nov (D17 to D20):** the piece is now a full cooking guide of eleven chapters in `js/data/chapters.js`: Spices, Onions, Marinade, Rest, Fry, Rice, Layers, Seal, Wait, Opening, Plate, then the end card with the printable recipe. Every amount and time comes from `js/data/cookbook.js`; a "for this step" ingredient card (`ui.ingredients`, `ui.tick`) shows what each step needs. The table below is the original seven-chapter outline, kept for the parts that did not change.
 
 A title card opens the piece; seven chapters; an end card closes it. Each chapter starts from its own known state, so any chapter can be opened alone with `?ch=<id>`. Lines are voice-over: **say** is the story, **why** is the reason. Whys marked *(cook)* are Claude's wording for the owner to confirm or correct.
 
