@@ -33,7 +33,8 @@
 //   lid({p, cx, cy, r=130, lean=-16})  copper lid standing on edge, leaning.
 //   tumbler({p, cx, cy, w=84, h=130})  steel tumbler of water with a cool highlight.
 //   servingSpoon({p, x, y, len=260, rot=-14})  long steel spoon standing in the rice, handle up.
-//   smallPlate(o) = plate with w 230.  onionRings({p, cx, cy, n=6, seed=1})  raw red onion rings.
+//   smallPlate(o) = plate with w 230.  chicken also takes raw (true = pale raw marinated), bone (short bone end),
+//   doneness 0 (raw marinade) .. 1 (fried golden-brown).  onionRings({p, cx, cy, n=6, seed=1})  raw red onion rings.
 //   lemonWedge({p, x, y, s=1, rot=0})  doughBits({p, cx, cy, n=7, spread=120, seed=1})  broken seal dough.
 
 import { f, rng, range, pick, mix, wobble, blob, halftone, linear, radial } from './lib.js';
@@ -70,9 +71,9 @@ export function foodDefs(p = 'f') {
 ${radial(`${p}-shad`, [[0, '#0a0405', 0.62], [0.6, '#0a0405', 0.3], [1, '#0a0405', 0]])}
 ${radial(`${p}-glow`, [[0, '#FFE2A0', 0.55], [0.5, '#F2A516', 0.18], [1, '#F2A516', 0]])}
 ${linear(`${p}-dome`, [[0, '#EBC47C'], [0.5, '#C99352'], [1, '#8A5226']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
-${linear(`${p}-steel`, [[0, '#FFF0C8'], [0.3, '#D9C79B'], [0.62, '#8187A6'], [1, '#2E3558']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
-${linear(`${p}-steelH`, [[0, '#FBE9BC'], [0.18, '#E6D2A0'], [0.5, '#8F94B2'], [0.82, '#394068'], [1, '#232845']], { x1: 0, y1: 0, x2: 1, y2: 0 })}
-${linear(`${p}-steelIn`, [[0, '#E0C088'], [0.4, '#8A7A8E'], [1, '#2C3258']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
+${linear(`${p}-steel`, [[0, '#FFF0C8'], [0.3, '#DCCDA8'], [0.62, '#9A9AA2'], [1, '#454858']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
+${linear(`${p}-steelH`, [[0, '#FBE6B8'], [0.18, '#E2D0A6'], [0.5, '#9A9A9E'], [0.82, '#4A4C58'], [1, '#2E3040']], { x1: 0, y1: 0, x2: 1, y2: 0 })}
+${linear(`${p}-steelIn`, [[0, '#E0C088'], [0.4, '#9A8E86'], [1, '#3A3C4C']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
 ${linear(`${p}-cop`, [[0, '#F4B071'], [0.25, '#D07F45'], [0.6, '#8A4224'], [1, '#3A1A16']], { x1: 0, y1: 0, x2: 1, y2: 0.4 })}
 ${linear(`${p}-copIn`, [[0, '#8A4524'], [0.5, '#4A2016'], [1, '#2A1210']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
 ${linear(`${p}-chk`, [[0, '#EDAA48'], [0.45, '#B8641E'], [1, '#5C2610']], { x1: 0, y1: 0, x2: 1, y2: 1 })}
@@ -157,44 +158,57 @@ ${list.map((e) => e.s).join('')}
 export const riceSurface = (o) => riceMound({ h: 14, ...o });
 
 // ---------- chicken ----------
-export function chicken({ p = 'f', x, y, w = 100, h = 70, rot = 0, seed = 1, doneness = 0.5 }) {
+const RAW_MARINADE = ['#DD5B22', '#C2471A', '#E8743A', '#B8431F'];
+const FRIED_MASALA = ['#B8532A', '#8E3A18', '#6E2810', '#D98A3A', '#4A1608', '#C2461F'];
+export function chicken({ p = 'f', x, y, w = 100, h = 70, rot = 0, seed = 1, doneness = 0.5, raw = false, bone = false }) {
+  const t = raw ? 0 : clamp(doneness); // 0 = raw marinated, 1 = fried golden-brown
   const rand = rng(seed * 31 + 7);
   const a = (rot * Math.PI) / 180; const ca = Math.cos(a); const sa = Math.sin(a);
   const R = (px, py) => [x + px * ca - py * sa, y + px * sa + py * ca];
-  const pts = Array.from({ length: 9 }, (_, i) => {
-    const t = (2 * Math.PI * i) / 9; const s = 1 + range(rand, -0.26, 0.2);
-    return R((w / 2) * Math.cos(t) * s, (h / 2) * Math.sin(t) * s);
+  const N = 10;
+  const pts = Array.from({ length: N }, (_, i) => {
+    const th = (2 * Math.PI * i) / N; const k = 1 + range(rand, -0.24, 0.2);
+    return R((w / 2) * Math.cos(th) * k, (h / 2) * Math.sin(th) * k);
   });
-  const d = wobble(pts, 4, rand, true);
+  const d = wobble(pts, 3.5, rand, true);
   const id = `${p}-ck${seed}`;
-  const dark = mix('#B8641E', '#4A1D0A', doneness * 0.5);
-  let s = `${shadow(p, x + 8, y + h * 0.42, w * 0.62, h * 0.4, 0.8)}`;
-  s += `<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="url(#${p}-chk)" stroke="#3E1608" stroke-width="3.4" stroke-linejoin="round"/><g clip-path="url(#${id})">`;
-  for (let i = 0; i < 16; i++) { // clinging masala patches, brick-red to dark
+  const lit = mix('#EBCDB8', '#EDAA48', t); const mid = mix('#D9A58C', '#B8641E', t); const dk = mix('#A8705C', '#5C2610', t);
+  let s = shadow(p, x + 8, y + h * 0.42, w * 0.62, h * 0.4, 0.8);
+  if (bone) { // short pale bone end with a darker knuckle, as on a drumstick
+    const bl = w * 0.36; const bh = h * 0.2;
+    s += `<g transform="${T(x, y, rot)}"><path d="M${f(-w * 0.34)} ${f(-bh)}L${f(-w / 2 - bl)} ${f(-bh * 0.8)}L${f(-w / 2 - bl)} ${f(bh * 0.8)}L${f(-w * 0.34)} ${f(bh)}Z" fill="#EFE2C4" stroke="#8A7550" stroke-width="1.5"/>` +
+      `<path d="M${f(-w * 0.34)} ${f(bh * 0.1)}L${f(-w / 2 - bl)} ${f(bh * 0.2)}L${f(-w / 2 - bl)} ${f(bh * 0.8)}L${f(-w * 0.34)} ${f(bh)}Z" fill="#C9B78F" fill-opacity=".7"/>` +
+      `<circle cx="${f(-w / 2 - bl)}" cy="${f(-bh * 0.6)}" r="${f(bh * 0.75)}" fill="#E4D5B0" stroke="#8A7550" stroke-width="1.5"/><circle cx="${f(-w / 2 - bl)}" cy="${f(bh * 0.6)}" r="${f(bh * 0.75)}" fill="#D9C79E" stroke="#8A7550" stroke-width="1.5"/>` +
+      `<circle cx="${f(-w / 2 - bl - 2)}" cy="${f(-bh * 0.85)}" r="2.2" fill="#FFF8E4" fill-opacity=".9"/></g>`;
+  }
+  s += `<defs><linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lit}"/><stop offset=".5" stop-color="${mid}"/><stop offset="1" stop-color="${dk}"/></linearGradient>` +
+    `<clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${id}g)" stroke="${mix(dk, '#2A0E04', 0.55)}" stroke-width="3.2" stroke-linejoin="round"/><g clip-path="url(#${id})">`;
+  const nP = 14 + Math.round((1 - t) * 8);
+  for (let i = 0; i < nP; i++) { // clinging marinade / masala patches: thick red-orange raw, darker once fried
     const [mx, my] = R(range(rand, -w * 0.45, w * 0.45), range(rand, -h * 0.4, h * 0.4));
-    s += `<path d="${blob(mx, my, range(rand, 5, 14), range(rand, 4, 9), 0.35, rand, 8)}" fill="${pick(rand, ['#B8532A', '#8E3A18', '#6E2810', '#D98A3A', '#4A1608', '#C2461F'])}" fill-opacity="${f(range(rand, 0.5, 0.85))}"/>`;
+    const big = 1 + (1 - t) * 0.9;
+    s += `<path d="${blob(mx, my, range(rand, 5, 14) * big, range(rand, 4, 9) * big, 0.35, rand, 8)}" fill="${mix(pick(rand, RAW_MARINADE), pick(rand, FRIED_MASALA), t)}" fill-opacity="${f(Math.min(1, range(rand, 0.5, 0.85) + (1 - t) * 0.12))}"/>`;
   }
-  s += `<ellipse cx="${f(x + w * 0.2)}" cy="${f(y + h * 0.22)}" rx="${f(w * 0.46)}" ry="${f(h * 0.4)}" fill="url(#${p}-ht)" opacity=".4"/>`;
-  s += `<path d="${d}" fill="none" stroke="#3A1306" stroke-opacity=".5" stroke-width="12" stroke-linejoin="round"/>`;
-  for (let i = 0; i < 10; i++) { // meat fibres catching the light
-    const [fx, fy] = R(range(rand, -w * 0.4, w * 0.3), range(rand, -h * 0.35, h * 0.25));
-    s += `<path d="M${f(fx)} ${f(fy)}l${f(range(rand, 8, 18))} ${f(range(rand, -3, 5))}" stroke="#F0B860" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round"/>`;
-  }
-  s += `<ellipse cx="${f(x + w * 0.3)}" cy="${f(y + h * 0.3)}" rx="${f(w * 0.5)}" ry="${f(h * 0.42)}" fill="${dark}" fill-opacity=".38"/>`;
-  for (let i = 0; i < 5; i++) { // creases
+  s += `<ellipse cx="${f(x + w * 0.22)}" cy="${f(y + h * 0.24)}" rx="${f(w * 0.46)}" ry="${f(h * 0.4)}" fill="url(#${p}-ht)" opacity=".62"/>`;
+  s += `<ellipse cx="${f(x + w * 0.3)}" cy="${f(y + h * 0.3)}" rx="${f(w * 0.5)}" ry="${f(h * 0.42)}" fill="${dk}" fill-opacity=".34"/>`;
+  s += `<path d="${d}" fill="none" stroke="#3A1306" stroke-opacity="${f(0.08 + 0.5 * t)}" stroke-width="12" stroke-linejoin="round"/>`; // caramelised edge
+  for (let i = 0; i < 4; i++) { // creases
     const [q1x, q1y] = R(range(rand, -w * 0.3, 0), range(rand, -h * 0.3, h * 0.3)); const [q2x, q2y] = R(range(rand, 0, w * 0.35), range(rand, -h * 0.3, h * 0.3));
-    s += `<path d="M${f(q1x)} ${f(q1y)}Q${f((q1x + q2x) / 2)} ${f((q1y + q2y) / 2 + range(rand, -7, 7))} ${f(q2x)} ${f(q2y)}" fill="none" stroke="#3A1306" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>`;
+    s += `<path d="M${f(q1x)} ${f(q1y)}Q${f((q1x + q2x) / 2)} ${f((q1y + q2y) / 2 + range(rand, -7, 7))} ${f(q2x)} ${f(q2y)}" fill="none" stroke="#3A1306" stroke-opacity="${f(0.3 + 0.2 * t)}" stroke-width="2" stroke-linecap="round"/>`;
   }
-  for (let i = 0; i < 12; i++) { // fried specks
+  for (let i = 0; i < 22; i++) { // dark speckles and spice flecks
     const [qx, qy] = R(range(rand, -w * 0.45, w * 0.45), range(rand, -h * 0.4, h * 0.4));
-    s += `<circle cx="${f(qx)}" cy="${f(qy)}" r="${f(range(rand, 0.9, 2))}" fill="${pick(rand, ['#2A0E04', '#F0B454'])}" fill-opacity=".7"/>`;
+    const dark = i < 14;
+    s += `<circle cx="${f(qx)}" cy="${f(qy)}" r="${f(range(rand, 0.8, dark ? 1.9 : 1.5))}" fill="${dark ? '#2A0E04' : pick(rand, ['#F0B454', '#E0861A', '#9AA84A'])}" fill-opacity="${f(dark ? 0.35 + 0.35 * t : 0.85)}"/>`;
+  }
+  if (t > 0.3) for (let i = 0; i < 8; i++) { // meat fibres
+    const [fx, fy] = R(range(rand, -w * 0.4, w * 0.3), range(rand, -h * 0.35, h * 0.25));
+    s += `<path d="M${f(fx)} ${f(fy)}l${f(range(rand, 8, 16))} ${f(range(rand, -3, 5))}" stroke="#F0B860" stroke-opacity="${f(0.5 * t)}" stroke-width="1.3" stroke-linecap="round"/>`;
   }
   s += '</g>';
-  const [hx, hy] = R(-w * 0.2, -h * 0.22);
-  s += `<path d="${blob(hx, hy, w * 0.12, h * 0.07, 0.12, rand, 8)}" fill="#FFE3A0" fill-opacity=".7" transform="rotate(${f(rot - 20)} ${f(hx)} ${f(hy)})"/>`;
-  s += `<circle cx="${f(hx - w * 0.12)}" cy="${f(hy + h * 0.08)}" r="2.4" fill="#FFF8E4"/>`;
-  s += `<path d="${blob(...R(w * 0.1, -h * 0.3), w * 0.08, h * 0.05, 0.1, rand, 6)}" fill="#FFE3A0" fill-opacity=".6"/>`;
-  s += `<path d="${d}" fill="none" stroke="#FFD27A" stroke-opacity=".35" stroke-width="2" stroke-dasharray="${f(w * 0.5)} 400" stroke-dashoffset="${f(-w * 1.9)}"/>`;
+  const [hx, hy] = R(-w * 0.18, -h * 0.22);
+  s += `<ellipse cx="${f(hx)}" cy="${f(hy)}" rx="${f(w * 0.09)}" ry="${f(h * 0.05)}" fill="${t < 0.3 ? '#FFF0E8' : '#FFE3A0'}" fill-opacity=".75" transform="rotate(${f(rot - 20)} ${f(hx)} ${f(hy)})"/>`;
+  s += `<circle cx="${f(hx + w * 0.16)}" cy="${f(hy + h * 0.1)}" r="1.8" fill="#FFF8E4" fill-opacity=".85"/>`;
   return s;
 }
 
@@ -232,7 +246,7 @@ export function spice(kind, { p = 'f', x, y, rot = 0, s = 1 }) {
   const sh = (rx, ry) => `<ellipse cx="${f(x + 4 * s)}" cy="${f(y + 5 * s)}" rx="${f(rx * s)}" ry="${f(ry * s)}" fill="#0a0405" fill-opacity=".5" transform="rotate(${f(rot)} ${f(x)} ${f(y)})"/>`;
   const g = (inner) => `<g transform="${T(x, y, rot, s)}">${inner}</g>`;
   switch (kind) {
-    case 'cardamom': return sh(16, 8) + g(`<path d="M-15 0C-12-7-3-8 3-7C10-6 14-2 16 0C14 2 10 6 3 7C-3 8-12 7-15 0Z" fill="#A5C165" stroke="#4E6A28" stroke-width="1"/><path d="M-15 0C-12-7-3-8 3-7C10-6 14-2 16 0Z" fill="#CFE38C" fill-opacity=".7"/><path d="M-15 0C-12 7-3 8 3 7C10 6 14 2 16 0Z" fill="#5E7F36" fill-opacity=".5"/><path d="M-12-3C-4-5 6-4 13-1M-13 0C-4 0 6 0 14 0M-12 3C-4 5 6 4 13 1" fill="none" stroke="#5E7C32" stroke-width=".9"/><circle cx="-15" cy="0" r="1.6" fill="#6B5A2A"/><circle cx="16" cy="0" r="1.3" fill="#6B5A2A"/>`);
+    case 'cardamom': return sh(12, 5) + g(`<path d="M-11 0C-9-3.5-3-4.6 1-4.4C6-4 9-2 11 0C9 2 6 4 1 4.4C-3 4.6-9 3.5-11 0Z" fill="#B9CF8A" stroke="#6E8A3C" stroke-width=".8"/><path d="M-11 0C-9-3.5-3-4.6 1-4.4C6-4 9-2 11 0Z" fill="#DCEBB2" fill-opacity=".7"/><path d="M-11 0C-9 3.5-3 4.6 1 4.4C6 4 9 2 11 0Z" fill="#7F9C48" fill-opacity=".4"/><path d="M-9-1.8Q0-3.4 9-1.2M-10 0Q0 .4 10 0M-9 1.8Q0 3.4 9 1.2" fill="none" stroke="#8FAA5A" stroke-opacity=".55" stroke-width=".7"/><path d="M-11 0L-13.6-.6" stroke="#7A6A3A" stroke-width="1.4" stroke-linecap="round"/><circle cx="11" cy="0" r=".9" fill="#8A7A44"/>`);
     case 'clove': return sh(14, 5) + g(`<path d="M-14 0L6-1.8L6 1.8Z" fill="#6B3A1C" stroke="#2E1408" stroke-width=".8"/><path d="M-12-.3L5-1.2" stroke="#B8794A" stroke-width=".8"/><ellipse cx="8" cy="-3.2" rx="2.6" ry="1.6" fill="#4A2410"/><ellipse cx="8" cy="3.2" rx="2.6" ry="1.6" fill="#4A2410"/><ellipse cx="12.5" cy="0" rx="1.6" ry="2.6" fill="#4A2410"/><circle cx="9" cy="0" r="3.6" fill="#5B2E14" stroke="#2A1206" stroke-width=".8"/><circle cx="8" cy="-1.2" r="1.2" fill="#C98A55" fill-opacity=".8"/>`);
     case 'cinnamon': return sh(28, 9) + g(`<path d="${wobble([[-26, -6], [-8, -8.5], [12, -8], [26, -5.5], [26, 6], [12, 8.5], [-8, 9], [-26, 6]], 0.8, rng(5))}" fill="#9E5A28" stroke="#4A220C" stroke-width="1.2"/><path d="M-25-5C-8-8 12-7 25-5L25-1C12-3-8-4-25-1Z" fill="#D49458" fill-opacity=".85"/><path d="M-25 3C-8 5 12 5 25 3L25 6C12 8-8 8-25 6Z" fill="#4E2410" fill-opacity=".55"/><ellipse cx="26" cy="0" rx="4.2" ry="6.3" fill="#7A3E18" stroke="#3A1A08" stroke-width="1"/><path d="M26-3A2.5 2.5 0 1 1 26 2" fill="none" stroke="#C98A55" stroke-width="1.1"/><path d="M-20-1L-6 0M2 2L16 1" stroke="#3A1A08" stroke-opacity=".5" stroke-width="1"/>`);
     case 'pepper': return sh(6, 4) + g(`<circle r="5.2" fill="#35261C" stroke="#120A06" stroke-width=".8"/><path d="M-3-2Q0-4 3-1M-4 1Q-1-1 2 2M0 3Q2 2 4 3" fill="none" stroke="#150C07" stroke-width=".8"/><ellipse cx="-1.8" cy="-2" rx="1.8" ry="1.1" fill="#E9D9BE" fill-opacity=".8"/>`);
@@ -266,7 +280,7 @@ export function steam({ p = 'f', x, y, h = 160, w = 40, n = 3, seed = 1 }) {
     for (let k = 1; k <= 5; k++) pts.push([ox + Math.sin(k * 1.3 + i * 2) * w * range(rand, 0.4, 1) * (k / 5 + 0.3), y - (h * k) / 5]);
     const d = wobble(pts, 3, rand, false);
     s += `<g class="${p}-wisp" style="animation-delay:${f(-rand() * 7)}s;animation-duration:${f(range(rand, 5.5, 8.5))}s" fill="none" stroke="url(#${p}-steam)" stroke-linecap="round">` +
-      `<path d="${d}" stroke-width="26" stroke-opacity=".25"/><path d="${d}" stroke-width="12" stroke-opacity=".4"/><path d="${d}" stroke-width="4" stroke-opacity=".6"/></g>`;
+      `<path d="${d}" stroke-width="34" stroke-opacity=".3"/><path d="${d}" stroke-width="16" stroke-opacity=".5"/><path d="${d}" stroke-width="5" stroke-opacity=".78"/></g>`;
   }
   return s;
 }
@@ -284,7 +298,9 @@ ${ell(cx, cy + ry * 0.07, rx * 0.84, ry * 0.84, `url(#${p}-steelIn)`)}
 ${ell(cx - rx * 0.1, cy + ry * 0.05, rx * 0.8, ry * 0.76, `url(#${p}-glow)`, 'style="mix-blend-mode:screen"')}
 ${ell(cx, cy + ry * 0.09, rx * 0.66, ry * 0.64, 'none', 'stroke="#10142A" stroke-opacity=".5" stroke-width="2"')}
 <path d="M${f(cx - rx * 0.97)} ${f(cy - ry * 0.18)}A${f(rx * 0.97)} ${f(ry * 0.97)} 0 0 1 ${f(cx - rx * 0.28)} ${f(cy - ry * 0.93)}" fill="none" stroke="#FFF8E0" stroke-width="3.4" stroke-linecap="round"/>
-<path d="M${f(cx + rx * 0.35)} ${f(cy - ry * 0.92)}A${f(rx * 0.97)} ${f(ry * 0.97)} 0 0 1 ${f(cx + rx * 0.9)} ${f(cy - ry * 0.35)}" fill="none" stroke="#9DB4F0" stroke-opacity=".7" stroke-width="2.2" stroke-linecap="round"/>`;
+<path d="M${f(cx + rx * 0.35)} ${f(cy - ry * 0.92)}A${f(rx * 0.97)} ${f(ry * 0.97)} 0 0 1 ${f(cx + rx * 0.9)} ${f(cy - ry * 0.35)}" fill="none" stroke="#9DB4F0" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>
+<path d="M${f(cx - rx * 0.62)} ${f(cy + ry * 0.8)}A${f(rx * 0.97)} ${f(ry * 0.97)} 0 0 0 ${f(cx + rx * 0.3)} ${f(cy + ry * 0.95)}" fill="none" stroke="#FFD890" stroke-opacity=".7" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M${f(cx - rx * 0.8)} ${f(cy - ry * 0.55)}A${f(rx * 0.97)} ${f(ry * 0.97)} 0 0 1 ${f(cx - rx * 0.5)} ${f(cy - ry * 0.85)}" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
 }
 export const smallPlate = (o) => plate({ w: 230, ...o });
 
@@ -304,7 +320,7 @@ export function spoon({ p = 'f', x, y, len = 170, rot = 0, s = 1, bite }) {
 <path d="M22-3L${len} -5.5L${len + 3} 1.5L22 3Z" fill="url(#${p}-steelH)" stroke="#2A3050" stroke-width="1"/><path d="M26-1.6L${len - 4} -3.6" stroke="#FFF4D8" stroke-width="1.6" stroke-linecap="round"/>
 <ellipse cx="0" cy="0" rx="28" ry="17" fill="url(#${p}-steel)" stroke="#2A3050" stroke-width="1.5"/>
 <ellipse cx="1" cy="1.5" rx="23" ry="13" fill="url(#${p}-steelIn)"/>${b}
-<path d="M-26-4A28 17 0 0 1-10-15" fill="none" stroke="#FFF8E0" stroke-width="2.6" stroke-linecap="round"/></g>`;
+<path d="M-26-4A28 17 0 0 1-10-15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M-14 14Q0 17 14 12" fill="none" stroke="#FFD890" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/></g>`;
 }
 
 export function bowl({ p = 'f', cx, cy, w = 190, fill = 'empty', seed = 1, tint = 0, depth = 0.4 }) {
@@ -317,7 +333,14 @@ export function bowl({ p = 'f', cx, cy, w = 190, fill = 'empty', seed = 1, tint 
     c += `<path d="${wobble([[cx - crx * 0.6, ccy], [cx - crx * 0.2, ccy - cry * 0.4], [cx + crx * 0.3, ccy - cry * 0.1], [cx + crx * 0.6, ccy + cry * 0.3]], 3, rand, false)}" fill="none" stroke="#fff" stroke-width="5" stroke-opacity=".7" stroke-linecap="round"/>`;
     for (let i = 0; i < 26; i++) { const r = Math.sqrt(rand()); const t = rand() * 6.28; const fx = cx + Math.cos(t) * r * crx * 0.9; const fy = ccy + Math.sin(t) * r * cry * 0.9;
       c += rand() < 0.65 ? `<ellipse cx="${f(fx)}" cy="${f(fy)}" rx="${f(range(rand, 2, 4.5))}" ry="${f(range(rand, 1, 2))}" transform="rotate(${f(rand() * 180)} ${f(fx)} ${f(fy)})" fill="${pick(rand, ['#4E8A3C', '#6FA650', '#3C6E2E'])}"/>` : `<rect x="${f(fx)}" y="${f(fy)}" width="${f(range(rand, 2, 4))}" height="${f(range(rand, 1.5, 3))}" rx=".8" fill="${pick(rand, ['#D79AB8', '#B8789E', '#EFC6D6'])}"/>`; }
-    c += `<ellipse cx="${f(cx - crx * 0.3)}" cy="${f(ccy - cry * 0.4)}" rx="${f(crx * 0.3)}" ry="${f(cry * 0.14)}" fill="#fff" fill-opacity=".7"/></g>`;
+    for (let i = 0; i < 2; i++) { // soft swirl strokes: wide pale ridge, thin shade beside it
+      const sw = wobble([[cx - crx * 0.55, ccy + cry * (0.3 - i * 0.5)], [cx - crx * 0.1, ccy - cry * (0.1 + i * 0.3)], [cx + crx * 0.35, ccy + cry * (0.15 - i * 0.4)], [cx + crx * 0.7, ccy - cry * 0.1]], 3, rand, false);
+      c += `<path d="${sw}" fill="none" stroke="#D8D0BC" stroke-width="3" stroke-opacity=".7" stroke-linecap="round" transform="translate(1.5 3)"/><path d="${sw}" fill="none" stroke="#fff" stroke-width="6" stroke-opacity=".6" stroke-linecap="round"/>`;
+    }
+    for (let i = 0; i < 24; i++) c += `<circle cx="${f(cx + range(rand, -crx * 0.85, crx * 0.85))}" cy="${f(ccy + range(rand, -cry * 0.8, cry * 0.8))}" r="${f(range(rand, 0.7, 1.4))}" fill="#8A5A2A" fill-opacity=".8"/>`; // cumin
+    for (let i = 0; i < 16; i++) c += `<circle cx="${f(cx + range(rand, -crx * 0.5, crx * 0.7))}" cy="${f(ccy + range(rand, -cry * 0.3, cry * 0.7))}" r="${f(range(rand, 0.9, 1.9))}" fill="#C0391A" fill-opacity=".85"/>`; // chilli powder
+    c += `<ellipse cx="${f(cx - crx * 0.3)}" cy="${f(ccy - cry * 0.4)}" rx="${f(crx * 0.3)}" ry="${f(cry * 0.14)}" fill="#fff" fill-opacity=".8"/></g>`;
+    c += ell(cx, ccy, crx, cry, 'none', 'stroke="#8A7A66" stroke-opacity=".5" stroke-width="1.2"') + ell(cx, ccy, crx - 2, cry - 1.5, 'none', 'stroke="#FFFDF4" stroke-opacity=".85" stroke-width="2"') + ell(cx + 1, ccy + 1, crx - 5, cry - 3.5, 'none', 'stroke="#CFC5AE" stroke-opacity=".6" stroke-width="2"'); // meniscus
     c += mintLeaf({ p, x: cx + crx * 0.05, y: ccy + cry * 0.1, len: w * 0.14, rot: -25, seed: seed + 2 });
   } else if (fill === 'salan') {
     c += ell(cx, ccy, crx, cry, `url(#${p}-salan)`);
@@ -337,12 +360,14 @@ export function bowl({ p = 'f', cx, cy, w = 190, fill = 'empty', seed = 1, tint 
   return `${shadow(p, cx + rx * 0.3, cy + d - 2, rx * 1.15, ry * 0.8, 0.85)}
 <path d="${body}" fill="url(#${p}-steelH)" stroke="#232845" stroke-width="1.5"/>
 <path d="M${f(cx - rx * 0.86)} ${f(cy + d * 0.18)}C${f(cx - rx * 0.78)} ${f(cy + d * 0.6)} ${f(cx - rx * 0.45)} ${f(cy + d * 0.88)} ${f(cx - rx * 0.2)} ${f(cy + d * 0.94)}" fill="none" stroke="#FFF3CF" stroke-opacity=".75" stroke-width="${f(w * 0.03)}" stroke-linecap="round"/>
-<path d="M${f(cx + rx * 0.5)} ${f(cy + d * 0.4)}C${f(cx + rx * 0.3)} ${f(cy + d * 0.8)} ${f(cx + rx * 0.2)} ${f(cy + d * 0.9)} ${f(cx)} ${f(cy + d * 0.96)}" fill="none" stroke="#7E94E0" stroke-opacity=".4" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M${f(cx + rx * 0.5)} ${f(cy + d * 0.4)}C${f(cx + rx * 0.3)} ${f(cy + d * 0.8)} ${f(cx + rx * 0.2)} ${f(cy + d * 0.9)} ${f(cx)} ${f(cy + d * 0.96)}" fill="none" stroke="#9AA8D8" stroke-opacity=".3" stroke-width="2.4" stroke-linecap="round"/>
 ${ell(cx, cy, rx, ry, `url(#${p}-steel)`, 'stroke="#232845" stroke-width="1.5"')}
 ${ell(cx, cy + ry * 0.07, rx * 0.92, ry * 0.9, `url(#${p}-steelIn)`)}
 ${c}
 <path d="M${f(cx - rx * 0.97)} ${f(cy - ry * 0.15)}A${f(rx)} ${f(ry)} 0 0 1 ${f(cx - rx * 0.3)} ${f(cy - ry * 0.95)}" fill="none" stroke="#FFF8E0" stroke-width="3" stroke-linecap="round"/>
-<path d="M${f(cx + rx * 0.4)} ${f(cy - ry * 0.92)}A${f(rx)} ${f(ry)} 0 0 1 ${f(cx + rx * 0.95)} ${f(cy - ry * 0.3)}" fill="none" stroke="#9DB4F0" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>`;
+<path d="M${f(cx + rx * 0.4)} ${f(cy - ry * 0.92)}A${f(rx)} ${f(ry)} 0 0 1 ${f(cx + rx * 0.95)} ${f(cy - ry * 0.3)}" fill="none" stroke="#9DB4F0" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+<path d="M${f(cx - rx * 0.6)} ${f(cy + ry * 0.82)}A${f(rx)} ${f(ry)} 0 0 0 ${f(cx + rx * 0.3)} ${f(cy + ry * 0.97)}" fill="none" stroke="#FFD890" stroke-opacity=".75" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M${f(cx - rx * 0.78)} ${f(cy - ry * 0.55)}A${f(rx)} ${f(ry)} 0 0 1 ${f(cx - rx * 0.5)} ${f(cy - ry * 0.86)}" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
 }
 
 // ---------- the copper handi ----------
@@ -391,7 +416,9 @@ export function tumbler({ p = 'f', cx, cy, w = 84, h = 130 }) {
 <path d="M${f(cx + rx * 0.7)} ${f(cy + 14)}L${f(cx + bx * 0.78)} ${f(cy + h - 10)}" stroke="#9DB4F0" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
 ${ell(cx, cy, rx, ry, `url(#${p}-steel)`, 'stroke="#232845" stroke-width="1.5"')}
 ${ell(cx, cy + 2, rx * 0.88, ry * 0.82, `url(#${p}-steelIn)`)}${ell(cx, cy + 5, rx * 0.8, ry * 0.7, `url(#${p}-water)`)}
-${ell(cx - rx * 0.3, cy + 3, rx * 0.3, ry * 0.18, '#E8F4FF', 'fill-opacity=".8"')}`;
+${ell(cx - rx * 0.3, cy + 3, rx * 0.3, ry * 0.18, '#E8F4FF', 'fill-opacity=".8"')}
+<path d="M${f(cx - rx * 0.9)} ${f(cy + ry * 0.2)}A${f(rx)} ${f(ry)} 0 0 1 ${f(cx - rx * 0.4)} ${f(cy - ry * 0.9)}" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M${f(cx - rx * 0.5)} ${f(cy + ry * 0.85)}A${f(rx)} ${f(ry)} 0 0 0 ${f(cx + rx * 0.3)} ${f(cy + ry * 0.98)}" fill="none" stroke="#FFD890" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round"/>`;
 }
 
 export function servingSpoon({ p = 'f', x, y, len = 260, rot = -14 }) {
@@ -425,11 +452,26 @@ export function lemonWedge({ p = 'f', x, y, s = 1, rot = 0 }) {
 export function doughBits({ p = 'f', cx, cy, n = 7, spread = 120, seed = 1 }) {
   const rand = rng(seed * 29 + 6); let s = '';
   for (let i = 0; i < n; i++) {
-    const x = cx + range(rand, -spread, spread); const y = cy + range(rand, -spread * 0.2, spread * 0.2); const w = range(rand, 18, 34); const h = range(rand, 9, 14);
-    s += `<ellipse cx="${f(x + 4)}" cy="${f(y + 5)}" rx="${f(w)}" ry="${f(h * 0.8)}" fill="#0a0405" fill-opacity=".45"/>` +
-      `<path d="${blob(x, y, w, h, 0.2, rand, 9)}" fill="${pick(rand, ['#D8BF94', '#CDB083', '#E2CCA0'])}" stroke="#7A5A30" stroke-width="1.5"/>` +
-      `<path d="${blob(x - w * 0.15, y - h * 0.25, w * 0.55, h * 0.4, 0.2, rand, 7)}" fill="#F4E4BE" fill-opacity=".7"/>` +
-      `<ellipse cx="${f(x + w * 0.2)}" cy="${f(y + h * 0.1)}" rx="${f(w * 0.2)}" ry="${f(h * 0.3)}" fill="#8A6A3A" fill-opacity=".5"/>`;
+    const x = cx + range(rand, -spread, spread); const y = cy + range(rand, -spread * 0.2, spread * 0.2);
+    const strip = i % 3 === 1; const w = strip ? range(rand, 34, 50) : range(rand, 18, 32); const h = strip ? range(rand, 12, 16) : range(rand, 11, 17);
+    const id = `${p}-dg${seed}-${i}`; const pts = [];
+    if (strip) { // a curved strip that came off the rim
+      const k = range(rand, 0.6, 1.2) * h; const top = []; const bot = [];
+      for (let j = 0; j <= 8; j++) { const t = -1 + j / 4; const c = -k * (1 - t * t); const th = (h / 2) * (1 - 0.3 * t * t); top.push([t * w + range(rand, -1.5, 1.5), c - th + range(rand, -1.5, 1.5)]); bot.push([t * w + range(rand, -1.5, 1.5), c + th + range(rand, -1.5, 1.5)]); }
+      pts.push(...top, ...bot.reverse());
+    } else {
+      for (let j = 0; j < 11; j++) { const th = (j / 11) * 6.283; const k = range(rand, 0.72, 1.18); pts.push([Math.cos(th) * w * k, Math.sin(th) * h * k]); }
+    }
+    const d = `M${pts.map(([px, py]) => `${f(px)} ${f(py)}`).join('L')}Z`; // straight, jagged segments: torn, not smooth
+    const rot = range(rand, -30, 30);
+    s += `<ellipse cx="${f(x + 4)}" cy="${f(y + 6)}" rx="${f(w)}" ry="${f(h * 0.8)}" fill="#0a0405" fill-opacity=".45"/>`;
+    s += `<g transform="${T(x, y, rot)}"><defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="#E8D3A8" stroke="#8A6A3A" stroke-width="1.4" stroke-linejoin="round"/><g clip-path="url(#${id})">`;
+    s += `<ellipse cx="${f(range(rand, -w * 0.3, w * 0.3))}" cy="${f(h * 0.75)}" rx="${f(w * 0.8)}" ry="${f(h * 0.7)}" fill="#BE7F34" fill-opacity=".95"/>`; // baked on the hot-rim side
+    for (let j = 0; j < 3; j++) s += `<ellipse cx="${f(range(rand, -w * 0.7, w * 0.7))}" cy="${f(h * range(rand, 0.1, 0.6))}" rx="${f(range(rand, 3, 7))}" ry="${f(range(rand, 2, 4))}" fill="#9A5F22" fill-opacity=".55"/>`;
+    s += `<ellipse cx="${f(-w * 0.2)}" cy="${f(-h * 0.45)}" rx="${f(w * 0.55)}" ry="${f(h * 0.3)}" fill="#F8EACA" fill-opacity=".75"/>`;
+    for (let j = 0; j < (strip ? 1 : 2); j++) { const dx = range(rand, -w * 0.4, w * 0.4); const dy = range(rand, -h * 0.2, h * 0.2);
+      s += `<ellipse cx="${f(dx)}" cy="${f(dy)}" rx="${f(h * 0.4)}" ry="${f(h * 0.28)}" fill="#A8885A" fill-opacity=".55"/><path d="M${f(dx - h * 0.35)} ${f(dy + h * 0.22)}Q${f(dx)} ${f(dy + h * 0.45)} ${f(dx + h * 0.35)} ${f(dy + h * 0.22)}" fill="none" stroke="#FFF2D0" stroke-opacity=".7" stroke-width="1.1"/>`; }
+    s += `</g></g>`;
   }
   return s;
 }

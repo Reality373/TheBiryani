@@ -51,8 +51,8 @@ ${F.onionRings({ p: 'r', cx: 1235, cy: 765, n: 5, seed: 2 })}
 ${F.lemonWedge({ p: 'r', x: 1325, y: 790, s: 0.85, rot: 14 })}`);
   // the plate of biryani: brightest, warmest thing in the frame
   const cx = 800; const cy = 615;
-  const chk = [[736, 585, 98, 68, -22], [866, 580, 96, 66, 16], [800, 540, 80, 56, 4], [905, 632, 74, 52, 30]];
-  const items = chk.map(([x, y, w, h, r], i) => ({ y: y + h * 0.3, svg: F.chicken({ p: 'm', x, y, w, h, rot: r, seed: i + 1, doneness: 0.4 + i * 0.1 }) }));
+  const chk = [[736, 585, 98, 68, -22], [866, 580, 96, 66, 16], [800, 540, 80, 56, 4], [905, 632, 74, 52, 210]];
+  const items = chk.map(([x, y, w, h, r], i) => ({ y: y + h * 0.3, svg: F.chicken({ p: 'm', x, y, w, h, rot: r, seed: i + 1, doneness: 0.7 + i * 0.08, bone: i === 0 || i === 3 }) }));
   items.push({ y: 640, svg: F.biristaCluster({ p: 'm', x: 800, y: 505, w: 130, h: 36, n: 16, seed: 5 }) });
   items.push({ y: 645, svg: F.biristaCluster({ p: 'm', x: 735, y: 655, w: 90, h: 24, n: 9, seed: 8 }) });
   items.push({ y: 650, svg: [[770, 495, -80], [830, 500, -30], [700, 640, 160], [880, 520, 20]].map(([x, y, r], i) => F.mintLeaf({ p: 'm', x, y, len: 38, rot: r, seed: i + 7 })).join('') });
@@ -63,7 +63,7 @@ ${F.plate({ p: 'm', cx, cy, w: 460 })}
 ${F.riceMound({ p: 'm', cx, cy: cy + 14, rx: 150, ry: 66, h: 150, count: 1500, seed: 11, saffron: 0.4, grain: 1.05, masala: chk.map(([x, y]) => ({ x, y: y + 20, r: 62 })), items })}
 ${F.glisten({ x: 780, y: 560, w: 260, h: 110, n: 22, seed: 4 })}
 ${F.spoon({ p: 'm', x: 925, y: 690, len: 150, rot: 14, s: 1.35, bite: { n: 34, seed: 5 } })}
-${F.steam({ p: 'm', x: 800, y: 470, h: 210, w: 70, n: 4, seed: 9 })}`);
+${F.steam({ p: 'm', x: 800, y: 470, h: 250, w: 90, n: 5, seed: 9 })}`);
   return [...back.planes, handi, left, right, plateP, back.front];
 }
 
@@ -82,7 +82,15 @@ ${F.steam({ p: 'p', x: 800, y: 300, h: 300, w: 160, n: 6, seed: 3 })}`);
   return [...back.planes, potP, back.front];
 }
 
-const planes = scene === 'pot' ? potPlanes() : platePlanes();
+function sheetPlanes() { // ?scene=sheet : every fixed item, large, for close crops
+  const d = F.foodDefs('s');
+  const back = close({ surface: 'table', mood, pool: { x: 800, y: 500, rx: 700, ry: 400 } });
+  const row1 = [0, 0.35, 0.7, 1].map((t, i) => F.chicken({ p: 's', x: 280 + i * 190, y: 250, w: 130, h: 90, rot: -10 + i * 8, seed: i + 2, doneness: t, bone: i % 2 === 0 })).join('') + F.chicken({ p: 's', x: 1100, y: 250, w: 130, h: 90, raw: true, seed: 9 });
+  const row2 = F.doughBits({ p: 's', cx: 330, cy: 470, n: 6, spread: 200, seed: 3 }) + [1, 2, 3].map((k) => F.spice('cardamom', { p: 's', x: 760 + k * 60, y: 470, rot: k * 40, s: 2.2 })).join('') + F.spice('cinnamon', { p: 's', x: 1150, y: 470, s: 1.6 });
+  const row3 = F.bowl({ p: 's', cx: 330, cy: 640, w: 300, fill: 'dahi', seed: 3 }) + F.plate({ p: 's', cx: 800, cy: 700, w: 300 }) + F.spoon({ p: 's', x: 760, y: 700, len: 120, s: 1.4, bite: { n: 20, seed: 2 } }) + F.tumbler({ p: 's', cx: 1150, cy: 580, w: 110, h: 170 }) + F.steam({ p: 's', x: 800, y: 650, h: 200, w: 70, n: 4, seed: 2 });
+  return [...back.planes, plane('p-sheet', 0.5, d + row1 + row2 + row3), back.front];
+}
+const planes = scene === 'sheet' ? sheetPlanes() : scene === 'pot' ? potPlanes() : platePlanes();
 world.innerHTML = planes.join('');
 if (q.has('cx')) stage.style.setProperty('--cx', q.get('cx'));
 if (q.has('cy')) stage.style.setProperty('--cy', q.get('cy'));
