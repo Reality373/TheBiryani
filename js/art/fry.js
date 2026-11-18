@@ -25,11 +25,14 @@ export const SPICES = [
 
 const LAYER_SEED = (i, k) => 20 + i * 3 + k; // one seed per drawn layer, so no two clip ids clash
 
+// Each piece's size and bone, so the heap in the bowl is uneven (piece 2, at the left rim, is the drumstick with its bone out).
+const CUTS = [{ w: 118, h: 80 }, { w: 104, h: 74 }, { w: 116, h: 84, bone: true }, { w: 96, h: 70 }];
+
 // One piece: three chicken layers (raw, half-fried, golden), the top one fading in as the pot cooks it.
 function piece(i) {
-  const p = PIECES[i];
+  const p = PIECES[i], c = CUTS[i];
   const layers = [{ raw: true }, { doneness: 0.5 }, { doneness: 1 }].map((o, k) =>
-    `<g class="f-l" style="opacity:${k === 0 ? 1 : 0}">${F.chicken({ p: 'ft', x: p.x, y: p.y, w: 112, h: 78, rot: p.rot, seed: LAYER_SEED(i, k), ...o })}</g>`).join('');
+    `<g class="f-l" style="opacity:${k === 0 ? 1 : 0}">${F.chicken({ p: 'ft', x: p.x, y: p.y, w: c.w, h: c.h, rot: p.rot, bone: !!c.bone, seed: LAYER_SEED(i, k), ...o })}</g>`).join('');
   return `<g class="f-pc" id="f-pc${i}"><ellipse class="hit" cx="${p.x}" cy="${p.y}" rx="66" ry="54"/>${layers}</g>`;
 }
 
@@ -84,13 +87,16 @@ ${F.handi({ p: 'fp', cx: POT.cx, cy: POT.cy, w: POT.w, tilt: POT.tilt, fill: 'em
 
   // The touchable things on the counter, in front of the pot.
   const top = plane('f-top', 0.66, `${F.foodDefs('ft')}
+${radial('ft-mar', [[0, '#F08A4A'], [0.6, '#D0501E'], [1, '#9A3A18']], { cx: 0.45, cy: 0.4, r: 0.7 })}
 <style>
   #f-top .hit{fill:transparent;stroke:none}
   #f-top .f-pc:not(.hotspot) .hit,#f-top .f-sp:not(.hotspot) .hit,#f-top #f-plate:not(.hotspot) .hit{pointer-events:none}
   #f-top #f-onions{pointer-events:none}
   #f-top .f-l{transition:opacity .3s}
 </style>
-${F.bowl({ p: 'ft', cx: BOWL.cx, cy: BOWL.cy, w: BOWL.w, fill: 'chicken', tint: 1, seed: 3 })}
+${F.bowl({ p: 'ft', cx: BOWL.cx, cy: BOWL.cy, w: BOWL.w, fill: 'empty', seed: 3 })}
+<ellipse cx="${BOWL.cx + 4}" cy="${BOWL.cy + 6}" rx="98" ry="38" fill="url(#ft-mar)"/>
+<ellipse cx="${BOWL.cx - 30}" cy="${BOWL.cy - 4}" rx="34" ry="7" fill="#FFD2A8" fill-opacity=".55"/>
 ${PIECES.map((_, i) => piece(i)).join('')}
 <g id="f-plate">${F.plate({ p: 'ft', cx: PLATE.cx, cy: PLATE.cy, w: PLATE.w })}<ellipse class="hit" cx="${PLATE.cx}" cy="${PLATE.cy}" rx="110" ry="62"/></g>
 <g id="f-onions">${F.biristaCluster({ p: 'ft', x: ONION.x, y: ONION.y, w: 120, h: 40, n: 18, seed: 4 })}</g>
