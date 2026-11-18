@@ -43,3 +43,18 @@ test('clear releases everything waiting', async () => {
   assert.deepEqual(shown, ['one']);
   assert.equal(typeof release, 'function');
 });
+
+test('a line still being looked up when the viewer jumps is dropped', async () => {
+  let open;
+  const gate = new Promise((r) => { open = r; });
+  const shown = [];
+  const voice = createVoice({
+    prefs: { get: () => null }, ui: { subtitle: (t) => shown.push(t) }, audio: { duck() {} },
+    loadLines: () => gate.then(() => lines), files: [], synth: null, sleep: () => Promise.resolve(),
+  });
+  const said = voice.say('t.a');
+  voice.clear();
+  open();
+  await said;
+  assert.deepEqual(shown, []);
+});

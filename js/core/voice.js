@@ -14,6 +14,7 @@ export function createVoice({
   let queue = [];
   let running = false;
   let interrupt = () => {};
+  let generation = 0; // clear() bumps it, so a line still being looked up when the viewer jumps is dropped
 
   async function lookup(id) {
     const [chapter, key] = id.split('.');
@@ -43,8 +44,9 @@ export function createVoice({
   }
 
   async function play(id) {
+    const gen = generation;
     const text = await lookup(id);
-    if (text === null) return;
+    if (text === null || gen !== generation) return;
     ui.subtitle(text);
     const voiced = prefs.get('sound') && prefs.get('voice');
     const stopped = new Promise((r) => { interrupt = r; });
@@ -71,6 +73,7 @@ export function createVoice({
       return new Promise((resolve) => { queue.push({ id, resolve }); pump(); });
     },
     clear() {
+      generation++;
       const q = queue;
       queue = [];
       q.forEach((i) => i.resolve());
