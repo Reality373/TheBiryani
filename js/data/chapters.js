@@ -5,7 +5,7 @@ export const chapters = [
   { id: 'marinade', mood: 'dusk', numeral: 'III', title: 'The Marinade', built: true },
   { id: 'rest', mood: 'night', numeral: 'IV', title: 'The Rest', built: false },
   { id: 'fry', mood: 'stove', numeral: 'V', title: 'The Fry', built: true },
-  { id: 'rice', mood: 'steam', numeral: 'VI', title: 'The Rice', built: false },
+  { id: 'rice', mood: 'steam', numeral: 'VI', title: 'The Rice', built: true },
   { id: 'layers', mood: 'steam', numeral: 'VII', title: 'The Layers', built: true },
   { id: 'seal', mood: 'night', numeral: 'VIII', title: 'The Seal', built: true },
   { id: 'wait', mood: 'night', numeral: 'IX', title: 'The Wait', built: true },
