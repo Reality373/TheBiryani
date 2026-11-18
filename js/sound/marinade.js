@@ -19,6 +19,22 @@ register('mar-puff', {
   },
 });
 
+register('mar-cut', {
+  hit(ctx, noise, out) {
+    tick(ctx, noise, out, { freq: 3400, q: 1.2, len: 0.07, peak: 0.28 }); // the slice
+    tone(ctx, out, { f: 150, to: 70, dec: 0.09, peak: 0.3, t: ctx.currentTime + 0.05 }); // the knife meets the board
+    tick(ctx, noise, out, { type: 'lowpass', freq: 600, q: 0.6, len: 0.08, peak: 0.3, t: ctx.currentTime + 0.05 });
+  },
+});
+
+register('mar-pour', {
+  hit(ctx, noise, out) {
+    const t0 = ctx.currentTime;
+    for (let i = 0; i < 6; i++) tone(ctx, out, { f: 500 + i * 90, to: 300 + i * 40, dec: 0.07, peak: 0.12, t: t0 + i * 0.07 }); // glug, glug
+    tick(ctx, noise, out, { type: 'lowpass', freq: 1100, q: 0.7, len: 0.45, peak: 0.18 });
+  },
+});
+
 register('mar-cloth', {
   hit(ctx, noise, out) {
     tick(ctx, noise, out, { freq: 520, q: 0.7, len: 0.4, peak: 0.2 });

@@ -1,11 +1,13 @@
 // Lines for the fry chapter (docs/design.md section 3). Id is <chapter>.<key>, e.g. 'fry.in'.
+// Times match js/data/cookbook.js.
 export default {
-  in: 'Hot oil. The chicken goes in.',
+  in: 'Hot pot, medium heat. Tip it all in, marinade and all.',
   kitchen: 'The kitchen stops being a kitchen.',
-  golden: "Golden at the edges. Next door, someone has started wondering what you're making.",
+  golden: "Edges coloured. Next door, someone has started wondering what you're making.",
   whyFry: 'Frying it first browns the edges, and the browning is flavour.',
-  onions: 'Fried onions, dark and sweet.',
-  spices: 'Whole spices: elaichi, clove, a piece of cinnamon, one long bay leaf.',
-  whySpices: 'Whole, not ground. They give up their smell slowly, through the long cook.',
-  thick: 'The masala thickens and holds on to the chicken.',
+  onions: 'The fried onions go in, all but the two spoons kept for the top.',
+  water: 'A quarter cup of hot water.',
+  lid: 'Lid on. Ten to fifteen minutes, on a gentle flame.',
+  thick: 'The gravy thickens and darkens.',
+  whyNinety: 'Take it off at about ninety-five percent. It finishes in the steam.',
 };
