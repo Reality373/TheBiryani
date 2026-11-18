@@ -340,14 +340,14 @@ export default {
       massX = PLATE.cx; massY = PLATE.cy; massS = 0.5; placeMass(0);
       mass.style.setProperty('--oc', toneAt(0.9));
       bowlOn.style.transition = 'none'; bowlOn.style.opacity = '1';
-      frame(1.4, 240, 980, 600);
+      frame(1.2, 480, 900, 430); // the bowl, the plate and the clock; a phone shows the whole picture (no zoom)
       await gone; // dev: the finished picture holds
       return;
     }
 
     // ---- the flow ----
     if (at < 1) {
-      frame(1.5, 260, 700, 640);
+      frame(1.1, 480, 700, 640); // the board, the pan and the clock label stay in view
       for (const key of ['A', 'B']) {
         if (key === 'B') voice.say('onions.second');
         await Promise.race([sliceBeat(key), gone]);
@@ -370,7 +370,7 @@ export default {
     voice.say('onions.stir');
     await Promise.race([cookBeat(), gone]);
     if (signal.aborted) return;
-    frame(1.4, 240, 980, 600);
+    frame(1.2, 480, 900, 430); // the bowl, the plate and the clock; a phone shows the whole picture (no zoom)
     await Promise.race([bowlBeat(), gone]);
     if (signal.aborted) return;
     await Promise.race([voice.say('onions.done'), gone]);
