@@ -1,6 +1,6 @@
-// The end chapter: three lines over the room, then the end card (the recipe with its whys, the spices found, "Go again").
+// The end chapter: three lines over the room, then the end card (what you will need, the recipe with its whys, the spices found, "Go again", "Print the recipe").
 // Dev switches: ?state=card opens the card at once (no lines); ?spices=elaichi,clove sets the spices found for a shot.
-import { recipe } from '../data/recipe.js';
+import { recipe, shopping } from '../data/recipe.js';
 import { spices } from '../data/spices.js';
 import { labels } from '../data/labels.js';
 
@@ -34,7 +34,7 @@ export default {
     const found = spices.filter((s) => ids.includes(s.id)); // validated: spiceIcon throws on an unknown id
     if (signal.aborted) return;
     await ui.card({
-      kind: 'end', title: labels.title, text: labels.method, list: recipe, icons: found,
+      kind: 'end', title: labels.title, text: labels.method, list: recipe, ingredients: shopping, icons: found,
       note: labels.found.replace('{n}', String(found.length)), choices: [labels.again],
     });
     audio.stop('drone', 2);
