@@ -66,6 +66,7 @@ html[data-calm='true'] .plane, html[data-calm='true'] .plane * { animation: none
 .plane .hotspot.draggable { cursor: grab; }
 .plane .hotspot.has-tool { cursor: none; }
 body[data-tool='spoon'] #m-spoon { opacity: 0 !important; } /* the cursor is the spoon while it is over the bowl */
+.hover-tip { position: fixed; left: 0; top: 0; z-index: 31; pointer-events: none; padding: 0.3rem 0.7rem; border-radius: 999px; background: rgba(14, 13, 18, 0.82); border: 1px solid rgba(242, 165, 22, 0.7); color: var(--rice); font-size: 0.85rem; white-space: nowrap; }
 .cursor-tool { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; margin: -2px 0 0 -2px; will-change: transform; }
 .cursor-tool svg { display: block; margin: -110px 0 0 -55px; transform-origin: 55px 110px; transition: transform 0.12s; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.45)); }
 .cursor-tool.is-down svg { transform: rotate(-14deg) scale(0.96); }

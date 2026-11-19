@@ -26,6 +26,18 @@ import { toolSvg } from '../art/tools.js';
 
 const IDLE_MS = 1500, TAP_PX = 10, TAP_MS = 350;
 
+// The hover name: one small tooltip, shared; a mouse or pen over a hotspot shows its label.
+let tip = null, tipOwner = null;
+const showTip = (owner, text, e) => {
+  tip ??= Object.assign(document.createElement('div'), { className: 'hover-tip', role: 'presentation' });
+  tipOwner = owner;
+  tip.textContent = text[0].toUpperCase() + text.slice(1);
+  document.body.append(tip);
+  moveTip(e);
+};
+const moveTip = (e) => { if (tip) tip.style.transform = `translate(${Math.min(e.clientX + 16, innerWidth - tip.offsetWidth - 8)}px, ${Math.min(e.clientY + 24, innerHeight - 40)}px)`; };
+const hideTip = (owner) => { if (tipOwner === owner) { tip?.remove(); tipOwner = null; } };
+
 export function createHotspots({ stage, ui, calm, auto }) {
   const active = new Set();
   let idle = 0;
@@ -64,6 +76,12 @@ export function createHotspots({ stage, ui, calm, auto }) {
     sync();
 
     el.classList.add('hotspot');
+    if (label) {
+      on('pointerenter', (e) => { if (e.pointerType !== 'touch' && !core.finished) showTip(h, label, e); });
+      on('pointermove', (e) => { if (tipOwner === h) moveTip(e); });
+      on('pointerleave', () => hideTip(h));
+      on('pointerdown', () => hideTip(h)); // a press is an action; the name has done its job
+    }
     // opts.tool: a mouse or pen over this hotspot becomes that tool (the native cursor hides); a press tilts it.
     let tool = null;
     const toolAt = (e) => { if (tool) tool.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
@@ -91,6 +109,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
       if (!active.delete(h)) return;
       sync();
       ac.abort();
+      hideTip(h);
       if (tool?.isConnected) delete document.body.dataset.tool;
       tool?.remove();
       clearInterval(timer);

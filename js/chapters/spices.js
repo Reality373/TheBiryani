@@ -143,7 +143,7 @@ export default {
         const need = COUNT[id] ?? 1;
         if ((counts[id] ?? 0) >= need) { finished.add(id); continue; }
         hotspot($(`#sp-j-${id}`), {
-          label: need > 1 ? `drop a ${id === 'clove' ? 'clove' : 'pod'}` : `add the ${{ bayleaf: 'bay leaf', shahijeera: 'shahi jeera' }[id] ?? id}`,
+          label: need > 1 ? `drop a ${id === 'clove' ? 'clove' : 'cardamom pod'}` : `add the ${{ bayleaf: 'bay leaf', shahijeera: 'shahi jeera' }[id] ?? id}`,
           gesture: 'tap',
           step() {
             const c = bump(counts[id] ?? 0, need);
