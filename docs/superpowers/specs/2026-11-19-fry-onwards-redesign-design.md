@@ -17,7 +17,7 @@ From The Fry to The Plate the game is hard to follow. Evidence gathered by walki
 ## Decisions (owner, 19 Nov)
 
 - **D-A. Split The Fry along the recipe.** V The Fry sears the chicken; new VI The Gravy cooks it down into the gravy: hot water, cover, cook, thicken. No new ingredients. The owner asked for the standard internet recipe for the gravy; three standard sources were read (see Source facts) and all make the gravy from the marinated chicken itself.
-- **D-B. One counter, two burners.** Fry, Gravy, Rice and Layers share one kitchen counter: the copper handi on the left burner, the rice pot on the right. The camera pans between them.
+- **D-B. One kitchen for every cooking chapter** (revised 19 Nov, after the owner saw the Fry pot floating behind its flames and said each step felt like a different kitchen). The room kitchen from The Seal, The Wait and The Opening (window with rain, jar shelf, gas stove with two burners and knobs, counter, brass lamp, checked cloth) is the single base for chapters I to X. Close chapters are the same kitchen with the camera moved in. The handi sits on the left burner and the rice pot on the right, with the flames under the pots. Only The Plate leaves the kitchen, for the dining table.
 - **D-C. A goal line that is always visible** under the chapter title, one plain sentence per step.
 - **D-D. One kitchen timer for the whole recipe:** the digital desk clock from The Rest, reused wherever recipe minutes matter.
 
@@ -42,7 +42,7 @@ Nothing can be failed. Releasing the timer early gives a "a bit longer" line; in
 
 1. **Goal line.** Hotspot option `goal` (string, at most 70 characters; falls back to the capitalised label). The line `#goal` under the cartouche shows the goal of the newest untouched live hotspot: the same selection the idle hint uses, extracted into one function in `js/core/hotspot.js` so hint and goal never disagree. It updates when steps finish or are skipped and hides when nothing is live.
 2. **Kitchen timer.** `js/core/timer.js` (pure logic: `createTimer({ target: [min, max], rate })` with `hold(dt)`, `tap()`, `minutes`, `status()` returning `early | inside | late`, `text()` such as `0:12`), `js/art/timer.js` (the desk clock artwork extracted from `js/art/rest.js`, with the target window marked on the display), and a chapter helper `ctx.timer({ target, cap, say })` that resolves on release. The Rest chapter is refactored onto it with no behaviour change.
-3. **Shared counter scene.** `js/art/counter.js`: backsplash, counter, two burners and knobs, the warm spot, named camera frames LEFT and RIGHT. Each chapter calls it and adds its props. Continuity is by identical layout plus chapter start states (Rice draws the handi covered and warm on the left; Layers draws it uncovered).
+3. **One kitchen scene.** `js/art/kitchen.js`, built from the existing `js/art/room.js` (the Seal/Wait room): wall, window, shelf, counter, stove with two burners and knobs, lamp. It exports named camera frames (COUNTER, LEFT_BURNER, RIGHT_BURNER, WIDE) and a pot-on-burner helper that seats a pot on a burner grate with the flames beneath it, not behind it. Every chapter from Spices to Opening calls it and adds its props, so the room, light and layout never change. Continuity is by identical layout plus chapter start states (Rice draws the handi covered and warm on the left; Layers draws it uncovered). Time of day and mood still vary per chapter by lighting only.
 4. **One onion drawing.** The Onions chapter's crescent symbol becomes the shared fried-onion art in The Fry, The Gravy, The Marinade and The Layers; the strand drawing is removed.
 
 ## Data changes
@@ -71,11 +71,12 @@ Sections of the standard method used for the gravy beats: the firm-up stage with
 
 ## Stages (each leaves a playable game; smoke run after each)
 
-1. **Foundations:** goal line, kitchen timer (Rest refactored), shared onion art, chapter data and numbering, decisions log. Accept: Rest plays as before with the shared timer; goal line shows on every chapter; unit tests pass.
-2. **Fry and Gravy on the counter** (answers the gravy question). Accept: both chapters playable by mouse with the goal line alone; handi ends covered and warm; chapter steps re-measured.
-3. **Rice on the counter.** Accept: camera pans right; the handi is visible covered and warm at the left; timer used.
-4. **Layers.** Accept: opens by uncovering the same handi.
-5. **Seal, Wait, Opening, Plate:** goal lines, timer in Wait, and any framing fix found in the walk-through.
+1. **Foundations:** the goal line (done 19 Nov), kitchen timer (Rest refactored), shared onion art, chapter data and numbering, decisions log.
+2. **The kitchen base.** `kitchen.js` with camera frames and the pot-on-burner helper; The Seal, Wait and Opening move onto it first (they already use this room). Accept: the same room in all three; pots sit on the grates with flames beneath.
+3. **Fry and Gravy in the kitchen** (answers the gravy question). Accept: both playable by mouse with the goal line alone; the handi sits on the left burner; it ends covered and warm.
+4. **Rice and Layers in the kitchen.** Accept: the camera moves to the right burner for the rice; the handi is visible covered and warm at the left; Layers opens by uncovering the same handi.
+5. **Spices, Onions, Marinade, Rest in the kitchen.** Accept: the beats and interactions are unchanged; only the backdrop and camera change (counter frame, the onion pan on a burner, the Rest's fridge and sink fitted into the kitchen layout).
+6. **Plate and the walk-through:** goal lines, timer in Wait, framing fixes; a full run-through screenshot review of all twelve chapters side by side.
 
 ## Testing
 
@@ -85,4 +86,4 @@ Sections of the standard method used for the gravy beats: the firm-up stage with
 
 ## Out of scope
 
-New voice recordings, new music, changes to chapters I to IV other than reusing the timer in The Rest, and changes to the bites in The Plate.
+New voice recordings, new music, changes to the beats or gestures of chapters I to IV (they only move into the shared kitchen, and The Rest gets the shared timer), and changes to the bites in The Plate.
