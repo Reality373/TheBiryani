@@ -1,6 +1,6 @@
 # Fry and onwards: a followable cook-through (design)
 
-Date: 2026-11-19. Status: approved in chat by the owner; written spec awaiting the owner's review.
+Date: 2026-11-19. Status: approved in chat by the owner; the gravy details follow the standard recipes (owner: "go for the standard recipe off the internet"); written spec awaiting the owner's review.
 
 ## Problem
 
@@ -16,7 +16,7 @@ From The Fry to The Plate the game is hard to follow. Evidence gathered by walki
 
 ## Decisions (owner, 19 Nov)
 
-- **D-A. Split The Fry along the recipe.** V The Fry sears the chicken; new VI The Gravy adds onions and hot water, covers and cooks. No new ingredients.
+- **D-A. Split The Fry along the recipe.** V The Fry sears the chicken; new VI The Gravy cooks it down into the gravy: hot water, cover, cook, thicken. No new ingredients. The owner asked for the standard internet recipe for the gravy; three standard sources were read (see Source facts) and all make the gravy from the marinated chicken itself.
 - **D-B. One counter, two burners.** Fry, Gravy, Rice and Layers share one kitchen counter: the copper handi on the left burner, the rice pot on the right. The camera pans between them.
 - **D-C. A goal line that is always visible** under the chapter title, one plain sentence per step.
 - **D-D. One kitchen timer for the whole recipe:** the digital desk clock from The Rest, reused wherever recipe minutes matter.
@@ -28,7 +28,7 @@ I Spices, II Onions, III Marinade, IV Rest (unchanged), then:
 | # | Chapter | Beats (goal line) |
 |---|---------|-------------------|
 | V | The Fry (left burner) | 1 "Pour the onion oil into the handi" (tap bottle) · 2 "Light the burner: turn the knob to medium" (drag knob; oil shimmers) · 3 "Tip the chicken in: drag the bowl over the handi" · 4 "Sear it: stir and turn the pieces" (circle) until edges colour, timer target 4 to 5 min |
-| VI | The Gravy (left burner) | 1 "Add the fried onions: drag the plate over the handi" · 2 "Add ¼ cup hot water: tap the tumbler" · 3 "Cover the handi: drag the lid on" · 4 "Cook covered: hold the timer, take it off between 10 and 15 min" (optional "tap the lid to peek": gravy thick but pourable, chicken about 95%) · 5 "Turn the burner off" · 6 "Set the handi aside, covered: drag it to the warm spot" |
+| VI | The Gravy (left burner) | 1 "Stir until it firms up and the liquid shows" (circle; the marinade clings to the chicken and the juices come out; no cover yet) · 2 "Add ¼ cup hot water: tap the tumbler" · 3 "Cover the handi: drag the lid on" · 4 "Cook covered: hold the timer, take it off between 10 and 15 min" (optional "tap the lid to peek": gravy thick but pourable, oil starting to show at the edge, chicken about 95%) · 5 "Turn the burner off" · 6 "Set the handi aside, covered: drag it to the warm spot" |
 | VII | The Rice (camera pans right) | Existing beats on the right burner, same counter; goal lines; boil and rice clocks become the kitchen timer (5 min, 5 min, test at 3) |
 | VIII | The Layers (pans back left) | New first beat "Uncover the handi: drag the lid off" (the same pot, gravy visible); then the existing ladle, saffron and toppings beats |
 | IX | The Seal | Existing; goal lines |
@@ -48,18 +48,26 @@ Nothing can be failed. Releasing the timer early gives a "a bit longer" line; in
 ## Data changes
 
 - `js/data/chapters.js`: add `gravy`, renumber V to XII, re-measure `steps` (`?auto=1`).
-- `js/data/cookbook.js`: split method step 8/9 into Fry and Gravy; add `ingredients.gravy` (fried onions 6 tbsp, hot water ¼ cup); shopping headings gain Gravy.
+- `js/data/cookbook.js`: split method step 8/9 into Fry and Gravy (the gravy step reads: stir until it firms up, add ¼ cup hot water, cover and cook 10 to 15 min, off at about 95%, gravy thick but pourable; the "add the fried onions" words are dropped because the onions are already in the marinade); add `ingredients.gravy` (hot water ¼ cup); shopping headings gain Gravy.
 - `js/data/lines/gravy.js` new; `fry.js` trimmed to the sear; `layers.js` gains the uncover line. Every `voice.say` key must exist (existing lines test).
 - `docs/decisions.md`: append D-A to D-D.
 - Fix stale chapter numbers in code comments.
 
-## Source facts (indianhealthyrecipes.com/chicken-biryani/, "Restaurant Style")
+## Source facts (read on 19 Nov; fetched pages are paraphrased, not copied)
 
-Verified by fetch on 19 Nov; the fetch was cut off inside step 3 of the method, so the layering details are from the recipe card summary.
+Three standard Hyderabadi chicken dum biryani recipes were read in full or in part:
 
-- Chicken step: sauté the marinated chicken 4 to 5 min on medium; reserve 2 tbsp fried onions, add the rest (6 tbsp) to the chicken; ¼ cup hot water; cover and cook 10 to 15 min on medium; about 95% cooked; gravy thick but pourable; turn off the heat.
-- There is no separate gravy or masala preparation.
-- **Open decision for the owner's review.** The source puts *no* fried-onion solids in the marinade; the 6 tbsp go into the chicken step. The app's Marinade chapter currently crushes fried onions into the marinade (`birista`, 6 tbsp). Default in this spec: follow the source, so the onion beat is removed from The Marinade and its card, and the onions are added in The Gravy. If the owner prefers the app's current marinade, The Gravy's first beat becomes "add the reserved onions" with the amount taken from what remains.
+| Source | Gravy | Fried onions | Cook |
+|--------|-------|--------------|------|
+| Swasthi, indianhealthyrecipes.com/chicken-biryani/ (read to the middle of the method; cut off) | none separate: the marinated chicken is cooked in the pot | no solids in the marinade; 6 tbsp into the chicken, 2 tbsp reserved | sauté 4 to 5 min on medium; ¼ cup hot water; cover 10 to 15 min; about 95% cooked; gravy thick but pourable |
+| My Food Story, myfoodstory.com/?p=12369 | none separate | 2 tbsp in the marinade, half over the chicken, the rest on top | chicken 4 min turning once, covered 3 min; the final steam finishes it |
+| Sinfully Spicy, sinfullyspicy.com (dum chicken biryani with restaurant flavors) | none separate; masala base is the marinated chicken | two-thirds in the marinade, one-third for layering | medium, stirring, 6 to 8 min until it firms up and liquid shows; cover 12 to 15 min; thick and saucy |
+
+A fourth (Whisk Affair) refused automated reads. No standard Hyderabadi recipe with a separate onion-and-tomato gravy was found; none is invented here.
+
+**Resolved: the marinade onions.** Two of the three sources put fried onions in the marinade, and the app's Marinade chapter already does. Chapter III stays as it is. The Gravy therefore adds no onions; the 2 tbsp kept back stay for the top of the biryani, as now. (The earlier open decision is closed.)
+
+Sections of the standard method used for the gravy beats: the firm-up stage with the liquid showing (Sinfully Spicy), the hot-water-and-cover stage and the 95% / thick-but-pourable cues (Swasthi). Add a credit line for Sinfully Spicy next to Swasthi's on the end card.
 
 ## Stages (each leaves a playable game; smoke run after each)
 
@@ -77,4 +85,4 @@ Verified by fetch on 19 Nov; the fetch was cut off inside step 3 of the method, 
 
 ## Out of scope
 
-New voice recordings, new music, changes to chapters I to IV other than the marinade onion decision above and reusing the timer in The Rest, and changes to the bites in The Plate.
+New voice recordings, new music, changes to chapters I to IV other than reusing the timer in The Rest, and changes to the bites in The Plate.
