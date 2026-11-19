@@ -24,6 +24,15 @@ export function createCore(opts, { calm = () => false, onTouch = () => {} } = {}
 
 import { toolSvg } from '../art/tools.js';
 
+// The goal line: the newest live hotspot says what to do now (an explicit `goal`, else its label); more than one live adds a count.
+export function goalFor(live) {
+  const cur = live[live.length - 1];
+  const t = cur?.goal ?? cur?.label ?? '';
+  if (!t) return '';
+  const text = t[0].toUpperCase() + t.slice(1);
+  return live.length > 1 ? `${text} · ${live.length} to do` : text;
+}
+
 const IDLE_MS = 1000, TAP_PX = 10, TAP_MS = 350;
 
 // The hover name: one small tooltip, shared; a mouse or pen over a hotspot shows its label.
@@ -56,6 +65,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
   for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, arm, true);
 
   // "Skip this step": every live hotspot performs itself, as in auto mode. Shown while any hotspot is live.
+  const refreshGoal = () => ui.goal?.(goalFor([...active]));
   const skipBtn = document.getElementById('skip');
   const sync = () => { if (skipBtn) skipBtn.hidden = !!auto || active.size === 0; };
   skipBtn?.addEventListener('click', () => { for (const h of active) h.skip?.(); });
@@ -74,8 +84,10 @@ export function createHotspots({ stage, ui, calm, auto }) {
     };
     const core = createCore(opts, { calm: calmed, onTouch: quiet });
     h.core = core;
+    h.goal = opts.goal;
     active.add(h);
     sync();
+    refreshGoal();
 
     el.classList.add('hotspot');
     if (label) {
@@ -110,6 +122,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
     const dispose = () => {
       if (!active.delete(h)) return;
       sync();
+      refreshGoal();
       ac.abort();
       hideTip(h);
       if (tool?.isConnected) delete document.body.dataset.tool;

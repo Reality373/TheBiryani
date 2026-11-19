@@ -36,3 +36,11 @@ test('finish() resolves done, and keys call their handler', async () => {
   core.finish();
   await core.done;
 });
+
+import { goalFor } from '../js/core/hotspot.js';
+test('the goal line is the newest live hotspot, capitalised, with a count when several are live', () => {
+  assert.equal(goalFor([]), '');
+  assert.equal(goalFor([{ label: 'tip the onions in' }]), 'Tip the onions in');
+  assert.equal(goalFor([{ label: 'turn the clock' }, { label: 'pour the water off', goal: 'pour the milky water off over the sink' }]), 'Pour the milky water off over the sink · 2 to do');
+  assert.equal(goalFor([{ label: '' }]), '');
+});

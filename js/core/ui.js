@@ -77,6 +77,9 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
   prefs.subscribe(syncPrefs);
 
+  // ---- the goal line: what to do now, shown before the action (set by the hotspot layer) ----
+  const goal = (text) => { const g = $('goal'); g.textContent = text || ''; g.hidden = !text; };
+
   // ---- chapter progress: each finished hotspot is a step; the bar fills to the chapter's step count, and the chapter's end fills it ----
   let stepsDone = 0, stepsTotal = 0;
   function showProgress(full) {
@@ -92,6 +95,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   // ---- chapter title: big and centred, then it settles into the cartouche ----
   async function chapter(index, numeral, title) {
     chapterId = chapters[index]?.id ?? null;
+    goal('');
     stepsDone = 0; stepsTotal = chapters[index]?.steps ?? 0;
     showProgress();
     $('cartouche').hidden = !title;
@@ -137,9 +141,15 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
       best ??= [x, y];
       if (!avoid.some((a) => hit(a, { l: x - w / 2, r: x + w / 2, t: y - h / 2, b: y + h / 2 }))) { best = [x, y]; break; }
     }
-    subs.style.setProperty('--sx', `${Math.round(best[0])}px`);
-    subs.style.setProperty('--sy', `${Math.round(best[1])}px`);
+    // Stay put while the current spot is still clear (no flipping sides as things move); move only when something is in the way.
+    const clear = (x, y) => x - w / 2 >= M && x + w / 2 <= vw - M && y - h / 2 >= TOP && y + h / 2 <= vh - 24
+      && !avoid.some((a) => hit(a, { l: x - w / 2, r: x + w / 2, t: y - h / 2, b: y + h / 2 }));
+    if (subPos && clear(subPos[0], subPos[1])) return;
+    subPos = [Math.round(best[0]), Math.round(best[1])];
+    subs.style.setProperty('--sx', `${subPos[0]}px`);
+    subs.style.setProperty('--sy', `${subPos[1]}px`);
   }
+  let subPos = null;
   addEventListener('pointermove', (e) => {
     if (e.pointerType === 'touch' || !subs.classList.contains('is-on')) return;
     const r = subs.getBoundingClientRect();
@@ -156,7 +166,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
     floatSubs();
     subs.classList.add('is-on');
     clearInterval(replace); replace = setInterval(floatSubs, 450); // slides and camera moves change what is under the card
-    fade = setTimeout(() => { subs.classList.remove('is-on'); clearInterval(replace); }, 9000);
+    fade = setTimeout(() => { subs.classList.remove('is-on'); clearInterval(replace); }, Math.min(9000, Math.max(3500, 2500 + 55 * text.length))); // short lines leave sooner
   }
   function caption(text) {
     cap.textContent = text ? `[${text.replace(/^\[|\]$/g, '')}]` : '';
@@ -339,7 +349,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
 
   const ui = {
-    chapter, stepDone, chapterDone: () => showProgress(true), subtitle, caption, card, hint, unhint, ingredients: showIngredients, tick,
+    chapter, goal, stepDone, chapterDone: () => showProgress(true), subtitle, caption, card, hint, unhint, ingredients: showIngredients, tick,
     headingFocused: () => document.activeElement === $('cart-title') || document.activeElement === document.body,
   };
   syncPrefs();

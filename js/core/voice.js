@@ -17,7 +17,7 @@ export function createVoice({
   // Narration follows the viewer's actions. Lines said together (within BURST_MS) are one burst and play in order; a later burst
   // means the viewer did something new, so lines of earlier bursts still waiting are dropped, and the one on screen gives way
   // once it has been up for MIN_SHOW.
-  const BURST_MS = 400, MIN_SHOW = 1500;
+  const BURST_MS = 400, MIN_SHOW = 700; // a line is cut short 0.7 s after the viewer does something new
   let burst = 0, lastSayAt = -Infinity, current = null;
   let generation = 0; // clear() bumps it, so a line still being looked up when the viewer jumps is dropped
 

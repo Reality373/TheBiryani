@@ -83,6 +83,7 @@ export default {
         const sendNow = (fx, fy, ms) => { sent = true; deliver(id, fx, fy, ms); later(check, ms * 0.74 + 20); return true; };
         hotspot($(`#sp-b-${id}`), {
           label: `scoop ${id}`,
+          goal: 'scoop each powder onto the tray',
           gesture: { drag: path },
           step() {
             if (sent) return true;
@@ -144,6 +145,7 @@ export default {
         if ((counts[id] ?? 0) >= need) { finished.add(id); continue; }
         hotspot($(`#sp-j-${id}`), {
           label: need > 1 ? `drop a ${id === 'clove' ? 'clove' : 'cardamom pod'}` : `add the ${{ bayleaf: 'bay leaf', shahijeera: 'shahi jeera' }[id] ?? id}`,
+          goal: 'add each whole spice to the tray',
           gesture: 'tap',
           step() {
             const c = bump(counts[id] ?? 0, need);
