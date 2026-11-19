@@ -1,4 +1,4 @@
-// Chapter VI, The Opening. Room, then into the pot. Beats: (1) drag along the dough to crack the seal: the cracks open
+// Chapter XI, The Opening. Room, then into the pot. Beats: (1) drag along the dough to crack the seal: the cracks open
 // where the finger has been and crumbs fall with each one; (2) drag the lid up: steam leaks at the gap, then the burst
 // (the room opens up, one chime); (3) the close shot into the pot; (4) serve: drag the big spoon down the side and let
 // go, and it comes up full (rice from the top, chicken from the bottom). The chapter then resolves after a short beat.

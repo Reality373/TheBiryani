@@ -26,7 +26,7 @@ test('continue is offered only for a built chapter with a title', () => {
 });
 
 test('chapters carry a mood and a built flag', () => {
-  assert.deepEqual(chapters.map((c) => c.id), ['spices', 'onions', 'marinade', 'rest', 'fry', 'rice', 'layers', 'seal', 'wait', 'opening', 'plate', 'end']);
+  assert.deepEqual(chapters.map((c) => c.id), ['spices', 'onions', 'marinade', 'rest', 'fry', 'gravy', 'rice', 'layers', 'seal', 'wait', 'opening', 'plate', 'end']);
   for (const c of chapters) { assert.ok(c.mood); assert.equal(typeof c.built, 'boolean'); }
 });
 

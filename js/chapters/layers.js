@@ -1,4 +1,4 @@
-// Chapter III, The Layers. Steam mood, close shot into the open copper handi with the chicken masala at the bottom.
+// Chapter VIII, The Layers. Steam mood, close shot into the open copper handi with the chicken masala at the bottom.
 // Beats: (1) tap the ladle: three layers of rice settle over the masala, each with its falling grains, a puff of steam
 // and a grainy pour; (2) drag across the rice to pour the saffron milk: the streaks grow where the finger goes, darker
 // where it lingers, and a tap gives a ready-made streak; (3) three at once: tap the mint, tap the fried onions, drag the

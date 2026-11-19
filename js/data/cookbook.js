@@ -61,7 +61,7 @@ export const method = [
   { ch: 'rest', step: 'Cover and marinate in the fridge.', time: '30 min at least, up to overnight', why: 'An hour in the curd, and it softens all the way through.' },
   { ch: 'rest', step: 'Meanwhile rinse the rice three times and soak it.', time: '15 to 30 min', why: 'Rinsing washes off the loose starch, so the grains stay separate.' },
   { ch: 'fry', step: 'Fry the marinated chicken on medium heat till the edges colour.', time: '4 to 5 min', why: 'Frying it first browns the edges, and the browning is flavour.' },
-  { ch: 'fry', step: 'Add the fried onions and ¼ cup hot water, cover and cook till nearly done.', time: '10 to 15 min', why: 'It finishes cooking in the steam later, so take it off at about ninety-five percent.' },
+  { ch: 'gravy', step: 'Add ¼ cup hot water, cover and cook till nearly done. The gravy should be thick but still pourable.', time: '10 to 15 min', why: 'It finishes cooking in the steam later, so take it off at about ninety-five percent.' },
   { ch: 'rice', step: 'Boil the water with the whole spices.', time: '5 min', why: 'The spices flavour the water, and the water flavours every grain.' },
   { ch: 'rice', step: 'Add salt, oil and the drained rice; boil on high till nine-tenths done, then drain.', time: '5 min', why: 'Only most of the way. The steam will finish it.' },
   { ch: 'layers', step: 'Spread the chicken, then the hot rice; add saffron milk, onions, herbs, masala and ghee.', why: 'Poured, not stirred. It stays in streaks, so every spoonful is a little different.' },

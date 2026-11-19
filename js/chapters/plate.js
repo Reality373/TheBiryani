@@ -1,4 +1,4 @@
-// Chapter VII, The Plate. Close: the plate of biryani on the table, the opened handi behind it, salan and dahi beside.
+// Chapter XII, The Plate. Close: the plate of biryani on the table, the opened handi behind it, salan and dahi beside.
 // Six bites, each its own gesture: (1) drag from the mound's right edge into the spoon; (2) tap the chicken to break it
 // onto the spoon; (3) sweep rice, chicken and an onion curl together (a circling drag); (4) drag the spoon to the dahi
 // and dip; (5) hold the serving spoon over the plate for a second helping; (6) sweep what is left into one spoonful.

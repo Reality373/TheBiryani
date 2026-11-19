@@ -1,4 +1,4 @@
-// Chapter V, The Wait. Room, wide: the sealed pot on a low flame on a rainy night, and nothing to do but wait.
+// Chapter X, The Wait. Room, wide: the sealed pot on a low flame on a rainy night, and nothing to do but wait.
 // Beats: (1) slide the tawa under the pot; (2) turn the knob from high to low, four clicks; (3) the dum: wipe the
 // window, try the lid, touch the steam (the steam waits for the window or the lid), in any order, each giving its
 // line on the first touch and staying playable; (4) flame off, then a few cooling ticks.

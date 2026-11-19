@@ -74,7 +74,7 @@ async function runChapter(c, index, signal) {
   hotspot.signal = signal;
   const aborted = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
   const ctx = {
-    stage, hotspot, voice, audio, ui, prefs, params: q, auto, calm, signal, mood: c.mood,
+    stage, hotspot, voice, audio, ui, prefs, params: q, auto, calm, signal, mood: c.mood, id: c.id,
     wait: (ms) => (auto ? Promise.resolve() : Promise.race([sleep(ms), aborted])),
   };
   voice.clear(); // the last chapter's unspoken lines must not run on into this one

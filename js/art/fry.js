@@ -58,7 +58,7 @@ export default function art() {
   const fire = plane('f-fire', 0.58, `<style>
   #f-fire .f-tg{transform-box:fill-box;transform-origin:50% 100%;animation:f-flick .55s ease-in-out infinite alternate}
   @media (prefers-reduced-motion:reduce){#f-fire .f-tg{animation:none}}
-</style>${frontTongues}`);
+</style><g transform="translate(0 -62)">${frontTongues}</g>`);
   const fx = plane('f-fx', 0.42, `${F.foodDefs('fx')}
 ${linear('fx-flame', [[0, '#3D7FE0'], [0.34, '#8CC2FF'], [0.62, '#F7C85A'], [1, '#F2A516']], { x1: 0, y1: 1, x2: 0, y2: 0 })}
 ${radial('fx-glow', [[0, '#FFD27A', 0.9], [0.45, '#F2A516', 0.35], [1, '#E0701A', 0]])}
@@ -68,11 +68,11 @@ ${radial('fx-glow', [[0, '#FFD27A', 0.9], [0.45, '#F2A516', 0.35], [1, '#E0701A'
   @keyframes f-flick{from{transform:scaleY(.9);opacity:.75}to{transform:scaleY(1.08);opacity:1}}
   @media (prefers-reduced-motion:reduce){#f-fx .f-tg,#f-fx .f-flick{animation:none}}
 </style>
-<ellipse cx="800" cy="706" rx="380" ry="58" fill="#17151E" stroke="#3A3446" stroke-width="3"/>
+<g transform="translate(0 -62)"><ellipse cx="800" cy="706" rx="380" ry="58" fill="#17151E" stroke="#3A3446" stroke-width="3"/>
 ${[-220, -110, 0, 110, 220].map((dx) => `<path d="M${800 + dx} 670L${800 + dx * 1.04} 720" stroke="#3A3446" stroke-width="4" stroke-linecap="round"/>`).join('')}
 ${tongues}
 <ellipse cx="800" cy="700" rx="430" ry="70" fill="url(#fx-glow)" opacity=".7" style="mix-blend-mode:screen"/>
-<ellipse class="f-flick" cx="800" cy="690" rx="560" ry="170" fill="url(#fx-glow)" style="mix-blend-mode:screen"/>`);
+<ellipse class="f-flick" cx="800" cy="690" rx="560" ry="170" fill="url(#fx-glow)" style="mix-blend-mode:screen"/></g>`);
 
   // The pot: copper body and rim, then the oil, the masala (faded in later), the shimmer and the bubbles.
   const pot = plane('f-pot', 0.5, `${F.foodDefs('fp')}

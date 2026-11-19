@@ -49,7 +49,10 @@ export default {
   async play(ctx) {
     const { stage, hotspot, voice, audio, ui, signal, params } = ctx;
     const el = stage.el;
-    const at = STATE[params.get('state')] ?? 0;
+    // The Fry is the tip-in and the sear; The Gravy (chapter VI, same pot, same art) is the hot water, the lid and the covered cook.
+    const part = ctx.id === 'gravy' ? 'gravy' : 'fry';
+    const dev = STATE[params.get('state')] ?? 0;
+    const at = part === 'gravy' ? Math.max(STATE.onions, dev) : dev;
     const gone = new Promise((r) => signal.addEventListener('abort', r, { once: true }));
     const $ = (sel) => stage.$(sel);
     const make = (markup) => { const t = document.createElementNS(SVG_NS, 'svg'); t.innerHTML = markup; return t.firstElementChild; };
@@ -256,9 +259,12 @@ export default {
     const gravy = (g) => { $('#f-masala').style.opacity = String(g.toFixed(2)); fade('#f-marpool', 1 - g); };
     if (at >= 1) { PIECES.forEach((_, i) => placeAt(i, 0)); lands = PIECES.length; fade('#f-marpool', 1); fade('#f-bowlMar', 0); }
     if (at >= 2) { setCook(donenessAt(1, 1)); clock(1, 1); }
-    if (at >= 3) { move($('#f-onions'), ONION_TO.x - ONION.x, ONION_TO.y - ONION.y, 0); fade('#f-plate', 0); }
+    // The fried onions are in the marinade (the standard recipes), so no plate of them is set out here.
+    $('#f-plate').style.opacity = '0'; $('#f-onions').style.opacity = '0';
     if (at >= 5) { $('#f-water').style.opacity = '0'; $('#f-masala').style.transition = 'none'; lidOn(true); }
     if (at >= 6) { heat = heatTo = 0.1; setCook(donenessAt(2, 1)); clock(2, 1); gravy(1); liftLid(true); }
+
+    if (part === 'gravy' && at < 5) $('#f-clock').style.opacity = '0'; // the sear clock is over; the covered cook brings its own
 
     // ---- the flow ----
     if (at < 1) {
@@ -273,8 +279,8 @@ export default {
       voice.say('fry.golden');
       voice.say('fry.whyFry');
     }
-    if (at < 3) { await run(onionBeat); if (signal.aborted) return; }
-    if (at < 4) { await run(waterBeat); if (signal.aborted) return; }
+    if (part === 'fry') return; // seared: on to The Gravy
+    if (at < 4) { frame(1.3, 480, 800, 430); await run(waterBeat); if (signal.aborted) return; }
     if (at < 5) { await run(lidBeat); if (signal.aborted) return; }
     if (at < 6) {
       frame(1.3, 480, 800, 430);

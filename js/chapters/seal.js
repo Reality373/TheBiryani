@@ -1,4 +1,4 @@
-// Chapter IV, The Seal. Room, medium shot: the copper pot on the stove, the lid at its side.
+// Chapter IX, The Seal. Room, medium shot: the copper pot on the stove, the lid at its side.
 // Beats: (1) drag the lid onto the pot; (2) press the dough rope round the rim: sweep along the rim (or tap), and
 // each eighth of the rim the pointer passes over is pressed once; (3) the room goes quiet, and the chapter
 // resolves after about 2 s.

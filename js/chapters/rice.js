@@ -1,4 +1,4 @@
-// Chapter VI, The Rice. Close shot down on the pot of water on the burner. Beats: (1) tap the tray to tip the whole spices
+// Chapter VII, The Rice. Close shot down on the pot of water on the burner. Beats: (1) tap the tray to tip the whole spices
 // into the water; (2) hold the flame knob until the water rolls (the boil bed rises with the hold); (3) tap the salt and the
 // oil (two hotspots at once); (4) drag the bowl over the pot to pour the rice in, or tap it. The boil drops, the clock
 // starts (5 min on high). The clock stops at 3 minutes: (5) lift a few grains with the slotted spoon and tap one grain
