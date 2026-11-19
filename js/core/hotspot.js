@@ -63,10 +63,10 @@ export function createHotspots({ stage, ui, calm, auto }) {
       on('pointerenter', (e) => {
         if (e.pointerType === 'touch' || calmed()) return;
         tool ??= Object.assign(document.createElement('div'), { className: 'cursor-tool', innerHTML: toolSvg(opts.tool) });
-        document.body.append(tool); toolAt(e);
+        document.body.append(tool); document.body.dataset.tool = opts.tool; toolAt(e);
       });
       on('pointermove', toolAt);
-      on('pointerleave', () => tool?.remove());
+      on('pointerleave', () => { tool?.remove(); delete document.body.dataset.tool; });
       on('pointerdown', () => tool?.classList.add('is-down'));
       for (const t of ['pointerup', 'pointercancel']) on(t, () => tool?.classList.remove('is-down'));
     }
@@ -80,6 +80,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
     const dispose = () => {
       if (!active.delete(h)) return;
       ac.abort();
+      if (tool?.isConnected) delete document.body.dataset.tool;
       tool?.remove();
       clearInterval(timer);
       cancelAnimationFrame(raf);

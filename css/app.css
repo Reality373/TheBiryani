@@ -65,6 +65,7 @@ html[data-calm='true'] .plane, html[data-calm='true'] .plane * { animation: none
 .plane .hotspot { pointer-events: all; cursor: pointer; touch-action: none; outline: none; }
 .plane .hotspot.draggable { cursor: grab; }
 .plane .hotspot.has-tool { cursor: none; }
+body[data-tool='spoon'] #m-spoon { opacity: 0 !important; } /* the cursor is the spoon while it is over the bowl */
 .cursor-tool { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; margin: -2px 0 0 -2px; will-change: transform; }
 .cursor-tool svg { display: block; margin: -110px 0 0 -55px; transform-origin: 55px 110px; transition: transform 0.12s; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.45)); }
 .cursor-tool.is-down svg { transform: rotate(-14deg) scale(0.96); }
@@ -196,9 +197,12 @@ html[data-calm='true'] .g-ping { opacity: 0.6; transform: scale(1.7); }
 /* Subtitles and sound captions, bottom centre. */
 #bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 3rem 1rem calc(var(--band) + 0.9rem + env(safe-area-inset-bottom)); text-align: center; }
 #bottom::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(14, 13, 18, 0.82), rgba(14, 13, 18, 0.5) 55%, transparent); opacity: 0; transition: opacity 500ms ease; }
-#bottom:has(#subs.is-on)::before { opacity: 1; }
+#bottom::before { display: none; } /* subtitles float on their own glass card now, so the bottom scrim is not needed */
 #cap { margin: 0 0 0.3rem; font-style: italic; font-size: 0.9rem; color: var(--rice); text-shadow: 0 1px 6px var(--iron); }
-#subs { text-wrap: pretty; text-wrap: balance; max-width: 46rem; margin: 0 auto; opacity: 0; transition: opacity 500ms ease; font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem); line-height: 1.4; text-shadow: 0 1px 8px var(--iron); }
+/* Subtitles float: each line glides to a new spot (--sx, --sy set in ui.js) and bobs gently. */
+#subs { position: fixed; left: var(--sx, 50%); top: var(--sy, 82%); translate: -50% -50%; width: max-content; max-width: min(24rem, 84vw); box-sizing: border-box; padding: 0.65rem 1.05rem; border-radius: 16px; background: rgba(14, 13, 18, 0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(246, 235, 211, 0.12); text-wrap: pretty; text-wrap: balance; text-align: center; opacity: 0; transition: opacity 500ms ease, left 1.4s ease-in-out, top 1.4s ease-in-out; animation: sub-drift 6.5s ease-in-out infinite alternate; pointer-events: none; font-size: clamp(0.95rem, 0.85rem + 0.45vw, 1.15rem); line-height: 1.4; text-shadow: 0 1px 8px var(--iron); }
+@keyframes sub-drift { from { transform: translate(-6px, 4px) rotate(-0.4deg); } to { transform: translate(7px, -5px) rotate(0.4deg); } }
+html[data-calm='true'] #subs { animation: none; transition: opacity 500ms ease; }
 #subs.is-on { opacity: 1; }
 #subs p { margin: 0; }
 #sub-prev { opacity: 0.45; }

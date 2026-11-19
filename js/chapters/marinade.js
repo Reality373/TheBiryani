@@ -269,6 +269,7 @@ export default {
       const check = () => { apply(clamp01(turns / total)); if (turns < total - 1e-6) return false; apply(1); audio.level('mar-fold', 0, 0.3); audio.level('mar-fold-hi', 0, 0.3); return true; };
       const spot = hotspot($('#m-stir'), {
         label,
+        tool: 'spoon',
         gesture: 'circle',
         step() {
           turns += 0.25; angle += Math.PI / 2;

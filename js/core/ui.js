@@ -109,12 +109,18 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
 
   // ---- subtitles and captions ----
+  const SUB_SPOTS = [[50, 89], [70, 28], [30, 86], [72, 86], [58, 34], [44, 90]];
+  let subSpot = 0;
   let fade = 0;
   function subtitle(text) {
     clearTimeout(fade);
     if (!text) { cur.textContent = prev.textContent = ''; subs.classList.remove('is-on'); return; }
     prev.textContent = cur.textContent;
     cur.textContent = text;
+    // Float: the next spot in turn; narrow screens keep the centre and only change height. Upper spots stay clear of the top-left card.
+    const [x, y] = SUB_SPOTS[subSpot++ % SUB_SPOTS.length];
+    subs.style.setProperty('--sx', `${matchMedia('(max-width: 640px)').matches ? 50 : x}%`);
+    subs.style.setProperty('--sy', `${y}%`);
     subs.classList.add('is-on');
     fade = setTimeout(() => subs.classList.remove('is-on'), 9000);
   }
