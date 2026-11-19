@@ -8,12 +8,17 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 export function createVoice({
   prefs, ui, audio, auto = false,
   loadLines = (chapter) => import(`../data/lines/${chapter}.js`).then((m) => m.default),
-  files = voiceFiles, synth = globalThis.speechSynthesis, sleep = wait,
+  files = voiceFiles, synth = globalThis.speechSynthesis, sleep = wait, now = () => performance.now(),
 }) {
   const cache = {};
   let queue = [];
   let running = false;
   let interrupt = () => {};
+  // Narration follows the viewer's actions. Lines said together (within BURST_MS) are one burst and play in order; a later burst
+  // means the viewer did something new, so lines of earlier bursts still waiting are dropped, and the one on screen gives way
+  // once it has been up for MIN_SHOW.
+  const BURST_MS = 400, MIN_SHOW = 1500;
+  let burst = 0, lastSayAt = -Infinity, current = null;
   let generation = 0; // clear() bumps it, so a line still being looked up when the viewer jumps is dropped
 
   async function lookup(id) {
@@ -61,7 +66,9 @@ export function createVoice({
     running = true;
     while (queue.length) {
       const item = queue.shift();
+      const mine = current = { burst: item.burst, since: now() };
       try { await play(item.id); } catch { /* never rejects */ }
+      if (current === mine) current = null;
       item.resolve();
     }
     running = false;
@@ -70,7 +77,15 @@ export function createVoice({
   return {
     say(id) {
       if (auto) { lookup(id).then((t) => t && ui.subtitle(t)); return Promise.resolve(); }
-      return new Promise((resolve) => { queue.push({ id, resolve }); pump(); });
+      const t = now();
+      if (t - lastSayAt > BURST_MS) {
+        burst++;
+        queue = queue.filter((i) => (i.burst < burst ? (i.resolve(), false) : true));
+        const cur = current;
+        if (cur) setTimeout(() => { if (current === cur) interrupt(); }, Math.max(0, MIN_SHOW - (t - cur.since)));
+      }
+      lastSayAt = t;
+      return new Promise((resolve) => { queue.push({ id, resolve, burst }); pump(); });
     },
     clear() {
       generation++;

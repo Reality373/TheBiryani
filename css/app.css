@@ -201,12 +201,18 @@ html[data-calm='true'] .g-ping { opacity: 0.6; transform: scale(1.7); }
 #bottom::before { display: none; } /* subtitles float on their own glass card now, so the bottom scrim is not needed */
 #cap { margin: 0 0 0.3rem; font-style: italic; font-size: 0.9rem; color: var(--rice); text-shadow: 0 1px 6px var(--iron); }
 /* Subtitles float: each line glides to a new spot (--sx, --sy set in ui.js) and bobs gently. */
-#subs { position: fixed; left: var(--sx, 50%); top: var(--sy, 82%); translate: -50% -50%; width: max-content; max-width: min(24rem, 84vw); box-sizing: border-box; padding: 0.65rem 1.05rem; border-radius: 16px; background: rgba(14, 13, 18, 0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(246, 235, 211, 0.12); text-wrap: pretty; text-wrap: balance; text-align: center; opacity: 0; transition: opacity 500ms ease, left 1.4s ease-in-out, top 1.4s ease-in-out; animation: sub-drift 6.5s ease-in-out infinite alternate; pointer-events: none; font-size: clamp(0.95rem, 0.85rem + 0.45vw, 1.15rem); line-height: 1.4; text-shadow: 0 1px 8px var(--iron); }
+#subs { position: fixed; left: var(--sx, 50%); top: var(--sy, 82%); translate: -50% -50%; width: max-content; max-width: min(20rem, 78vw); box-sizing: border-box; padding: 0.5rem 0.9rem; border-radius: 16px; background: rgba(14, 13, 18, 0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(246, 235, 211, 0.12); text-wrap: pretty; text-wrap: balance; text-align: center; opacity: 0; transition: opacity 500ms ease, left 1.4s ease-in-out, top 1.4s ease-in-out; animation: sub-drift 6.5s ease-in-out infinite alternate; pointer-events: none; font-size: clamp(0.88rem, 0.8rem + 0.35vw, 1.02rem); line-height: 1.35; text-shadow: 0 1px 8px var(--iron); }
 @keyframes sub-drift { from { transform: translate(-6px, 4px) rotate(-0.4deg); } to { transform: translate(7px, -5px) rotate(0.4deg); } }
 html[data-calm='true'] #subs { animation: none; transition: opacity 500ms ease; }
+#sub-bar { height: 3px; margin-top: 0.45rem; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
+#sub-bar i { display: block; height: 100%; width: calc(var(--prog, 0) * 100%); background: var(--saffron); transition: width 0.5s ease-out; }
+html[data-calm='true'] #sub-bar i { transition: none; }
+#sub-step { margin: 0.3rem 0 0; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; }
+#sub-bar[hidden], #sub-step[hidden] { display: none; }
 #subs.is-on { opacity: 1; }
+#subs.is-on.is-dodging { opacity: 0.08; } /* the pointer is near: get out of the way */
 #subs p { margin: 0; }
-#sub-prev { opacity: 0.45; }
+#sub-prev { display: none; } /* a floating card shows only the current line */
 #sub-prev:empty { display: none; }
 html[data-subtitles='false'] #subs { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 

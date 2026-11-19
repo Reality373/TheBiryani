@@ -81,8 +81,11 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   let stepsDone = 0, stepsTotal = 0;
   function showProgress(full) {
     const f = full ? 1 : stepsTotal ? Math.min(0.97, stepsDone / stepsTotal) : 0; // 97%: only the chapter's end shows 100%
-    $('prog').style.setProperty('--prog', String(f));
+    root.style.setProperty('--prog', String(f)); // the cartouche bar and the subtitle card's bar both read it
     $('prog').setAttribute('aria-valuenow', String(Math.round(f * 100)));
+    const step = $('sub-step');
+    step.textContent = !stepsTotal ? '' : full ? 'Done' : `Step ${Math.min(stepsTotal, stepsDone + 1)} of ${stepsTotal}`;
+    $('sub-bar').hidden = step.hidden = !stepsTotal;
   }
   const stepDone = () => { stepsDone++; showProgress(); };
 
@@ -108,36 +111,52 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
     if (title) $('cart-title').focus({ preventScroll: true });
   }
 
-  // ---- subtitles and captions ----
-  // The line floats near the action: above (else below) the live hotspots, clear of the top-left card; high and central when none.
+  // The line floats near the action but never on it: the first of above / right / left / below the live hotspots that clears
+  // every hotspot, the ingredient card and the buttons; else high and central. It also fades while the pointer is near it.
+  const hit = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+  const grow = (r, g) => ({ l: r.left - g, r: r.right + g, t: r.top - g, b: r.bottom + g });
   function floatSubs() {
-    const vw = innerWidth, vh = innerHeight;
-    const rs = [...document.querySelectorAll('.hotspot')].map((n) => n.getBoundingClientRect())
+    const vw = innerWidth, vh = innerHeight, M = 12, TOP = 64;
+    const hs = [...document.querySelectorAll('.hotspot')].map((n) => n.getBoundingClientRect())
       .filter((r) => r.width > 4 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw);
-    const w = Math.min(subs.offsetWidth || 340, vw - 24), h = subs.offsetHeight || 70;
-    let x = vw / 2, y = vh * 0.24;
-    if (rs.length) {
-      const top = Math.min(...rs.map((r) => r.top)), bottom = Math.max(...rs.map((r) => r.bottom));
-      x = (Math.min(...rs.map((r) => r.left)) + Math.max(...rs.map((r) => r.right))) / 2;
-      const above = top - 22 - h / 2, below = bottom + 22 + h / 2;
-      y = above - h / 2 >= 70 ? above : below + h / 2 <= vh - 60 ? below : vh * 0.24;
+    const avoid = [...hs, ...['tl', 'corner-buttons', 'skip'].map((id) => $(id)?.getBoundingClientRect()).filter((r) => r && r.width > 0)]
+      .map((r) => grow(r, 10));
+    const w = Math.min(subs.offsetWidth || 320, vw - 2 * M), h = subs.offsetHeight || 60;
+    const cands = [];
+    if (hs.length) {
+      const l = Math.min(...hs.map((r) => r.left)), r = Math.max(...hs.map((r) => r.right));
+      const t = Math.min(...hs.map((r) => r.top)), b = Math.max(...hs.map((r) => r.bottom));
+      const cx = (l + r) / 2, cy = (t + b) / 2;
+      cands.push([cx, t - 14 - h / 2], [r + 14 + w / 2, cy], [l - 14 - w / 2, cy], [cx, b + 14 + h / 2]);
     }
-    x = Math.min(vw - w / 2 - 12, Math.max(w / 2 + 12, x));
-    y = Math.min(vh - h / 2 - 60, Math.max(h / 2 + 70, y));
-    const tl = $('tl').getBoundingClientRect();
-    if (y - h / 2 < tl.bottom + 8 && x - w / 2 < tl.right + 8) x = Math.min(vw - w / 2 - 12, tl.right + 8 + w / 2);
-    subs.style.setProperty('--sx', `${Math.round(x)}px`);
-    subs.style.setProperty('--sy', `${Math.round(y)}px`);
+    cands.push([vw / 2, TOP + 8 + h / 2]);
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+    let best = null;
+    for (const [cx, cy] of cands) {
+      const x = clamp(cx, M + w / 2, vw - M - w / 2), y = clamp(cy, TOP + h / 2, vh - 24 - h / 2);
+      best ??= [x, y];
+      if (!avoid.some((a) => hit(a, { l: x - w / 2, r: x + w / 2, t: y - h / 2, b: y + h / 2 }))) { best = [x, y]; break; }
+    }
+    subs.style.setProperty('--sx', `${Math.round(best[0])}px`);
+    subs.style.setProperty('--sy', `${Math.round(best[1])}px`);
   }
-  let fade = 0;
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch' || !subs.classList.contains('is-on')) return;
+    const r = subs.getBoundingClientRect();
+    subs.classList.toggle('is-dodging', e.clientX > r.left - 40 && e.clientX < r.right + 40 && e.clientY > r.top - 40 && e.clientY < r.bottom + 40);
+  }, { passive: true });
+
+  // ---- subtitles and captions ----
+  let fade = 0, replace = 0;
   function subtitle(text) {
     clearTimeout(fade);
-    if (!text) { cur.textContent = prev.textContent = ''; subs.classList.remove('is-on'); return; }
+    if (!text) { clearInterval(replace); cur.textContent = prev.textContent = ''; subs.classList.remove('is-on'); return; }
     prev.textContent = cur.textContent;
     cur.textContent = text;
     floatSubs();
     subs.classList.add('is-on');
-    fade = setTimeout(() => subs.classList.remove('is-on'), 9000);
+    clearInterval(replace); replace = setInterval(floatSubs, 450); // slides and camera moves change what is under the card
+    fade = setTimeout(() => { subs.classList.remove('is-on'); clearInterval(replace); }, 9000);
   }
   function caption(text) {
     cap.textContent = text ? `[${text.replace(/^\[|\]$/g, '')}]` : '';

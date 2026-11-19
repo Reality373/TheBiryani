@@ -58,3 +58,19 @@ test('a line still being looked up when the viewer jumps is dropped', async () =
   await said;
   assert.deepEqual(shown, []);
 });
+
+test('a later burst drops lines still waiting from an earlier one; one burst keeps its order', async () => {
+  let t = 0;
+  const shown = [];
+  const voice = createVoice({
+    prefs: { get: () => false }, ui: { subtitle: (x) => shown.push(x) }, audio: { duck() {} },
+    loadLines: async () => lines, files: [], synth: null, now: () => t,
+    sleep: () => new Promise((r) => setTimeout(r, 30)),
+  });
+  const first = [voice.say('t.a'), voice.say('t.b')]; // one burst: both stay
+  await new Promise((r) => setTimeout(r, 5));
+  t = 5000; // the viewer acts again: a new burst
+  const later = voice.say('t.c');
+  await Promise.all([...first, later]);
+  assert.deepEqual(shown, ['one', 'three'], 'b waited behind a and was stale by the time the viewer acted again');
+});
