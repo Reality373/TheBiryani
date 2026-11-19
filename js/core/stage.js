@@ -3,6 +3,7 @@
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const VIEW_W = 1600, VIEW_H = 1000;
+const MIN_VIEW_H = 720; // world units of height that stay visible when the camera pushes in on a landscape window
 
 // One 256 px luminance-noise tile, made once, used as the background of both grain overlays.
 function makeGrain(root) {
@@ -105,7 +106,10 @@ export function createStage({ el, camera, calm, auto, params }) {
         const k = Math.max(innerWidth / VIEW_W, innerHeight / VIEW_H); // "slice" scale
         const px = innerWidth / 2 + (x - VIEW_W / 2) * k;
         const py = innerHeight / 2 + (y - VIEW_H / 2) * k;
-        const s = Math.max(1, scale);
+        // On a landscape window never zoom in so far that less than MIN_VIEW_H of the 1000-unit scene is visible: the pot rim,
+        // the clock or the bowls would be cut off. (Portrait phones need the deep zoom to fit their narrow column.)
+        const cap = innerWidth > innerHeight ? Math.max(1, innerHeight / (k * MIN_VIEW_H)) : Infinity;
+        const s = Math.min(cap, Math.max(1, scale));
         // The pushed-to point is kept in the top 70% (the bottom is the subtitle zone); the scene must still cover the screen.
         const wantY = Math.min(py, innerHeight * 0.7);
         const tx = Math.min(0, Math.max(innerWidth * (1 - s), px - s * px));
