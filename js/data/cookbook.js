@@ -2,6 +2,7 @@
 // part-cooked rice, then dum). Serves 3 to 4.
 // Source: Swasthi, "Restaurant Style Chicken Biryani", indianhealthyrecipes.com/chicken-biryani/ (updated 2 Sep 2022),
 // which calls this method pakki dum biryani. The dough seal and tawa come from docs/research/03 (SBS, home practice).
+// The gravy stage (cook down uncovered, then covered) is cross-checked with Sinfully Spicy's "Dum Chicken Biryani With Restaurant Flavors".
 // Drafted by Claude from that source; the owner chose not to review it (17 Nov 2026). Star anise is left out of the
 // rice water because it is contested in Hyderabadi biryani (research 03); it stays the rare easter egg.
 
