@@ -3,7 +3,7 @@
 export default {
   fridge: 'Half an hour in the fridge at least. Overnight is better.',
   whyFridge: 'An hour in the curd, and it softens all the way through.',
-  clock: 'Time passes while it sits. Turn the clock to move it on.',
+  clock: 'Time passes while it sits. Hold the clock on the counter to move it on.',
   nudge: 'While it waits, the rice.',
   rinse1: 'Rinse one. Water in, and the rice goes cloudy white.',
   swirl: 'Swirl it. The loose starch comes off into the water.',
@@ -13,7 +13,7 @@ export default {
   rinse3: 'Once more. Nearly clear now.',
   soak: 'Fresh water over the rice, and leave it. Fifteen to thirty minutes.',
   whySoak: 'The grains drink up slowly, so they cook evenly and stay long.',
-  clockNow: 'Now the clock. Half an hour, and the rice has soaked.',
+  clockNow: 'Now the clock on the counter. Half an hour, and the rice has soaked.',
   half: 'Half an hour gone. The chicken has had its curd, and the rice has soaked.',
   overnight: 'Overnight is even better, if you can wait.',
   morning: 'Morning. The chicken has been in the curd all night.',

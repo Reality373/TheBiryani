@@ -1,12 +1,12 @@
 // Chapter IV, The Rest. Evening going to night. Close shot of the counter: the covered marinade bowl, a small fridge at
 // the left, a wall clock above the counter, and the steel bowl of dry rice by a tap and a sink.
 // Beats: (1) drag the covered bowl into the fridge (or tap): the door swings, shuts with a thunk, and the hum starts;
-// (2) the clock, from here to the end: drag its hands round (circle) or tap, a quarter turn is 30 minutes (the clock is
-// stylised, its hands are not to real scale). Until the rice is soaking it stops at 24 minutes, with the nudge "While it
+// (2) the digital desk clock on the counter, from here to the end: hold it to pass the time (10 minutes a second) or tap it
+// for the next half hour (the wall clock's hands follow). Until the rice is soaking it stops at 24 minutes, with the nudge "While it
 // waits, the rice."; (3) rinse the rice three times, each rinse: bring the bowl under the tap (drag, or tap), swirl it
 // (circle, or tap: two turns), pour the water off over the sink (drag, or tap). The water goes from milky to nearly clear,
 // and the paper tag counts the rinses; (4) soak: a tap pours fresh water over the rice and ticks it on the ingredient
-// card; (5) the clock: at half an hour the chapter ends. Keep turning past an hour with a drag still held, and the sun
+// card; (5) the clock: at half an hour the chapter ends. Keep holding past an hour, and the sun
 // and the moon pass once over the window: overnight.
 //
 // ?state= (dev, for screenshots; sets the chapter up at that point and plays on from there, except done and night,
@@ -17,17 +17,17 @@
 //   soaking  three rinses done, the rice soaking in fresh water, the clock uncapped
 //   done     half an hour passed (holds)
 //   night    overnight: the sun and the moon have passed (holds)
-// Hotspots: #r-cov (drag to the fridge, or tap), #r-clock (circle, or tap), #r-rice (drag under the tap, circle, drag over
+// Hotspots: #r-cov (drag to the fridge, or tap), #r-desk (hold, or tap), #r-rice (drag under the tap, circle, drag over
 // the sink; tap for the soak). The clock is a hotspot from the fridge on; the rice's steps come one at a time.
 import '../sound/rest.js';
-import { COV, RICE, TAP_AT, POUR_AT, FRIDGE_DOOR, CLOCK } from '../art/rest.js';
+import { COV, RICE, TAP_AT, POUR_AT, FRIDGE_DOOR } from '../art/rest.js';
 
 export const RINSES = 3;
 export const SWIRLS = 2; // turns of the bowl that make one rinse (a tap is one turn)
 export const MILK = [0.9, 0.5, 0.1]; // how cloudy the water is at the top of each rinse: milky, less, nearly clear
 export const PRE_SOAK_MAX = 24; // minutes: the clock waits here until the rice is soaking
 export const HALF_HOUR = 30;
-export const KEEP_TURNING = 60; // a drag still held past this minute is the overnight
+export const KEEP_TURNING = 60; // holding on past this minute is the overnight
 export const OVERNIGHT = 600; // ten hours: the sun and the moon pass once
 export const MIN_PER_DEG = 1 / 3; // a quarter turn (90 degrees) is 30 minutes
 
@@ -46,6 +46,9 @@ export const stepClock = (minutes, soaked) => {
   const next = Math.floor(minutes / HALF_HOUR) * HALF_HOUR + HALF_HOUR;
   return soaked ? next : Math.min(next, PRE_SOAK_MAX);
 };
+// What the desk clock reads for a time in minutes: hours and minutes, "0:30".
+export const clockText = (minutes) => `${Math.floor(minutes / 60)}:${String(Math.floor(minutes % 60)).padStart(2, '0')}`;
+export const HOLD_RATE = 10; // minutes of the clock's time that pass each second it is held
 // Degrees of the two hands for a time in minutes: the minute hand turns 3 degrees a minute (a quarter in 30 minutes).
 export const handsAt = (minutes) => ({ min: minutes * 3, hour: minutes * 0.25 });
 // The window goes darker as the time passes: a little at dusk, most of the way by the night.
@@ -82,7 +85,7 @@ export default {
 
     const $ = (sel) => stage.$(sel);
     const cov = $('#r-cov'), fdoor = $('#r-fdoor'), finside = $('#r-finside'), fled = $('#r-fled');
-    const clockEl = $('#r-clock'), clkH = $('#r-clk-h'), clkM = $('#r-clk-m'), veil = $('#r-veil');
+    const clockEl = $('#r-desk'), digits = $('#r-digits'), clkH = $('#r-clk-h'), clkM = $('#r-clk-m'), veil = $('#r-veil');
     const sun = $('#r-sun'), moon = $('#r-moon');
     const rice = $('#r-rice'), water = $('#r-water'), milk = $('#r-milk'), ring = $('#r-ring'), rip = $('#r-rip');
     const stream = $('#r-stream'), pour = $('#r-pour'), tagT = $('#r-tag-t');
@@ -106,6 +109,7 @@ export default {
         e.style.transition = ms ? `transform ${ms}ms ease-out` : 'none';
         e.style.transform = `rotate(${deg.toFixed(2)}deg)`;
       }
+      digits.textContent = clockText(minutes);
       veil.style.opacity = nightVeil(minutes).toFixed(3);
     };
     const tag = () => { tagT.textContent = tagText(rinsesDone); };
@@ -164,11 +168,11 @@ export default {
 
     // ---- the clock: the hands, a quarter turn is 30 minutes; it ends at half an hour, or overnight ----
     const clockBeat = () => new Promise((resolve) => {
-      let angle = null;
       const nudge = () => { if (!soaked && !nudged) { nudged = true; voice.say('rest.nudge'); } };
+      clockEl.style.opacity = '1'; // the desk clock appears once the marinade is in the fridge
       const spot = hotspot(clockEl, {
-        label: 'turn the clock',
-        gesture: 'circle',
+        label: 'hold the clock to pass the time',
+        gesture: 'hold',
         step() {
           const next = stepClock(minutes, soaked);
           if (next === minutes) nudge();
@@ -178,21 +182,16 @@ export default {
           if (minutes >= HALF_HOUR) { outcome = 'half'; return true; }
           return false;
         },
-        drag({ x, y }) {
-          const a = Math.atan2(y - CLOCK.cy, x - CLOCK.cx);
-          if (angle === null) { angle = a; return; }
-          const d = wrap(a - angle);
-          angle = a;
+        hold(dt) { // time runs while it is held; a minute of the clock is a tenth of a second
           const before = minutes;
-          minutes = turnClock(minutes, (d * 180) / Math.PI, soaked);
-          if (!soaked && d > 0 && minutes >= PRE_SOAK_MAX) nudge();
+          minutes = turnClock(minutes, dt * HOLD_RATE * 3, soaked);
+          if (!soaked && minutes >= PRE_SOAK_MAX) nudge();
           if (Math.floor(before / HALF_HOUR) !== Math.floor(minutes / HALF_HOUR)) audio.hit('clock-tick');
           hands(0);
           if (minutes >= KEEP_TURNING) { outcome = 'night'; return true; }
           return false;
         },
         release() {
-          angle = null;
           if (outcome) return;
           if (minutes >= HALF_HOUR) outcome = 'half';
           if (outcome) spot.finish();
@@ -380,7 +379,7 @@ export default {
       await Promise.race([fridgeBeat(), gone]);
       if (signal.aborted) return;
     }
-    frame(1.4, 520, CLOCK.cx, 280);
+    frame(1.15, 520, 780, 520); // the desk clock, the rice bowl and the tap
     voice.say('rest.clock');
     const clockP = clockBeat();
     for (let n = rinsesDone + 1; n <= RINSES; n++) {
@@ -392,6 +391,8 @@ export default {
       await Promise.race([soakBeat(), gone]);
       if (signal.aborted) return;
     }
+    // Only the desk clock is left to do (passing the time ends the chapter), so the camera shows it with the bowl.
+    frame(1.15, 520, 780, 520);
     const end = await Promise.race([clockP, gone]);
     if (signal.aborted) return;
     if (end === 'night') await Promise.race([overnight(), gone]);

@@ -4,6 +4,7 @@
 // the covered marinade bowl (a checked towel over a steel bowl), the steel bowl of dry basmati rice, the tap and the
 // sink, a brass lamp and the paper tag that counts the rinses; the warm light of the lamp; the close shot's front.
 // The things you touch sit in x 560..1040 (a phone's column); the fridge and the tin are on the desktop's left.
+// The desk clock: #r-desk (its hit) #r-digits (the readout).
 // Ids: #r-cov (covered bowl, its hit), #r-fdoor (fridge door), #r-finside, #r-fled (fridge light), #r-clock (hit),
 // #r-clk-h #r-clk-m (hands), #r-veil (night), #r-sun #r-moon, #r-rice (rice bowl, its hit), #r-water #r-milk (the
 // water and how cloudy it is), #r-ring #r-rip (ripples), #r-stream #r-pour (water from the tap, and from the bowl),
@@ -19,6 +20,7 @@ export const TAP_AT = { x: 930, y: 548 }; // the rice bowl under the tap, its ce
 export const POUR_AT = { x: 870, y: 566 }; // the rice bowl at the sink's edge, while it is poured off
 export const FRIDGE_DOOR = { x: 310, y: 230 }; // where the covered bowl goes into the fridge
 export const CLOCK = { cx: 760, cy: 150, r: 58 };
+export const DESK = { cx: 660, cy: 592 }; // the digital desk clock on the counter, between the tin and the rice bowl
 const SINK = { cx: 930, cy: 584, rx: 96, ry: 42 };
 
 // The rice bowl's water surface, from F.bowl's own proportions (rim ry = rx * 0.45; the inside is 0.84 by 0.8 of that).
@@ -122,7 +124,7 @@ ${ticks}
 <g id="r-sun" opacity="0"><circle cx="1010" cy="200" r="42" fill="#FFC45A" opacity=".25"/><circle cx="1010" cy="200" r="24" fill="#FFD27A"/></g>
 <g id="r-moon" opacity="0"><circle cx="1010" cy="200" r="46" fill="#DDE6FF" opacity=".18"/><circle cx="1010" cy="200" r="22" fill="#EEF2FF"/></g>
 </g>`;
-  const backPlane = plane('r-back', 0.14, `${defsBack}<style>#r-back .hit{fill:transparent}#r-back #r-clock{cursor:pointer}</style>
+  const backPlane = plane('r-back', 0.14, `${defsBack}<style>#r-back .hit{fill:transparent}</style>
 ${fridge}${clock}${veil}${sky}`, { label: 'A small fridge at the left, a wall clock above the counter, and the window at dusk' });
 
   // ---- the table: the masala tin, the covered bowl, the rice bowl, the sink and tap, the lamp, the rinse tag ----
@@ -146,9 +148,18 @@ ${CHECK}</defs>`;
 <path d="M322 560H462M322 584H462" stroke="#232845" stroke-opacity=".45" stroke-width="2"/></g>`;
   const tag = `<g id="r-tag"><rect x="${RICE.cx - 120}" y="692" width="240" height="46" rx="8" fill="#F6EBD3" stroke="#5A2A22" stroke-width="2.5"/>
 <text id="r-tag-t" x="${RICE.cx}" y="722" text-anchor="middle" font-family="Literata, Georgia, serif" font-size="24" fill="#2A1612">rinse 1 of 3</text></g>`;
+  // The desk clock: a small digital timer showing the hours and minutes that have passed. Hold it to pass the time.
+  const desk = `<g id="r-desk" style="opacity:0;transition:opacity .8s">
+<ellipse cx="${DESK.cx}" cy="${DESK.cy + 36}" rx="82" ry="13" fill="#0a0405" fill-opacity=".42"/>
+<rect x="${DESK.cx - 64}" y="${DESK.cy - 34}" width="128" height="68" rx="13" fill="url(#r-tapG)" stroke="#232845" stroke-width="2.4"/>
+<rect x="${DESK.cx - 54}" y="${DESK.cy - 25}" width="108" height="44" rx="7" fill="#08150F" stroke="#3A4A42" stroke-width="2"/>
+<text id="r-digits" x="${DESK.cx}" y="${DESK.cy + 6}" text-anchor="middle" font-family="'Courier New', Consolas, monospace" font-size="34" font-weight="700" fill="#7DF0B0" style="filter:drop-shadow(0 0 5px #3EE08A)">0:00</text>
+<text x="${DESK.cx}" y="${DESK.cy + 15}" text-anchor="middle" font-family="'Courier New', Consolas, monospace" font-size="8" letter-spacing="1.4" fill="#7DF0B0" fill-opacity=".65">HOURS : MINUTES</text>
+<circle cx="${DESK.cx - 36}" cy="${DESK.cy + 28}" r="3" fill="#A33B2C"/><circle cx="${DESK.cx - 26}" cy="${DESK.cy + 28}" r="3" fill="#C8B04A"/>
+<rect class="hit" x="${DESK.cx - 76}" y="${DESK.cy - 46}" width="152" height="96" rx="14"/></g>`;
   const table = plane('r-table', 0.5, `${defsTable}<style>#r-table .hit{fill:transparent}</style>
-${sinkAndTap()}${tin}${covered()}${riceBowl()}${lamp}${tag}`,
-  { label: 'A steel bowl under a checked towel, a steel bowl of dry rice, a tap over a sink, and a brass lamp on the counter' });
+${sinkAndTap()}${tin}${covered()}${riceBowl()}${desk}${lamp}${tag}`,
+  { label: 'A steel bowl under a checked towel, a steel bowl of dry rice, a tap over a sink, a digital desk clock and a brass lamp on the counter' });
 
   // The lamp's warmth on the counter, and a little light on the sink.
   const glow = plane('r-glow', 0.52, `<defs>${radial('r-lampG', [[0, '#FFD27A', 0.55], [0.4, '#F2A516', 0.2], [1, '#B8693A', 0]])}</defs>

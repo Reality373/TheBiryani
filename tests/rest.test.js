@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { along, milkAt, turnClock, stepClock, handsAt, nightVeil, tagText, RINSES, MILK, PRE_SOAK_MAX, HALF_HOUR } from '../js/chapters/rest.js';
+import { clockText, along, milkAt, turnClock, stepClock, handsAt, nightVeil, tagText, RINSES, MILK, PRE_SOAK_MAX, HALF_HOUR } from '../js/chapters/rest.js';
 import art from '../js/art/rest.js';
 import lines from '../js/data/lines/rest.js';
 
@@ -75,9 +75,16 @@ test('every line the chapter speaks exists, and the lines fit the rules', () => 
 test('the art has the ids the chapter drives and stays under 5000 elements', () => {
   const { planes } = art();
   const svg = planes.join('');
-  for (const id of ['r-cov', 'r-fdoor', 'r-finside', 'r-fled', 'r-clock', 'r-clk-h', 'r-clk-m', 'r-veil', 'r-sun', 'r-moon',
+  for (const id of ['r-cov', 'r-fdoor', 'r-finside', 'r-fled', 'r-desk', 'r-digits', 'r-clock', 'r-clk-h', 'r-clk-m', 'r-veil', 'r-sun', 'r-moon',
     'r-rice', 'r-water', 'r-milk', 'r-ring', 'r-rip', 'r-stream', 'r-pour', 'r-tag-t']) {
     assert.ok(svg.includes(`id="${id}"`), id);
   }
   assert.ok((svg.match(/</g) || []).length < 5000);
+});
+
+test('the desk clock reads hours and minutes', () => {
+  assert.equal(clockText(0), '0:00');
+  assert.equal(clockText(24), '0:24');
+  assert.equal(clockText(30.9), '0:30');
+  assert.equal(clockText(605), '10:05');
 });
