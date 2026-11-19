@@ -53,6 +53,8 @@ button { font: inherit; }
 /* No will-change here: scaled SVG must re-sharpen after a camera move. */
 .camera { position: absolute; inset: 0; transform-origin: 0 0; }
 .scene { position: absolute; inset: 0; }
+@property --cx { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --cy { syntax: '<number>'; inherits: false; initial-value: 0; }
 .plane {
   position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
   transform: translate3d(calc(var(--cx, 0) * var(--d, 0) * var(--shift)), calc(var(--cy, 0) * var(--d, 0) * var(--shift) * 0.4), 0);
@@ -72,9 +74,10 @@ body[data-tool='spoon'] #m-spoon { opacity: 0 !important; } /* the cursor is the
 .cursor-tool.is-down svg { transform: rotate(-14deg) scale(0.96); }
 .plane .hotspot.draggable.is-dragging { cursor: grabbing; }
 .hotspot .hit, .hotspot.hit { fill: transparent; stroke: var(--saffron); stroke-width: 3; stroke-opacity: 0; vector-effect: non-scaling-stroke; }
-.hotspot.is-hinting .hit, .hotspot.is-hinting.hit { stroke-opacity: 0.9; animation: ring 2.4s ease-in-out infinite; }
+/* One pulse, then a steady ring: an endless pulse repaints everything under the ring on every frame (a whole pot of rice grains in The Layers: 16 fps). */
+.hotspot.is-hinting .hit, .hotspot.is-hinting.hit { stroke-opacity: 0.9; stroke-width: 4px; animation: ring 1.2s ease-out 1; }
 .hotspot:focus-visible .hit, .hotspot.hit:focus-visible { stroke: var(--rice); stroke-width: 4; stroke-opacity: 1; animation: none; }
-@keyframes ring { 0%, 100% { stroke-opacity: 0.35; stroke-width: 2px; } 50% { stroke-opacity: 1; stroke-width: 6px; } }
+@keyframes ring { from { stroke-opacity: 0.15; } to { stroke-opacity: 0.9; } }
 
 /* ---------- overlays that never move ---------- */
 

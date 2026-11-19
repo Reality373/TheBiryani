@@ -56,8 +56,15 @@ export function createStage({ el, camera, calm, auto, params }) {
   const write = (x, y) => {
     if (x === last.x && y === last.y) return;
     last = { x, y };
-    el.style.setProperty('--cx', x.toFixed(4));
-    el.style.setProperty('--cy', y.toFixed(4));
+    applyParallax();
+  };
+  // --cx and --cy are registered as NOT inherited (css/app.css) and are set on the planes themselves. Written on #stage as
+  // inherited variables they made the browser re-check every element of the scene (up to 17,000) on every frame: that was
+  // most of the frame time (measured: 3.4 s of every 4 s in the Layers scene).
+  const applyParallax = () => {
+    if (Number.isNaN(last.x)) return;
+    const cx = last.x.toFixed(4), cy = last.y.toFixed(4);
+    for (const p of el.getElementsByClassName('plane')) { p.style.setProperty('--cx', cx); p.style.setProperty('--cy', cy); }
   };
   write(cur.x, cur.y);
   if (!pinned) {
@@ -90,6 +97,7 @@ export function createStage({ el, camera, calm, auto, params }) {
       cam = { s: 1, x: 0, y: 0 };
       const old = scene;
       scene = next;
+      applyParallax(); // the new planes start at the current parallax, not at zero
       void next.offsetWidth;
       const ms = auto ? 0 : calm() ? 300 : 900;
       next.style.transition = `opacity ${ms}ms ease`;
