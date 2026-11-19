@@ -181,7 +181,12 @@ export default {
 
     // ---- the mass in the pan: placed with pose(); its crescents take --oc, its colour from the cook level ----
     let massX = PAN.cx, massY = PAN.cy, massRot = 0, massS = 1;
-    const placeMass = (ms = 0) => { mass.style.transition = ms ? `transform ${ms}ms ease-out` : 'none'; mass.style.transform = pose(massX, massY, massRot, massS); };
+    const spin = $('#o-spin');
+    const placeMass = (ms = 0) => {
+      const tr = ms ? `transform ${ms}ms ease-out` : 'none';
+      mass.style.transition = tr; mass.style.transform = pose(massX, massY, 0, massS);
+      spin.style.transition = tr; spin.style.transform = `rotate(${f(massRot)}deg)`;
+    };
     let cooking = false, cook = 0, holding = false, boost = 0, lastPhase = '', darkSaid = false;
     const startCooking = () => { cooking = true; audio.bed('flame', 0.25); };
     const setPhase = (ph) => { // the knob, the flames, the clock label and the heat follow the cook level
@@ -268,6 +273,7 @@ export default {
         frame(1.3, 330, 880, 520); // the pan's right side and the plate, so the drag lands in view
         scoop = hotspot($('#o-scoop'), {
           label: 'lift them out onto the plate',
+          tool: 'turner',
           gesture: { drag: [PLATE.cx - PAN.cx, PLATE.cy - PAN.cy] },
           step: drain,
           drag({ dx, dy }) {
@@ -280,6 +286,7 @@ export default {
       };
       stirH = hotspot($('#o-stir'), {
         label: 'stir the onions',
+        tool: 'turner',
         gesture: 'circle',
         step() {
           addCook(STIR); massRot += 45; placeMass(260);

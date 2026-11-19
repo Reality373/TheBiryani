@@ -81,6 +81,7 @@ async function runChapter(c, index, signal) {
   await ui.chapter(index, c.numeral, c.title);
   if (signal.aborted) return;
   await Promise.race([mod.play(ctx), aborted]);
+  if (!signal.aborted) ui.chapterDone();
 }
 
 async function run() {

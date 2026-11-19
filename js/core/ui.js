@@ -77,9 +77,20 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
   prefs.subscribe(syncPrefs);
 
+  // ---- chapter progress: each finished hotspot is a step; the bar fills to the chapter's step count, and the chapter's end fills it ----
+  let stepsDone = 0, stepsTotal = 0;
+  function showProgress(full) {
+    const f = full ? 1 : stepsTotal ? Math.min(0.97, stepsDone / stepsTotal) : 0; // 97%: only the chapter's end shows 100%
+    $('prog').style.setProperty('--prog', String(f));
+    $('prog').setAttribute('aria-valuenow', String(Math.round(f * 100)));
+  }
+  const stepDone = () => { stepsDone++; showProgress(); };
+
   // ---- chapter title: big and centred, then it settles into the cartouche ----
   async function chapter(index, numeral, title) {
     chapterId = chapters[index]?.id ?? null;
+    stepsDone = 0; stepsTotal = chapters[index]?.steps ?? 0;
+    showProgress();
     $('cartouche').hidden = !title;
     $('cart-num').textContent = numeral;
     $('cart-title').textContent = title;
@@ -288,7 +299,7 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
 
   const ui = {
-    chapter, subtitle, caption, card, hint, unhint, ingredients: showIngredients, tick,
+    chapter, stepDone, chapterDone: () => showProgress(true), subtitle, caption, card, hint, unhint, ingredients: showIngredients, tick,
     headingFocused: () => document.activeElement === $('cart-title') || document.activeElement === document.body,
   };
   syncPrefs();

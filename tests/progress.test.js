@@ -29,3 +29,8 @@ test('chapters carry a mood and a built flag', () => {
   assert.deepEqual(chapters.map((c) => c.id), ['spices', 'onions', 'marinade', 'rest', 'fry', 'rice', 'layers', 'seal', 'wait', 'opening', 'plate', 'end']);
   for (const c of chapters) { assert.ok(c.mood); assert.equal(typeof c.built, 'boolean'); }
 });
+
+test('every numbered chapter declares its step count for the progress bar', async () => {
+  const { chapters } = await import('../js/data/chapters.js');
+  for (const c of chapters.filter((x) => x.numeral)) assert.ok(c.steps > 0, `${c.id} needs steps`);
+});

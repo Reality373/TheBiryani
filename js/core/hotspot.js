@@ -22,6 +22,8 @@ export function createCore(opts, { calm = () => false, onTouch = () => {} } = {}
   };
 }
 
+import { toolSvg } from '../art/tools.js';
+
 const IDLE_MS = 2500, TAP_PX = 10, TAP_MS = 350;
 
 export function createHotspots({ stage, ui, calm, auto }) {
@@ -53,6 +55,22 @@ export function createHotspots({ stage, ui, calm, auto }) {
     active.add(h);
 
     el.classList.add('hotspot');
+    // opts.tool: a mouse or pen over this hotspot becomes that tool (the native cursor hides); a press tilts it.
+    let tool = null;
+    const toolAt = (e) => { if (tool) tool.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
+    if (opts.tool) {
+      el.classList.add('has-tool');
+      on('pointerenter', (e) => {
+        if (e.pointerType === 'touch' || calmed()) return;
+        tool ??= Object.assign(document.createElement('div'), { className: 'cursor-tool', innerHTML: toolSvg(opts.tool) });
+        document.body.append(tool); toolAt(e);
+      });
+      on('pointermove', toolAt);
+      on('pointerleave', () => tool?.remove());
+      on('pointerdown', () => tool?.classList.add('is-down'));
+      for (const t of ['pointerup', 'pointercancel']) on(t, () => tool?.classList.remove('is-down'));
+    }
+    if (opts.drag) el.classList.add('draggable'); // grab cursor: this one is dragged, not just clicked
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
     el.removeAttribute('aria-hidden');
@@ -62,6 +80,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
     const dispose = () => {
       if (!active.delete(h)) return;
       ac.abort();
+      tool?.remove();
       clearInterval(timer);
       cancelAnimationFrame(raf);
       quiet();
@@ -71,7 +90,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
       el.setAttribute('aria-hidden', 'true');
       if (document.activeElement === el) el.blur();
     };
-    core.done.then(dispose);
+    core.done.then(() => { dispose(); ui.stepDone?.(); });
 
     // ---- pointer: a short press with little movement is a tap (one step); otherwise drag / hold ----
     let down = null;
@@ -86,6 +105,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
     on('pointerdown', (e) => {
       if (core.finished || down || (e.pointerType === 'mouse' && e.button !== 0)) return; // a second finger does not restart the drag
       el.setPointerCapture?.(e.pointerId);
+      el.classList.add('is-dragging');
       core.touch();
       const w = world(e);
       down = { id: e.pointerId, sx: e.clientX, sy: e.clientY, at: performance.now(), t: performance.now(), x: w.x, y: w.y, first: true, moved: false };
@@ -107,6 +127,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
       const d = down;
       down = null;
       cancelAnimationFrame(raf);
+      el.classList.remove('is-dragging');
       el.releasePointerCapture?.(e.pointerId);
       const plain = (!opts.drag && !opts.hold) || calmed(); // nothing to hold or drag: any still press is a tap
       const tap = e.type === 'pointerup' && !d.moved && (plain || performance.now() - d.at < TAP_MS);

@@ -63,6 +63,12 @@ html[data-calm='true'] .plane, html[data-calm='true'] .plane * { animation: none
 /* ---------- hotspots ---------- */
 
 .plane .hotspot { pointer-events: all; cursor: pointer; touch-action: none; outline: none; }
+.plane .hotspot.draggable { cursor: grab; }
+.plane .hotspot.has-tool { cursor: none; }
+.cursor-tool { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; margin: -2px 0 0 -2px; will-change: transform; }
+.cursor-tool svg { display: block; margin: -110px 0 0 -55px; transform-origin: 55px 110px; transition: transform 0.12s; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.45)); }
+.cursor-tool.is-down svg { transform: rotate(-14deg) scale(0.96); }
+.plane .hotspot.draggable.is-dragging { cursor: grabbing; }
 .hotspot .hit, .hotspot.hit { fill: transparent; stroke: var(--saffron); stroke-width: 3; stroke-opacity: 0; vector-effect: non-scaling-stroke; }
 .hotspot.is-hinting .hit, .hotspot.is-hinting.hit { stroke-opacity: 0.9; animation: ring 2.4s ease-in-out infinite; }
 .hotspot:focus-visible .hit, .hotspot.hit:focus-visible { stroke: var(--rice); stroke-width: 4; stroke-opacity: 1; animation: none; }
@@ -123,6 +129,9 @@ button.dia { cursor: pointer; }
 }
 #cart-num { margin: 0; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--saffron); }
 #cart-title { margin: 0; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.1rem; line-height: 1.2; color: var(--rice); }
+#prog { height: 3px; margin-top: 0.4rem; border-radius: 2px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+#prog i { display: block; height: 100%; width: calc(var(--prog, 0) * 100%); background: var(--saffron); transition: width 0.5s ease-out; }
+html[data-calm="true"] #prog i { transition: none; }
 #cart-title:focus { outline: none; }
 #cart-title:focus-visible { outline: 3px solid var(--rice); outline-offset: 4px; }
 
