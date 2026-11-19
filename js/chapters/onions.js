@@ -318,7 +318,8 @@ export default {
       audio.hit('onion-spoon');
       ui.tick?.('onion');
       flying.style.setProperty('--oc', toneAt(Math.min(1, cook + 0.1)));
-      dropTo(flying, { x: PLATE.cx, y: PLATE.cy - 6 }, BOWL, 8, true);
+      dropTo(flying, { x: PLATE.cx, y: PLATE.cy - 6 }, { x: BOWL.cx, y: BOWL.cy - 4 }, 8, true); // BOWL has cx/cy, not x/y
+      bowlOn.style.setProperty('--oc', toneAt(Math.min(1, cook + 0.1))); // the same slices, the same colour as on the plate
       later(() => { bowlOn.style.opacity = '1'; }, 700);
       voice.say('onions.keep');
     };

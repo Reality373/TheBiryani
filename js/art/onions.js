@@ -68,6 +68,15 @@ const massCres = (() => {
   }).join('');
 })();
 
+// The two spoonfuls kept in the small bowl: the same crescents as the pan and the plate, a few, heaped in the bowl's mouth.
+const bowlCres = (() => {
+  const r = rng(8);
+  return Array.from({ length: 14 }, () => {
+    const a = r() * 2 * Math.PI, d = Math.sqrt(r());
+    return `<use href="#o-cr" style="fill:var(--oc);transform:translate(${f(BOWL.cx + Math.cos(a) * d * 32)}px, ${f(BOWL.cy - 4 + Math.sin(a) * d * 8)}px) rotate(${f(r() * 360)}deg) scale(.62)"/>`;
+  }).join('');
+})();
+
 const clockPlane = plane('o-clock', 0.12, `<defs>${radial('o-face', [[0, '#FFF6E2'], [1, '#E8D6AE']], { cx: 0.4, cy: 0.35, r: 0.7 })}</defs>
 <circle cx="${CLOCK.x}" cy="${CLOCK.y}" r="${CLOCK.r + 9}" fill="#0A0810" fill-opacity=".45"/>
 <circle cx="${CLOCK.x}" cy="${CLOCK.y}" r="${CLOCK.r}" fill="url(#o-face)" stroke="#A33B2C" stroke-width="6"/>
@@ -156,7 +165,7 @@ ${onion('B')}
 <g id="o-bowlG">
   <ellipse class="hit" cx="${BOWL.cx}" cy="${BOWL.cy + 6}" rx="60" ry="44"/>
   ${F.bowl({ p: 'ot', cx: BOWL.cx, cy: BOWL.cy, w: BOWL.w, fill: 'empty', seed: 5 })}
-  <g id="o-bowlOn" style="opacity:0;transition:opacity .8s">${F.biristaCluster({ p: 'ot', x: BOWL.cx, y: BOWL.cy - 2, w: 60, h: 18, n: 12, seed: 8 })}</g>
+  <g id="o-bowlOn" style="opacity:0;transition:opacity .8s;--oc:#7E4420">${bowlCres}</g>
 </g>
 <g id="o-bottleG" style="transform:${pose(BOTTLE.x, BOTTLE.y, 0, BOTTLE.s)}">
   <ellipse class="hit" cx="0" cy="-110" rx="50" ry="120"/>
