@@ -22,8 +22,6 @@ export const ingredients = {
     { id: 'turmeric', name: 'turmeric', amount: '¼ tsp' },
     { id: 'salt', name: 'salt', amount: '½ tsp' },
     { id: 'masala', name: 'biryani masala or garam masala', amount: '1¼ tbsp' },
-    { id: 'coriander', name: 'coriander powder', amount: '½ tbsp' },
-    { id: 'cumin', name: 'roasted cumin powder', amount: '¼ tbsp' },
     { id: 'greenchilli', name: 'green chilli, slit', amount: '1' },
     { id: 'mint', name: 'mint and coriander leaves, chopped', amount: '2 tbsp each' },
     { id: 'birista', name: 'fried onions (from the onions)', amount: '6 tbsp' },

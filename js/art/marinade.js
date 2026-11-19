@@ -17,8 +17,8 @@ export const IN = { cx: 800, cy: 580, rx: 150, ry: 64 }; // the inside of the mi
 export const POS = { curd: [668, 350], paste: [700, 365], lemon: [850, 385], oil: [965, 380], tray: [706, 345], birista: [936, 345], herbs: [770, 438], greenchilli: [905, 440], cloth: [958, 480], spoon: [888, 378] };
 export const BP = [[684, 330, -12], [795, 322, 8], [908, 336, -6], [796, 398, 14]]; // the four pieces on the board: x, y, rotation
 export const BOARD = { cx: 800, cy: 358, w: 420, h: 170 };
-export const HEAPS = ['paste', 'lemon', 'oil', 'chilli', 'turmeric', 'salt', 'masala', 'coriander', 'cumin', 'herbs', 'greenchilli', 'birista'];
-export const TRAY = ['chilli', 'turmeric', 'salt', 'masala', 'coriander', 'cumin']; // the measured powders, left to right
+export const HEAPS = ['paste', 'lemon', 'oil', 'chilli', 'turmeric', 'salt', 'masala', 'herbs', 'greenchilli', 'birista'];
+export const TRAY = ['chilli', 'turmeric', 'salt', 'masala']; // the measured powders, left to right
 // Where each heap lands: a ring round the inside of the bowl, clear of the three dollops.
 export const SLOT = Object.fromEntries(HEAPS.map((n, i) => { const a = (i / HEAPS.length) * 6.283 + 0.3; return [n, [Math.round(IN.cx + Math.cos(a) * 104), Math.round(IN.cy + Math.sin(a) * 44)]]; }));
 export const DOLLOP = [[766, 561], [840, 576], [803, 546]];
@@ -30,8 +30,6 @@ const K = {
   turmeric: { c: '#F2B212', d: '#A8660A', h: '#FFE466' },
   salt: { c: '#F4F0E6', d: '#A4AAC2', h: '#FFFFFF' },
   masala: { c: '#8A4A1E', d: '#4A230C', h: '#C98A4E' },
-  coriander: { c: '#A89048', d: '#5E5020', h: '#D8C47A' },
-  cumin: { c: '#7A5A30', d: '#3E2A12', h: '#B8926A' },
 };
 const INK = '#1A0C10';
 
@@ -163,13 +161,13 @@ export default function art() {
 <path d="M${ox - 20} ${oy + 30}Q${ox} ${oy + 22} ${ox + 20} ${oy + 30}L${ox + 22} ${oy + 52}Q${ox} ${oy + 58} ${ox - 22} ${oy + 52}Z" fill="#F2B232"/>
 <rect x="${ox - 11}" y="${oy - 28}" width="22" height="9" rx="3" fill="#7A3E18" stroke="${INK}" stroke-width="1.2"/>
 <path d="M${ox - 17} ${oy + 6}Q${ox - 22} ${oy + 30} ${ox - 17} ${oy + 48}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>`, [ox, oy + 20, 44, 52]);
-  // the spice tray: six small mounds in a brass tray, left to right chilli, turmeric, salt, masala, coriander, cumin
+  // the spice tray: four small mounds in a brass tray, left to right chilli, turmeric, salt, masala
   const [tx, ty] = POS.tray, tr = rng(23);
   const tray = src('tray', `<ellipse cx="${tx + 6}" cy="${ty + 22}" rx="118" ry="28" fill="#0a0405" fill-opacity=".5"/>
 <path d="${blob(tx, ty + 6, 110, 32, 0.03, tr, 14)}" fill="#8E5A20" stroke="${INK}" stroke-width="1.6"/>
 <path d="${blob(tx, ty + 4, 101, 26, 0.03, tr, 14)}" fill="#C8923E"/>
 <path d="M${tx - 94} ${ty - 6}Q${tx} ${ty - 22} ${tx + 94} ${ty - 6}" fill="none" stroke="#FFE4A8" stroke-width="2.4" stroke-opacity=".7" stroke-linecap="round"/>
-${TRAY.map((n, i) => mound(tx - 75 + i * 30, ty + 6 + (i % 2) * 4, 15, 9, K[n], tr)).join('')}`, [tx, ty + 6, 120, 38]);
+${TRAY.map((n, i) => mound(tx - 45 + i * 30, ty + 6 + (i % 2) * 4, 15, 9, K[n], tr)).join('')}`, [tx, ty + 6, 120, 38]);
   const [bx, by] = POS.birista;
   const birista = src('birista', `${F.bowl({ p: 'm', cx: bx, cy: by, w: 124, depth: 0.4, seed: 9 })}${F.biristaCluster({ p: 'm', x: bx, y: by + 2, w: 70, h: 22, n: 12, seed: 5 })}`, [bx, by + 10, 76, 46]);
   const [hx, hy] = POS.herbs;

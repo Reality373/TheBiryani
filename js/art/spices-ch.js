@@ -9,7 +9,7 @@ import * as F from './food.js';
 import { plane, blob, rng, range, f, wobble, radial, linear } from './lib.js';
 import { ingredients } from '../data/cookbook.js';
 
-export const POWDERS = ['chilli', 'turmeric', 'salt', 'masala', 'coriander', 'cumin'];
+export const POWDERS = ['chilli', 'turmeric', 'salt', 'masala']; // the dabba holds more bowls; only these go in the marinade
 export const WHOLE = ['cardamom', 'clove', 'bayleaf', 'cinnamon', 'shahijeera', 'mace'];
 export const COUNT = { cardamom: 4, clove: 4 }; // tap this many times
 
@@ -29,7 +29,7 @@ export const DAB = [800, 382];
 const bo = (x, y) => [DAB[0] + x, DAB[1] + y];
 export const BOWL = { masala: bo(0, 2), chilli: bo(-120, 2), turmeric: bo(-60, -41), coriander: bo(60, -41), cumin: bo(120, 2), salt: bo(60, 43), pepper: bo(-60, 43) };
 export const TRAY1 = { c: [775, 592], w: 330, h: 142 };
-export const PILE = Object.fromEntries(Object.entries({ chilli: [-100, -34], turmeric: [0, -36], salt: [100, -34], masala: [-92, 24], coriander: [0, 26], cumin: [96, 24] }).map(([k, [x, y]]) => [k, [TRAY1.c[0] + x, TRAY1.c[1] + y]]));
+export const PILE = Object.fromEntries(Object.entries({ chilli: [-100, -34], turmeric: [0, -36], salt: [100, -34], masala: [0, 26] }).map(([k, [x, y]]) => [k, [TRAY1.c[0] + x, TRAY1.c[1] + y]]));
 export const TRAY2 = { c: [800, 585], w: 370, h: 140 };
 const t2 = (x, y) => [TRAY2.c[0] + x, TRAY2.c[1] + y];
 export const JAR = { cardamom: [695, 372], clove: [800, 372], bayleaf: [905, 372], cinnamon: [695, 482], shahijeera: [800, 482], mace: [905, 482] };
@@ -48,7 +48,7 @@ const K = {
   turmeric: { c: '#F2B212', d: '#A8660A', h: '#FFE466' },
   salt: { c: '#F4F0E6', d: '#A4AAC2', h: '#FFFFFF' },
   masala: { c: '#9A4E22', d: '#4A2210', h: '#D9965A' },
-  coriander: { c: '#B9A25A', d: '#6E5A28', h: '#E6D794' },
+  coriander: { c: '#B9A25A', d: '#6E5A28', h: '#E6D794' }, // decorative bowls in the dabba: not in the marinade, but drawn
   cumin: { c: '#8E6A3A', d: '#4A3218', h: '#CFA46C' },
   pepper: { c: '#5A4A40', d: '#2A2018', h: '#9A8878' },
 };
@@ -226,7 +226,7 @@ export default function art() {
 <path d="M${dx + DRX * 0.4} ${dy - DRY * 0.92}A${DRX} ${DRY} 0 0 1 ${dx + DRX * 0.95} ${dy - DRY * 0.3}" fill="none" stroke="#9DB4F0" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
 ${order.map((id, i) => bowlAt(id, BOWL[id], i + 2)).join('')}`;
 
-  // ---- tray 1: six piles waiting (hidden until each lands) ----
+  // ---- tray 1: four piles waiting (hidden until each lands) ----
   const pr = rng(51);
   const piles = POWDERS.map((id) => {
     const [x, y] = PILE[id], rr = pileR(tsp(AMOUNT[id]));

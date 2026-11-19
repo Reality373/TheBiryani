@@ -2,7 +2,7 @@
 // then the chicken goes in. Beats, each station fading in as the last is done:
 // (1) tip the curd bowl over the steel bowl (drag and hold, or tap): three dollops; (2) paste, lemon half, oil, all at
 // once: tap the paste and the oil, drag the lemon down to squeeze it; (3) the dry things: drag the spice tray over the
-// bowl (all six powders), drag the fried onions over it (crushed by hand), tap the herbs and the green chilli; (4) stir in
+// bowl (all four powders), drag the fried onions over it (crushed by hand), tap the herbs and the green chilli; (4) stir in
 // circles (or tap) to an even orange paste, then taste it; (5) the board: drag across each piece for its gashes (or
 // tap), then drag each piece into the bowl (or tap); (6) fold in circles till every piece is coated; (7) drag the cloth
 // over the bowl (or tap): the window dims a little and the chapter ends. The ingredient card ticks as each goes in.

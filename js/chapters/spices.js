@@ -1,11 +1,11 @@
-// Chapter I, The Spices. Close shot on the counter at dusk. Beats: (1) six powders for the marinade: drag the spoon from
+// Chapter I, The Spices. Close shot on the counter at dusk. Beats: (1) four powders for the marinade: drag the spoon from
 // a dabba bowl to tray 1 (or tap): a heaped spoon of that colour tips into its own pile, sized by the amount;
 // (2) the whole spices for the rice water: tap a jar and one piece drops on tray 2 (cardamom and cloves four times,
 // with a count; the others once). Any order inside a beat. Nothing can be failed. Amounts come from data/cookbook.js.
 //
 // ?state= (dev, for screenshots; the chapter plays on from there. done holds):
 //   start    nothing measured (also the default)
-//   powders  the six powders on tray 1, the jars waiting
+//   powders  the four powders on tray 1, the jars waiting
 //   whole    plus 4 cardamom, 4 cloves and the bay leaf; cinnamon, shahi jeera and mace waiting
 //   done     everything measured
 // Hotspots: #sp-b-<powder> (drag to the tray, or tap), #sp-j-<whole> (tap).
