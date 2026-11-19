@@ -24,7 +24,7 @@ export function createCore(opts, { calm = () => false, onTouch = () => {} } = {}
 
 import { toolSvg } from '../art/tools.js';
 
-const IDLE_MS = 1500, TAP_PX = 10, TAP_MS = 350;
+const IDLE_MS = 1000, TAP_PX = 10, TAP_MS = 350;
 
 // The hover name: one small tooltip, shared; a mouse or pen over a hotspot shows its label.
 let tip = null, tipOwner = null;
@@ -45,10 +45,12 @@ export function createHotspots({ stage, ui, calm, auto }) {
     clearTimeout(idle);
     if (auto) return;
     idle = setTimeout(() => {
-      // One hint at a time: several at once pile up on each other. The next shows once this one's hotspot is touched.
-      if ([...active].some((h) => h.hinted && !h.core.touched)) return;
-      const h = [...active].find((x) => !x.core.touched && !x.hinted);
-      if (h) { h.hinted = true; h.el.classList.add('is-hinting'); ui.hint(h.el, h.label, h.gesture); }
+      // One hint at a time (several pile up on each other), for the newest untouched hotspot: that is the current step,
+      // not a standing one like the clock. An older hint is withdrawn when a newer step arrives.
+      const cur = [...active].reverse().find((x) => !x.core.touched);
+      if (!cur || cur.hinted) return;
+      for (const h of active) if (h.hinted && !h.core.touched) { h.el.classList.remove('is-hinting'); ui.unhint(h.el); }
+      cur.hinted = true; cur.el.classList.add('is-hinting'); ui.hint(cur.el, cur.label, cur.gesture);
     }, IDLE_MS);
   };
   for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, arm, true);
