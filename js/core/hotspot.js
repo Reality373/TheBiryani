@@ -24,7 +24,7 @@ export function createCore(opts, { calm = () => false, onTouch = () => {} } = {}
 
 import { toolSvg } from '../art/tools.js';
 
-const IDLE_MS = 2500, TAP_PX = 10, TAP_MS = 350;
+const IDLE_MS = 1500, TAP_PX = 10, TAP_MS = 350;
 
 export function createHotspots({ stage, ui, calm, auto }) {
   const active = new Set();
@@ -33,10 +33,18 @@ export function createHotspots({ stage, ui, calm, auto }) {
     clearTimeout(idle);
     if (auto) return;
     idle = setTimeout(() => {
-      for (const h of active) if (!h.core.touched && !h.hinted) { h.hinted = true; h.el.classList.add('is-hinting'); ui.hint(h.el, h.label, h.gesture); }
+      // One hint at a time: several at once pile up on each other. The next shows once this one's hotspot is touched.
+      if ([...active].some((h) => h.hinted && !h.core.touched)) return;
+      const h = [...active].find((x) => !x.core.touched && !x.hinted);
+      if (h) { h.hinted = true; h.el.classList.add('is-hinting'); ui.hint(h.el, h.label, h.gesture); }
     }, IDLE_MS);
   };
   for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, arm, true);
+
+  // "Skip this step": every live hotspot performs itself, as in auto mode. Shown while any hotspot is live.
+  const skipBtn = document.getElementById('skip');
+  const sync = () => { if (skipBtn) skipBtn.hidden = !!auto || active.size === 0; };
+  skipBtn?.addEventListener('click', () => { for (const h of active) h.skip?.(); });
 
   function hotspot(el, opts) {
     if (typeof opts.step !== 'function') throw new Error('hotspot: step is required');
@@ -53,6 +61,7 @@ export function createHotspots({ stage, ui, calm, auto }) {
     const core = createCore(opts, { calm: calmed, onTouch: quiet });
     h.core = core;
     active.add(h);
+    sync();
 
     el.classList.add('hotspot');
     // opts.tool: a mouse or pen over this hotspot becomes that tool (the native cursor hides); a press tilts it.
@@ -77,8 +86,10 @@ export function createHotspots({ stage, ui, calm, auto }) {
     if (label) el.setAttribute('aria-label', label);
 
     let timer = 0;
+    h.skip = () => { if (!timer && !core.finished) timer = setInterval(() => { if (core.step()) clearInterval(timer); }, 60); };
     const dispose = () => {
       if (!active.delete(h)) return;
+      sync();
       ac.abort();
       if (tool?.isConnected) delete document.body.dataset.tool;
       tool?.remove();

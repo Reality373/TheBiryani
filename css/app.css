@@ -110,7 +110,7 @@ html[data-card] #frame, html[data-card] #vignette { display: none; }
 #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
 #ui button { pointer-events: auto; }
 #scrim-top { position: absolute; left: 0; right: 0; top: 0; height: 5rem; background: linear-gradient(rgba(14, 13, 18, 0.45), transparent); }
-html[data-card] #scrim-top, html[data-card] #bottom, html[data-card] #cartouche, html[data-card] #ingr, html[data-card] #diamonds, html[data-card] #hints { display: none; }
+html[data-card] #skip, html[data-card] #scrim-top, html[data-card] #bottom, html[data-card] #cartouche, html[data-card] #ingr, html[data-card] #diamonds, html[data-card] #hints { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Seven diamonds along the top border; reached ones are buttons. */
@@ -140,9 +140,9 @@ html[data-calm="true"] #prog i { transition: none; }
 #ingr { width: 16.5rem; max-width: 62vw; }
 #ingr-panel {
   position: relative; pointer-events: auto; padding: 0.7rem 0.9rem 0.8rem; background: rgba(20, 26, 46, 0.82);
-  border: 1px solid var(--saffron); border-radius: 4px 14px 4px 14px; max-height: calc(78svh - 150px); overflow-y: auto;
+  border: 1px solid var(--saffron); border-radius: 4px 14px 4px 14px; max-height: calc(78svh - 150px); overflow-y: auto; overflow-x: hidden;
 }
-.ingr-fl { position: absolute; right: -7px; top: -7px; width: 18px; height: 18px; overflow: visible; }
+.ingr-fl { position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; overflow: visible; }
 #ingr-head { margin: 0 0 0.45rem; font-family: var(--font-text); font-variant-caps: all-small-caps; letter-spacing: 0.14em; font-size: 0.95rem; font-weight: 650; color: var(--saffron); }
 #ingr-list { list-style: none; margin: 0; padding: 0; }
 #ingr-list li { position: relative; margin: 0 0 0.42rem; padding-left: 1.5rem; font-size: 0.95rem; line-height: 1.3; color: var(--rice); }
@@ -215,6 +215,9 @@ html[data-card] #corner-buttons { top: calc(var(--cb) + 14px); right: calc(var(-
   display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%;
   border: 1.5px solid rgba(242, 165, 22, 0.85); background: rgba(20, 26, 46, 0.72); color: var(--rice); cursor: pointer;
 }
+#skip { position: absolute; right: calc(var(--band) + 12px); bottom: calc(var(--band) + 12px + env(safe-area-inset-bottom)); min-height: 2.5rem; padding: 0 1rem; border-radius: 999px; border: 1.5px solid rgba(242, 165, 22, 0.85); background: rgba(20, 26, 46, 0.72); color: var(--rice); font: inherit; font-size: 0.9rem; cursor: pointer; backdrop-filter: blur(6px); }
+#skip[hidden] { display: none; }
+#skip:hover, #skip:focus-visible { background: var(--saffron); color: var(--iron); }
 #cc[aria-pressed='true'] { background: var(--saffron); color: var(--iron); }
 
 /* ---------- title and end cards ---------- */

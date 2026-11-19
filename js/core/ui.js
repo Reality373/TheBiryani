@@ -109,18 +109,33 @@ export function createUI({ prefs, calm, auto, chapters, onJump }) {
   }
 
   // ---- subtitles and captions ----
-  const SUB_SPOTS = [[50, 89], [70, 28], [30, 86], [72, 86], [58, 34], [44, 90]];
-  let subSpot = 0;
+  // The line floats near the action: above (else below) the live hotspots, clear of the top-left card; high and central when none.
+  function floatSubs() {
+    const vw = innerWidth, vh = innerHeight;
+    const rs = [...document.querySelectorAll('.hotspot')].map((n) => n.getBoundingClientRect())
+      .filter((r) => r.width > 4 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw);
+    const w = Math.min(subs.offsetWidth || 340, vw - 24), h = subs.offsetHeight || 70;
+    let x = vw / 2, y = vh * 0.24;
+    if (rs.length) {
+      const top = Math.min(...rs.map((r) => r.top)), bottom = Math.max(...rs.map((r) => r.bottom));
+      x = (Math.min(...rs.map((r) => r.left)) + Math.max(...rs.map((r) => r.right))) / 2;
+      const above = top - 22 - h / 2, below = bottom + 22 + h / 2;
+      y = above - h / 2 >= 70 ? above : below + h / 2 <= vh - 60 ? below : vh * 0.24;
+    }
+    x = Math.min(vw - w / 2 - 12, Math.max(w / 2 + 12, x));
+    y = Math.min(vh - h / 2 - 60, Math.max(h / 2 + 70, y));
+    const tl = $('tl').getBoundingClientRect();
+    if (y - h / 2 < tl.bottom + 8 && x - w / 2 < tl.right + 8) x = Math.min(vw - w / 2 - 12, tl.right + 8 + w / 2);
+    subs.style.setProperty('--sx', `${Math.round(x)}px`);
+    subs.style.setProperty('--sy', `${Math.round(y)}px`);
+  }
   let fade = 0;
   function subtitle(text) {
     clearTimeout(fade);
     if (!text) { cur.textContent = prev.textContent = ''; subs.classList.remove('is-on'); return; }
     prev.textContent = cur.textContent;
     cur.textContent = text;
-    // Float: the next spot in turn; narrow screens keep the centre and only change height. Upper spots stay clear of the top-left card.
-    const [x, y] = SUB_SPOTS[subSpot++ % SUB_SPOTS.length];
-    subs.style.setProperty('--sx', `${matchMedia('(max-width: 640px)').matches ? 50 : x}%`);
-    subs.style.setProperty('--sy', `${y}%`);
+    floatSubs();
     subs.classList.add('is-on');
     fade = setTimeout(() => subs.classList.remove('is-on'), 9000);
   }
