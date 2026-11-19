@@ -214,16 +214,15 @@ export function chicken({ p = 'f', x, y, w = 100, h = 70, rot = 0, seed = 1, don
 
 // ---------- birista ----------
 export function biristaCluster({ p = 'f', x, y, w = 120, h = 50, n = 22, seed = 1 }) {
+  // Fried onions: the same half-moon slices as The Onions chapter, browned (not the old long strands), so they look alike everywhere.
   const rand = rng(seed * 17 + 3); let s = '';
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const D = 'M-13 0A13 12 0 0 0 13 0Q0 7 -13 0Z';
   for (let i = 0; i < n; i++) {
-    let px = x + range(rand, -w / 2, w / 2); let py = y + range(rand, -h / 2, h / 2);
-    let dir = rand() * 6.28; const pts = [[px, py]];
-    for (let k = 0; k < 5; k++) { dir += range(rand, -1.4, 1.4); px += Math.cos(dir) * range(rand, 8, 15); py += Math.sin(dir) * range(rand, 5, 10); pts.push([px, py]); }
-    const d = wobble(pts, 1.2, rand, false);
-    const dk = pick(rand, ['#3E1D0B', '#4A230E', '#563013', '#2E1508']);
-    s += `<path d="${d}" fill="none" stroke="#120804" stroke-opacity=".5" stroke-width="3.2" stroke-linecap="round" transform="translate(1.5 2.2)"/>` +
-      `<path d="${d}" fill="none" stroke="${dk}" stroke-width="2.8" stroke-linecap="round"/>` +
-      `<path d="${d}" fill="none" stroke="${pick(rand, ['#D79A3C', '#C98A35', '#E8B055'])}" stroke-opacity=".85" stroke-width="1.1" stroke-linecap="round" transform="translate(-.7 -.9)"/>`;
+    const px = x + range(rand, -w / 2, w / 2), py = y + range(rand, -h / 2, h / 2);
+    const rot = rand() * 360, sc = range(rand, 0.55, 0.85);
+    const fill = pick(rand, ['#8A4F1E', '#9A5A22', '#7A4418', '#A8672A']);
+    s += `<g transform="translate(${r1(px)} ${r1(py)}) rotate(${r1(rot)}) scale(${r1(sc * 100) / 100})"><path d="${D}" transform="translate(1.5 2)" fill="#120804" fill-opacity=".4"/><path d="${D}" fill="${fill}" stroke="#4A2A0E" stroke-width="1.2"/><path d="M-9 1.5Q0 8 9 1.5" fill="none" stroke="#E8B055" stroke-opacity=".7" stroke-width="1"/></g>`;
   }
   return s;
 }
