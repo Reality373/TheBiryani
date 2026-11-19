@@ -4,9 +4,9 @@ Read [design.md](design.md) first: it says what the piece is and the rules every
 
 ## Ground rules
 
-- **Branch `v2`.** Commit after every step that works. Never keep work only in `/tmp`: a reboot on 17 Nov wiped two days of concept work that lived there.
+- **Branch `main`** (the work was done on `v2`, which was fast-forwarded into `main` on 19 Nov; the GitHub default branch is `main`). Commit after every step that works. Never keep work only in `/tmp`: a reboot on 17 Nov wiped two days of concept work that lived there.
 - **Zero-build static site.** ES modules, SVG built as strings in JS, CSS, canvas only where SVG cannot do it (grain, steam plume), Web Audio. No framework, bundler, runtime dependency or Python build step.
-- **Serve it** with `npm run serve` (port 8000). Chapters load with dynamic `import()`, so `file://` is not supported.
+- **Serve it** with `npm run serve` (`tools/serve.py`, port 8000: never cached, so a reload always loads the latest files). Chapters load with dynamic `import()`, so `file://` is not supported.
 - **Tests** with `npm test` (`node --test`). `tests/contrast.test.js` reads `css/tokens.css` and must keep passing.
 - **Only touch the files you own** (table below). If you need a change in someone else's file, say so in your report instead.
 
@@ -95,6 +95,8 @@ const h = ctx.hotspot(el, {
   hold,      // optional (dt) => true|void. Called every frame while pressed and held.
   release,   // optional () => void. Pointer up or cancel.
   keys,      // optional { ArrowLeft: fn, ArrowRight: fn }
+  goal,      // optional sentence for the goal line (at most about 70 characters); falls back to the label
+  tool,      // optional 'turner' | 'spoon': a mouse or pen over this hotspot becomes that tool (art/tools.js)
 });
 h.done      // Promise, resolves once finished (a callback returned true, or h.finish())
 h.finish(); h.dispose();
@@ -102,7 +104,10 @@ h.finish(); h.dispose();
 
 - Makes `el` a focusable control: `role="button"`, `tabindex="0"` while active (`-1` plus `aria-hidden` once disposed or finished), `aria-label`, `.hotspot` class, visible focus ring. The art gives `el` a transparent `.hit` shape at least 48 CSS px across at the camera scale it is used at.
 - Several hotspots can be active at once.
-- After 2.5 s with no input anywhere, each active hotspot that has never been touched gets a slow saffron pulse ring, its hint text beside it (through `ui.hint`, never inside the subtitle zone) and the gesture glyph animated along its path (still in calm mode). All fade on its first touch and never return for it.
+- After about 1 s with no input anywhere, the newest active hotspot that has never been touched (one at a time; an older hint is withdrawn when a newer step arrives) gets a saffron ring that pulses once, its hint text beside it (through `ui.hint`, never inside the subtitle zone) and the gesture glyph animated along its path (still in calm mode). All fade on its first touch and never return for it.
+- The goal line: `goalFor(live)` (exported, tested) picks the newest live hotspot's `goal` or label, capitalised, with "· N to do" when several are live; the layer calls `ui.goal(text)` whenever a hotspot is added, finished or disposed.
+- Hover name: a mouse or pen over a hotspot shows its label in a small tag (hidden on press). Hotspots with `drag` get the `draggable` class (grab cursor, grabbing while pressed).
+- `#skip` ("Skip this step") is shown while any hotspot is live: it starts each live hotspot's auto timer, so every one performs itself as in auto mode.
 - Calm mode: `drag` and `hold` are ignored; only `step`.
 - Auto mode (`?auto=1`): calls `step` every 60 ms until it returns true. So `step` must always make progress.
 
@@ -132,10 +137,12 @@ and exports the existing building blocks (`tick`, `tone`, `voiceKit`, `makeNoise
 
 ```js
 ui.chapter(index, numeral, title) -> Promise  // big centred title for about 2 s, then it settles into the top-left cartouche; immediate in auto; then focus goes to the heading
-ui.subtitle(text)                             // used by voice: current line full, previous at 0.45
+ui.subtitle(text)                             // used by voice: the floating card shows the current line only, placed clear of every hotspot, the ingredient card and the buttons, re-checked every 0.45 s; short lines leave sooner
 ui.caption(text | null)                       // [sound caption], shown only when captions are on
 ui.card({ kind: 'title' | 'end', title, text, note, icons, choices }) -> Promise<choice index>
-ui.hint(el, text); ui.unhint(el)               // used by hotspot
+ui.hint(el, text, gesture); ui.unhint(el)      // used by hotspot
+ui.goal(text)                                 // the goal line under the title ('' hides it); used by hotspot
+ui.stepDone(); ui.chapterDone()               // the step bar: each finished hotspot is a step; chapterDone fills it. Totals are `steps` in data/chapters.js (measured with ?auto=1; the bar stops at 97% until the chapter ends)
 ```
 
 ### Progress and ways out (`main.js`, `ui.js`)
@@ -156,8 +163,16 @@ ui.hint(el, text); ui.unhint(el)               // used by hotspot
 - `?state=<name>` passed to the chapter in `ctx.params`, for jumping inside a chapter to take screenshots. Each chapter documents its states in a comment at the top of its file.
 - `?auto=1` every hotspot performs itself; voice resolves at once. The run must end with `data-done="1"` on `<html>` and no `data-error`.
 - `?calm=1`, `?cx=…&cy=…`.
+- `?ch=gravy` runs The Gravy from the seared pot; it shares `fry.js` (the chapter's `ctx.id` selects the part: `fry` tips in and sears, `gravy` adds the water, the lid and the covered cook).
 
 ## Performance
+
+Rules learnt from a measured regression on 19 Nov (the Layers scene ran at 108 ms a frame):
+
+- **Never change an inherited CSS custom property on a scene root every frame.** It forces style recalculation of every descendant (17,000 elements in The Layers: 85% of the frame). The parallax variables `--cx` and `--cy` are registered with `@property` as non-inherited and set on the planes themselves (`js/core/stage.js`, `css/app.css`).
+- **No endless animation over a large or dense area.** SVG repaints on the CPU, so an infinite pulse on a ring that covers 2,000 rice grains repaints them every frame. The hint ring pulses once, then holds.
+- **How to measure:** drive headless Chrome over DevTools, record `requestAnimationFrame` intervals and `Performance.getMetrics` (ScriptDuration, LayoutDuration, RecalcStyleDuration) for 4 s, then A/B one suspect at a time with injected CSS. Target: 16.6 ms steady at 1916 by 990. Compare against an older commit in a `git worktree` to bisect.
+- **Known hot spot:** The Wait's fogged window (mask, about 100 drops and gradients, screen-blend glows) is about 55 ms a frame; see the README's known gaps.
 
 - Animate only `transform` and `opacity`. No animated filters, `feTurbulence` or masks on large areas. A static blur of at most 1 px on a foreground plane is fine.
 - Under about 5000 SVG elements per chapter. Draw repeated small things (rice grains, rain, dots) as a few `<symbol>`s placed with `<use>`, or as `<pattern>`s.
