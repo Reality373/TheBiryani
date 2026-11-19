@@ -124,6 +124,9 @@ span.dia { pointer-events: none; }
 .dia[data-state='current'] { pointer-events: none; }
 button.dia { cursor: pointer; }
 
+@property --c { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --s { syntax: '<number>'; inherits: true; initial-value: 0; }
+
 /* The top-left corner: the cartouche, and the ingredient card under it. */
 #tl { position: absolute; left: calc(var(--band) + 10px); top: calc(var(--band) + 12px); display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; max-width: 55vw; }
 #cartouche {

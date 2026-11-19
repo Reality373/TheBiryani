@@ -57,12 +57,14 @@ const HALF = `<ellipse cx="6" cy="12" rx="70" ry="48" fill="#0A0604" fill-opacit
 const onion = (k) => `<g class="o-on" id="o-on${k}" transform="translate(${ONIONS[k].x} ${ONIONS[k].y}) scale(${ONION_S})"><ellipse class="hit" rx="120" ry="100"/>${k === 'B' ? HALF : WHOLE}</g>`;
 
 // The cooked mass in the pan is drawn around the origin and placed with pose(); its crescents take --oc (the colour).
-const MASS_K = 58 / 160; // the mass is a circle squashed to the pan's ellipse; turning it only orbits the slices along that ellipse
+const MASS_K = 58 / 160; // the mass is laid out on a circle; turning it moves each slice round the pan's ellipse (see --c, --s)
 const massCres = (() => {
   const r = rng(31);
   return Array.from({ length: 120 }, () => {
     const a = r() * 2 * Math.PI, d = Math.sqrt(r());
-    return `<use href="#o-cr" style="fill:var(--oc);transform:translate(${f(Math.cos(a) * d * 160)}px, ${f(Math.sin(a) * d * 160)}px) scale(1, ${f(1 / MASS_K)}) rotate(${f(r() * 360)}deg) scale(1.1)"/>`;
+    const px = f(Math.cos(a) * d * 160), py = f(Math.sin(a) * d * 160);
+    // Each slice is placed by the turn (--c, --s are cos and sin of it) and keeps its own shape: no group is squashed or rotated.
+    return `<use href="#o-cr" style="fill:var(--oc);transform:translate(calc(var(--c, 1) * ${px}px - var(--s, 0) * ${py}px), calc((var(--s, 0) * ${px} + var(--c, 1) * ${py}) * ${f(MASS_K)}px)) rotate(${f(r() * 360)}deg) scale(1.1)"/>`;
   }).join('');
 })();
 
@@ -172,7 +174,7 @@ ${onion('B')}
 </g>
 <g id="o-panOn" style="opacity:0;transition:opacity .9s;transform:${pose(PAN.cx, PAN.cy)};--oc:#F3EBD0">
   <ellipse id="o-scoop" class="hit" cx="0" cy="0" rx="170" ry="62"/>
-  <g transform="scale(1 ${f(MASS_K)})"><g id="o-spin">${massCres}</g></g>
+  <g id="o-spin">${massCres}</g>
 </g>
 <g id="o-sparks"></g>
 <g id="o-flying"></g>`, { label: 'The board with two onions and a knife, the oil bottle, the plate and the small bowl' });

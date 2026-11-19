@@ -185,7 +185,9 @@ export default {
     const placeMass = (ms = 0) => {
       const tr = ms ? `transform ${ms}ms ease-out` : 'none';
       mass.style.transition = tr; mass.style.transform = pose(massX, massY, 0, massS);
-      spin.style.transition = tr; spin.style.transform = `rotate(${f(massRot)}deg)`;
+      const a = (massRot * Math.PI) / 180;
+      spin.style.transition = ms ? `--c ${ms}ms ease-out, --s ${ms}ms ease-out` : 'none';
+      spin.style.setProperty('--c', Math.cos(a).toFixed(4)); spin.style.setProperty('--s', Math.sin(a).toFixed(4));
     };
     let cooking = false, cook = 0, holding = false, boost = 0, lastPhase = '', darkSaid = false;
     const startCooking = () => { cooking = true; audio.bed('flame', 0.25); };
