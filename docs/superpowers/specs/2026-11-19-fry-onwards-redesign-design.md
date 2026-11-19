@@ -2,6 +2,10 @@
 
 Date: 2026-11-19. Status: approved in chat by the owner; the gravy details follow the standard recipes (owner: "go for the standard recipe off the internet"); written spec awaiting the owner's review.
 
+## Progress (19 Nov, end of the first hour)
+
+Built: the goal line; The Gravy as chapter VI (shares the Fry's pot and art; onion plate removed); chapters renumbered I to XII; the marinade trimmed (four powders); the pot seated on its burner in the Fry/Gravy art; one fried-onion drawing everywhere; a camera zoom cap on landscape windows; calmer, action-paced subtitles. Not built yet: the one-kitchen scene (`js/art/kitchen.js`) and moving chapters I to X onto it, the shared kitchen timer, per-chapter explicit goals beyond the label fallback (only the spices have them), and re-measured step counts for Fry (2) and Gravy (3), which are estimates.
+
 ## Problem
 
 From The Fry to The Plate the game is hard to follow. Evidence gathered by walking every chapter in headless Chrome:

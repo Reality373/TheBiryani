@@ -32,6 +32,9 @@ Sources: the brainstorm chat of 7 Nov 2026 ([research/00-brainstorm-chat.md](res
 | D18 | **Recipe drafted by Claude from a published pakki recipe, not reviewed by the owner.** | 18 Nov | Source: Swasthi, indianhealthyrecipes.com/chicken-biryani/ (restaurant style). Data in js/data/cookbook.js. Supersedes O11. |
 | D19 | **Learn on screen, recipe to keep.** Waits pass in seconds; the end card has the full recipe with quantities and a Print button. No cook-along timers. | 18 Nov | |
 | D20 | **Length 15 to 20 minutes, all detail.** | 18 Nov | Supersedes rule 10's 8-minute budget. |
+| D21 | **The gravy is the marinade cooked down, as a chapter of its own (VI The Gravy).** The standard Hyderabadi recipes read (Swasthi, My Food Story, Sinfully Spicy) have no separate onion-and-tomato gravy; the marinated chicken cooks in the pot and makes it. The Fry (V) sears; The Gravy adds hot water, covers, cooks 10 to 15 min to about 95%, thick but pourable. | 19 Nov | Supersedes the silent merge of the base into The Fry (D3's "biryani base"). Fried onions stay in the marinade (two of the three sources). |
+| D22 | **Marinade trimmed to the core:** coriander powder and roasted cumin powder dropped; the Spices chapter measures four powders. | 19 Nov | Owner: too many masalas in the marinade. |
+| D23 | **One kitchen for every cooking chapter** (the Seal/Wait room), only The Plate at the dining table. Always-visible goal line before each action; one kitchen timer. | 19 Nov | Spec: docs/superpowers/specs/2026-11-19-fry-onwards-redesign-design.md. Goal line and The Gravy are built; the one-kitchen rebuild and the shared timer are not yet. |
 
 ## Proposed
 
